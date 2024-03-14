@@ -7,7 +7,6 @@ export async function connect_to_db() {
     console.log(process.env.MONGODB_URL)
     await mongoose.connect(url);
     console.log("Connected to db");
-
 }
 
 
