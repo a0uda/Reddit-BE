@@ -1,5 +1,4 @@
-const { Timestamp } = require("mongodb");
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const communitySchema = new mongoose.Schema({
   created_at: {
@@ -10,10 +9,10 @@ const communitySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    unique: true,
   },
   title: {
     type: String,
-    required: true,
   },
   type: {
     type: String,
@@ -334,10 +333,10 @@ const communitySchema = new mongoose.Schema({
         default: false,
       },
       submit_time: {
-        type: Timestamp,
+        type: Date,
       },
       time_zone: {
-        type: Timestamp,
+        type: Date,
       },
       title: String,
       repeat_options: {
@@ -418,6 +417,6 @@ const communitySchema = new mongoose.Schema({
   ],
 });
 
-const Community = mongoose.model("Community", communitySchema);
+export const Community = mongoose.model("Community", communitySchema);
 
-module.exports = Community;
+// module.exports = Community;
