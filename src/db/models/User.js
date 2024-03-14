@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
 const userSchema = new mongoose.Schema({
   created_at: {
     type: Date,
@@ -24,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    minlength: 8
+    minlength: 8,
   },
   connected_google: {
     type: Boolean,
@@ -38,31 +39,29 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  email:{
-  type: String,
-  required: true,
-  trim: true,
-  lowercase: true,
-  unique: true,
-  validate(value) {
-    if (!validator.isEmail(value)) {
-      throw new Error("Email is invalid");
-    }
-  }},
-  
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    validate(value) {
+      if (!validator.isEmail(value)) {
+        throw new Error("Email is invalid");
+      }
+    },
+  },
+
   verified_email_flag: {
-        type: Boolean,
-        default: false,
-      },
-    
-  
+    type: Boolean,
+    default: false,
+  },
+
   gmail: {
     type: String,
-    
   },
   facebook_email: {
     type: String,
-    
   },
   profile_settings: {
     type: Object,
@@ -70,9 +69,9 @@ const userSchema = new mongoose.Schema({
       display_name: {
         type: String,
         required: true,
-        default:  function() {
-          return this.username; 
-        }
+        default: function () {
+          return this.username;
+        },
       },
       about: {
         type: String,
@@ -420,32 +419,20 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-
 userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
-    user.password = await bcrypt.hash(user.password, 8);
+    user.password = await bcrypt.hash(
+      user.password,
+      parseInt(process.env.PASSWORD_HASH_SALT)
+    );
   }
   next();
 });
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign({ _id: user._id.toString() }, "ncndhjcjhy74r4rfref")
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+};
 
 export const User = mongoose.model("User", userSchema);
