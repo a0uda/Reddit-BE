@@ -54,5 +54,6 @@ const addNewRuleToCommunity = async (requestBody) => {
 }
 
 // TODO: Implement the "Reorder Rules" API.
+// Error in sending the pull request - GitHub.
 
 export { addNewCommunity, addNewRuleToCommunity };
