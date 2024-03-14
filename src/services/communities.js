@@ -29,4 +29,30 @@ const addNewCommunity = async (requestBody) => {
   }
 }
 
-export { addNewCommunity };
+
+const addNewRuleToCommunity = async (requestBody) => {
+  let { community_name, rule_title, applies_to, report_reason, full_description } = requestBody;
+
+  try {
+    const community = await communityNameExists(community_name);
+
+    const rule_order = community.rules.length + 1;
+    report_reason = report_reason || rule_title;
+    full_description = full_description || "";
+
+    const new_rule = { rule_title, rule_order, applies_to, report_reason, full_description };
+
+    community.rules.push(new_rule);
+
+    const savedCommunity = await community.save();
+
+    return { community: savedCommunity };
+  }
+  catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+// TODO: Implement the "Reorder Rules" API.
+
+export { addNewCommunity, addNewRuleToCommunity };
