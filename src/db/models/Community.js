@@ -1,5 +1,4 @@
-const { Timestamp } = require("mongodb");
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const communitySchema = new mongoose.Schema({
   created_at: {
@@ -10,10 +9,10 @@ const communitySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    unique: true,
   },
   title: {
     type: String,
-    required: true,
   },
   type: {
     type: String,
@@ -334,10 +333,10 @@ const communitySchema = new mongoose.Schema({
         default: false,
       },
       submit_time: {
-        type: Timestamp,
+        type: Date,
       },
       time_zone: {
-        type: Timestamp,
+        type: Date,
       },
       title: String,
       repeat_options: {
@@ -401,23 +400,23 @@ const communitySchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  rules: [
-    {
-      rule_title: String,
-      rule_order: {
-        type: Number,
-        min: 1,
-      },
-      applies_to: {
-        type: String,
-        enum: ["posts_and_comments", "posts_only", "comments_only"],
-      },
-      report_reason: String,
-      full_description: String,
+  rules: [ // All rule validations are assumed to be handled in the front-end.
+  {
+    rule_title: String, // => required
+    rule_order: {  // => determined by db
+      type: Number,
+      min: 1,
     },
-  ],
+    applies_to: { // => chosen by default
+      type: String,
+      enum: ["posts_and_comments", "posts_only", "comments_only"],
+    },
+    report_reason: String, // => if not provided, use rule_title
+    full_description: String, // => optional
+  },
+],
 });
 
-const Community = mongoose.model("Community", communitySchema);
+export const Community = mongoose.model("Community", communitySchema);
 
-module.exports = Community;
+// module.exports = Community;
