@@ -1,7 +1,14 @@
 import express from "express";
 import { User } from "../db/models/User.js";
 import { Token } from "../db/models/Token.js";
-import { signupUser, loginUser, logoutUser } from "../utils/userAuth.js";
+import {
+  signupUser,
+  loginUser,
+  logoutUser,
+  verifyEmail,
+  forgetPassword,
+  resetPassword,
+} from "../utils/userAuth.js";
 
 export const usersRouter = express.Router();
 
@@ -63,24 +70,78 @@ usersRouter.post("/users/logout", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/verify-email/:token", async (req, res) => {
-  console.log("TOKEN",req.params.token)
+//the front end does't directly access this api, i call it after the sign up route
+usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
+  console.log("TOKEN", req.params.token);
   try {
-    const token = await Token.findOne({
-      token: req.params.token,
-    });
-    //check if token exists
-    if (!token) return res.status(404).send("Token not found");
-    //check if token is't expired
-    if (token.expires_at < Date.now())
-      return res.status(400).send("Token has expired");
-    await User.updateOne(
-      { _id: token.user_id },
-      { $set: { verified_email_flag: true } }
+    const { success, err, status, user, msg } = await verifyEmail(
+      req.params,
+      true
     );
-    await Token.findByIdAndDelete(token._id);
-    res.status(200).send("Email is verified");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    // res.status(200).send(msg);
+    console.log(msg);
+    res.redirect("/homepage");
   } catch (error) {
-    return res.status(400).send(error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+// https://accounts.reddit.com/resetpassword/
+// xJw7tZGUgh-MvcEJOFM7NLwTF1w?correlation_id=85f94646-62e7-4bd5-856b-c3ae5737f4ae
+// &ref=password_reset
+// &ref_campaign=password_reset
+// &ref_source=email
+// &v=QVFBQUZTcmdab09PRzBwblZUNzU2X2lkQ1ZyQ3J3V0dEME80cjFuc3A1VDV1RUJiWkRMTQ%3D%3D
+
+//the front end does't directly access this api, i call it after the forget password route
+
+usersRouter.get("/users/internal-forget-password/:token", async (req, res) => {
+  console.log("TOKEN", req.params.token);
+  try {
+    const { success, err, status, user, msg } = await verifyEmail(
+      req.params,
+      false
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.redirect(`/resetpasswordpage/?token=${req.params.token}`);
+    // res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error: "hi Internal server error." });
+  }
+});
+
+usersRouter.post("/users/forget-password", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await forgetPassword(req.body);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+usersRouter.post("/users/reset-password", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await resetPassword(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
   }
 });
