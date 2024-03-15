@@ -118,6 +118,7 @@ const getAllUsers = async () => {
   }
 
 }
+//test approve user
 const approveUser = async (community_name, username) => {
   try {
 
