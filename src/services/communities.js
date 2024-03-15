@@ -1,4 +1,5 @@
 import { Community } from '../db/models/Community.js';
+import { User } from '../db/models/User.js';//delete this line 
 import { communityNameExists, ruleTitleExists } from '../utils/communities.js';
 
 // Return { err: { status: XX, message: "XX" }} or { community }
@@ -107,6 +108,34 @@ const getCommunityRules = async (community_name) => {
 // TODO: Implement the "Reorder Rules" API.
 // Error in sending the pull request - GitHub.
 const setCommunitySettings = async (requestBody) => {
+}//this function is just for testing purposes , has nothing todo with community feature 
+const getAllUsers = async () => {
+  try {
+    const users = await User.find({});
+    return { users: users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
+}
+const approveUser = async (community_name, username) => {
+  try {
+
+    const user = await User.findOne({ username: username });
+
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.approved_users.push(user_id);
+      await community.save();
+      return { user: user };
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
 }
 //TODO:not tested yet
 const getApprovedUsers = async (community_name) => {
@@ -139,4 +168,4 @@ const editCommunityGeneralSettings = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 }
-export { addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, setCommunitySettings, getApprovedUsers, editCommunityGeneralSettings };
+export { addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, setCommunitySettings, getApprovedUsers, editCommunityGeneralSettings, approveUser, getAllUsers };

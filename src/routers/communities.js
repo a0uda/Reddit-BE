@@ -1,5 +1,5 @@
 import express from "express";
-import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings } from "../services/communities.js";
+import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings, getAllUsers, approveUser } from "../services/communities.js";
 
 const communityRouter = express.Router();
 //testing done 
@@ -125,13 +125,38 @@ communityRouter.get("/communities/get_approved_users/:community_name", async (re
 */
 //testing done 
 communityRouter.post("/communities/edit_general_settings", async (req, res, next) => {
-    console.log("hi")
     try {
         const { err, settings } = await editCommunityGeneralSettings(req.body)
 
         if (err) { return next(err) }
 
         return res.status(200).send(settings)
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.get("/all_users", async (req, res, next) => {
+    try {
+        const { err, users } = await getAllUsers()
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(users)
+
+    } catch (error) {
+        next(error)
+    }
+})
+//approve user psot request
+communityRouter.post("/communities/approve_user", async (req, res, next) => {
+    try {
+        console.log(req.body)
+        const { err, user } = await approveUser(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(user)
 
     } catch (error) {
         next(error)
