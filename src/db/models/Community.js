@@ -16,13 +16,13 @@ const communitySchema = new mongoose.Schema({
     type: String,
   },
   type: {
-    type: String,
+    type: String,//TODO : employee only de leh ?
     enum: ["public", "private", "restricted", "employee only"],
   },
   category: {
     type: String,
   },
-  nswf_flag: {
+  nsfw_flag: {
     type: Boolean,
     default: false,
   },
@@ -40,29 +40,46 @@ const communitySchema = new mongoose.Schema({
     type: String,
     default: "Online",
   },
-  description: {
-    type: String,
-  },
-  welcome_message: {
-    send_welcome_message_flag: {
+  general_settings: {
+    description: {
+      type: String,
+    },
+    welcome_message: {
+      send_welcome_message_flag: {
+        type: Boolean,
+        default: false,
+      },
+      message: {
+        type: String,
+      },
+    },
+    language: {
+      type: String,
+      default: "English",
+    },
+    region: {
+      type: String,
+    },
+    visibility: {
+      type: String,
+      enum: ["public", "private", "restricted"],
+    },
+    nsfw_flag: {
       type: Boolean,
       default: false,
     },
-    message: {
+    accepting_requests_to_join: {
       type: String,
-    },
+      default: true,
+    }
+    , approved_users_have_the_ability_to:
+    {
+      type: String,
+      enum: ["comment only", "post only", "comment and post"],
+      default: "post only",
+    }
   },
-  language: {
-    type: String,
-    default: "English",
-  },
-  region: {
-    type: String,
-  },
-  accepting_requests_to_join: {
-    type: String,
-    default: true,
-  },
+
   content_controls: {
     providing_members_with_posting_guidlines: {
       flag: {

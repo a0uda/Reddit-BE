@@ -1,4 +1,5 @@
 import { Community } from '../db/models/Community.js';
+import { User } from '../db/models/User.js';//delete this line 
 import { communityNameExists, ruleTitleExists } from '../utils/communities.js';
 
 // Return { err: { status: XX, message: "XX" }} or { community }
@@ -97,10 +98,8 @@ const deleteCommunityRule = async (requestBody) => {
 //testing done 
 const getCommunityRules = async (community_name) => {
   try {
-    console.log("inside service")
-    const community = await communityNameExists(community_name);
 
-    console.log(community)
+    const community = await communityNameExists(community_name);
     return { rules: community.rules };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -109,5 +108,64 @@ const getCommunityRules = async (community_name) => {
 // TODO: Implement the "Reorder Rules" API.
 // Error in sending the pull request - GitHub.
 const setCommunitySettings = async (requestBody) => {
+}//this function is just for testing purposes , has nothing todo with community feature 
+const getAllUsers = async () => {
+  try {
+    const users = await User.find({});
+    return { users: users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
 }
-export { addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, setCommunitySettings };
+const approveUser = async (community_name, username) => {
+  try {
+
+    const user = await User.findOne({ username: username });
+
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.approved_users.push(user_id);
+      await community.save();
+      return { user: user };
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
+}
+//TODO:not tested yet
+const getApprovedUsers = async (community_name) => {
+  //get all users from the community
+  try {
+    const community = await communityNameExists(community_name);
+    const users = await getUsersByIds(community.users);
+    return { users: users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
+}
+const editCommunityGeneralSettings = async (requestBody) => {
+  const { community_name, description, send_welcome_message_flag, message, language, region, visibility, nsfw_flag, accepting_requests_to_join, approved_users_have_the_ability_to } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    community.general_settings.description = description || community.general_settings.description;
+    community.general_settings.welcome_message.send_welcome_message_flag = send_welcome_message_flag || community.general_settings.welcome_message.send_welcome_message_flag;
+    community.general_settings.welcome_message.message = message || community.general_settings.welcome_message.message;
+    community.general_settings.language = language || community.general_settings.language;
+    community.general_settings.region = region || community.general_settings.region;
+    community.general_settings.visibility = visibility || community.general_settings.visibility;
+    community.general_settings.nsfw_flag = nsfw_flag || community.general_settings.nsfw_flag;
+    community.general_settings.accepting_requests_to_join = accepting_requests_to_join || community.general_settings.accepting_requests_to_join;
+    community.general_settings.approved_users_have_the_ability_to = approved_users_have_the_ability_to || community.general_settings.approved_users_have_the_ability_to;
+    const savedCommunity = await community.save();
+    return { settings: savedCommunity.general_settings };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+export { addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, setCommunitySettings, getApprovedUsers, editCommunityGeneralSettings, approveUser, getAllUsers };

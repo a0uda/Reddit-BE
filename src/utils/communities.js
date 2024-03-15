@@ -1,4 +1,5 @@
 import { Community } from '../db/models/Community.js';
+import { User } from '../db/models/User.js';
 
 // Returns Promise<Object|null>
 async function communityNameExists(communityName) {
@@ -11,4 +12,16 @@ async function ruleTitleExists(communityName, ruleTitle) {
     return await Community.findOne({ name: communityName, "rules.rule_title": ruleTitle })
 
 }
-export { communityNameExists, ruleTitleExists };
+// Find users with the provided IDs
+const getUsersByIds = async (userIds) => {
+    try {
+        const users = await User.find({ _id: { $in: userIds } });
+        const filteredUsers = users.filter(user => user !== null);
+        return { users: filteredUsers };
+    } catch (error) {
+        return {
+            err: { status: 500, message: error.message }
+        }
+    };
+}
+export { communityNameExists, ruleTitleExists, getUsersByIds }
