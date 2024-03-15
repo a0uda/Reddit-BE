@@ -449,7 +449,15 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, {
+    expiresIn: "1s",
+  });
+  const refreshToken = jwt.sign(
+    { _id: user._id.toString() },
+    process.env.JWT_SECRET,
+    { expiresIn: "1m" }
+  );
+  return refreshToken;
 };
 
 export const User = mongoose.model("User", userSchema);
