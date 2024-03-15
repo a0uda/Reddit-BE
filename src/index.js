@@ -1,11 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import { usersRouter } from "./routers/users.js";
-
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
-
-//const connect_to_db = require("./db/mongoose")
 
 const app = express();
 
