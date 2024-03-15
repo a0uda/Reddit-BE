@@ -1,5 +1,5 @@
 import express from "express";
-import { addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules } from "../services/communities.js";
+import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings } from "../services/communities.js";
 
 const communityRouter = express.Router();
 //testing done 
@@ -54,7 +54,6 @@ communityRouter.post("/communities/delete_rule", async (req, res, next) => {
         next(error)
     }
 })
-//testing done 
 communityRouter.get("/communities/get_rules/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name);
@@ -68,20 +67,74 @@ communityRouter.get("/communities/get_rules/:community_name", async (req, res, n
     } catch (error) {
         next(error)
     }
-})
 
-/*excpected fields from FE{
-    community_name: string,
-    community_description: string,
-    Send welcome message to new members flag 
-    language string
-    reigon string
-    community_type: string
-    18+ flag 
-    restricted community settings {}
-    private Accepting requests to join flag 
-} */
-//TODO:not implemented yet
-communityRouter.patch("/communities/edit_general_settings", async (req, res, next) => {
+})
+//TODO : not tested untill we have users 
+communityRouter.get("/communities/get_approved_users/:community_name", async (req, res, next) => {
+    try {
+        const { err, users } = await getApprovedUsers(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(users)
+
+    } catch (error) {
+        next(error)
+    }
+})
+/*
+ general_settings: {
+    community_name :string 
+    description: {
+      type: String,
+    },
+    send_welcome_message_flag: {
+        type: Boolean,}
+    message: 
+    {
+        type: String,
+    },
+
+    language: {
+      type: String,
+      default: "English",
+    },
+    region: {
+      type: String,
+    },
+    visibility: {
+      type: String,
+      enum: ["public", "private", "restricted"],
+    },
+    nsfw_flag: {
+      type: Boolean,
+      default: false,
+    },
+    accepting_requests_to_join: {
+      type: String,
+      default: true,
+    }
+    , approved_users_have_the_ability_to:
+    {
+      type: String,
+      enum: ["comment only", "post only", "comment and post"],
+      default: "post only",
+    }
+  }
+
+*/
+//testing done 
+communityRouter.post("/communities/edit_general_settings", async (req, res, next) => {
+    console.log("hi")
+    try {
+        const { err, settings } = await editCommunityGeneralSettings(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(settings)
+
+    } catch (error) {
+        next(error)
+    }
 })
 export { communityRouter }
