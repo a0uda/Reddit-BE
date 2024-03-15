@@ -1,11 +1,8 @@
 import express from "express";
 import { User } from "../db/models/User.js"; //if error put .js
-import { signupUser, loginUser, logoutUser } from "../utils/userAuth.js";
-import session from "express-session";
 import dotenv from "dotenv";
-import passport from "passport";
 import axios from "axios";
-import { Strategy as GoogleStrategy } from "passport-google-oauth2";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -15,8 +12,7 @@ const REDIRECT_URI = "http://localhost:3000/users/signup-google/callback";
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
 const REDIRECT_URI_fb = "http://localhost:3000/auth/facebook/callback";
-import { User } from "../db/models/User.js";
-import { Token } from "../db/models/Token.js";
+
 import {
   signupUser,
   loginUser,
@@ -51,7 +47,7 @@ usersRouter.post("/users/signup", async (req, res) => {
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, err, user } = await loginUser(req.body);
+    const { success, err, user, refreshToken } = await loginUser(req.body);
 
     if (!success) {
       res.status(400).send(err);
@@ -59,7 +55,8 @@ usersRouter.post("/users/login", async (req, res) => {
     }
 
     // Set the token in the response header
-    res.header("Authorization", `Bearer ${user.token}`);
+    res.header("Authorization", `Bearer ${user.token} `);
+    res.setHeader("RefreshToken", refreshToken);
 
     // Send a response without the token in the body
     res.status(200).send({ username: user.username });
@@ -72,10 +69,17 @@ usersRouter.post("/users/login", async (req, res) => {
 
 usersRouter.post("/users/logout", async (req, res) => {
   try {
-    const token = request.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).send("Access Denied");
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).send("Access Denied");
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send("Access Denied: Expired token");
     }
+  });
+
     const { username } = req.body;
 
     const { success, msg, err } = await logoutUser({ token, username });

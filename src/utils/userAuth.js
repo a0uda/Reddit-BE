@@ -79,14 +79,16 @@ export async function loginUser(requestBody) {
     return { success: false, err: "Username or password are incorrect" };
   }
 
-  await user.generateAuthToken();
+  const refreshToken = await user.generateAuthToken();
   await user.save();
 
-  return { success: true, user };
+  return { success: true, user, refreshToken: refreshToken };
 }
 
 export async function logoutUser(requestBody) {
+  
   const { username, token } = requestBody;
+  console.log(username, token);
   const user = await User.findOne({ username });
   if (!user || user.token != token) {
     console.log(token);
