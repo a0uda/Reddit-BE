@@ -1,5 +1,6 @@
 import { User } from "../db/models/User.js"; //if error put .js
 import bcrypt from "bcryptjs";
+
 export async function signupUser(requestBody) {
   const { username, email, password, gender } = requestBody;
 
@@ -52,7 +53,7 @@ export async function logoutUser(requestBody) {
     return { success: false, err: "Not a valid username or existing token" };
   }
 
-  user.token = undefined;
+  user.token = "";
   await user.save();
 
   return { success: true, msg: "Logged Out Successfully" };
