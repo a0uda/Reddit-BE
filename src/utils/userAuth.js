@@ -94,7 +94,7 @@ export async function logoutUser(requestBody) {
     return { success: false, err: "Not a valid username or existing token" };
   }
 
-  user.token = undefined;
+  user.token = "";
   await user.save();
 
   return { success: true, msg: "Logged Out Successfully" };
