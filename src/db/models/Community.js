@@ -237,7 +237,7 @@ const communitySchema = new mongoose.Schema({
       ref: "User",
     },
   ],
-  users: [
+  approved_users: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

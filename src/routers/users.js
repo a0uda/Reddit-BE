@@ -1,11 +1,6 @@
 import express from "express";
-import { User } from "../db/models/User.js"; //if error put .js
-import { signupUser, loginUser, logoutUser } from "../utils/userAuth.js";
-import session from "express-session";
 import dotenv from "dotenv";
-import passport from "passport";
 import axios from "axios";
-import { Strategy as GoogleStrategy } from "passport-google-oauth2";
 
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
