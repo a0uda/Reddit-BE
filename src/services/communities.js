@@ -1,9 +1,10 @@
 import { Community } from "../db/models/Community.js";
 import { User } from "../db/models/User.js"; //delete this line
-import { communityNameExists, ruleTitleExists } from "../utils/communities.js";
+import { communityNameExists, ruleTitleExists, getUsersByIds } from "../utils/communities.js";
 
 // Return { err: { status: XX, message: "XX" }} or { community }
 //testing done
+//documantation updated
 const addNewCommunity = async (requestBody) => {
   const { name, description, content_visibility, mature_content } = requestBody;
 
@@ -28,8 +29,8 @@ const addNewCommunity = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
-
 //testing done
+//documantation updated
 const addNewRuleToCommunity = async (requestBody) => {
   let {
     community_name,
@@ -64,6 +65,7 @@ const addNewRuleToCommunity = async (requestBody) => {
   }
 };
 //testing done
+//documantation updated
 const editCommunityRule = async (requestBody) => {
   let {
     community_name,
@@ -95,6 +97,7 @@ const editCommunityRule = async (requestBody) => {
   }
 };
 //testing done
+//documantation updated
 const deleteCommunityRule = async (requestBody) => {
   let { community_name, rule_title } = requestBody;
   try {
@@ -113,6 +116,7 @@ const deleteCommunityRule = async (requestBody) => {
   }
 };
 //testing done
+//documantation updated
 const getCommunityRules = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
@@ -122,8 +126,8 @@ const getCommunityRules = async (community_name) => {
   }
 };
 // TODO: Implement the "Reorder Rules" API.
-// Error in sending the pull request - GitHub.
-const setCommunitySettings = async (requestBody) => { }; //this function is just for testing purposes , has nothing todo with community feature
+const setCommunitySettings = async (requestBody) => { };
+//i use this function {getAllUsers} is just for testing purposes , has nothing todo wth communities end points 
 const getAllUsers = async () => {
   try {
     const users = await User.find({});
@@ -132,10 +136,7 @@ const getAllUsers = async () => {
     return { err: { status: 500, message: error.message } };
   }
 };
-const approveUser = async (requestBody) => {
-
-}
-//test approve user
+//testing done 
 const approveUser = async (community_name, username) => {
   try {
     const { username, community_name } = requestBody;
@@ -156,17 +157,19 @@ const approveUser = async (community_name, username) => {
     return { err: { status: 500, message: error.message } };
   }
 };
-//TODO:not tested yet
+//testing done 
 const getApprovedUsers = async (community_name) => {
   //get all users from the community
   try {
     const community = await communityNameExists(community_name);
-    const users = await getUsersByIds(community.users);
+    const users = await getUsersByIds(community.approved_users);
+    console.log(users);
     return { users: users };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
+//testing done
 const editCommunityGeneralSettings = async (requestBody) => {
   const {
     community_name,
@@ -209,6 +212,24 @@ const editCommunityGeneralSettings = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+const editDetailsWidget = async (requestBody) => {
+  const { community_name, members_nickname, currently_viewing_nickname, description } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.members_nickname = members_nickname || community.members_nickname;
+      community.currently_viewing_nickname = currently_viewing_nickname || community.currently_viewing_nickname;
+      community.description = description || community.description;
+      await community.save();
+    }
+
+    return { widget: { members_nickname, currently_viewing_nickname, description } };
+  }
+  catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
 export {
   addNewCommunity,
   addNewRuleToCommunity,
@@ -220,4 +241,5 @@ export {
   editCommunityGeneralSettings,
   approveUser,
   getAllUsers,
+  editDetailsWidget
 };

@@ -1,8 +1,9 @@
 import express from "express";
-import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings, getAllUsers, approveUser } from "../services/communities.js";
+import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings, getAllUsers, approveUser, editDetailsWidget } from "../services/communities.js";
 
 const communityRouter = express.Router();
 //testing done 
+//documenation updated
 communityRouter.post("/communities/add_community", async (req, res, next) => {
     try {
         const { err, community } = await addNewCommunity(req.body)
@@ -16,6 +17,7 @@ communityRouter.post("/communities/add_community", async (req, res, next) => {
     }
 })
 //testing done 
+//documenation updated
 communityRouter.post("/communities/add_rule", async (req, res, next) => {
     try {
         const { err, community } = await addNewRuleToCommunity(req.body)
@@ -29,6 +31,7 @@ communityRouter.post("/communities/add_rule", async (req, res, next) => {
     }
 })
 //TODO : not tested yet 
+//documentation updated
 communityRouter.post("/communities/edit_rule", async (req, res, next) => {
     try {
         const { err, community } = await editCommunityRule(req.body)
@@ -42,6 +45,7 @@ communityRouter.post("/communities/edit_rule", async (req, res, next) => {
     }
 })
 //testing done 
+//documenation updated
 communityRouter.post("/communities/delete_rule", async (req, res, next) => {
     try {
         const { err, rule } = await deleteCommunityRule(req.body)
@@ -54,6 +58,8 @@ communityRouter.post("/communities/delete_rule", async (req, res, next) => {
         next(error)
     }
 })
+//testing done
+//documenation updated
 communityRouter.get("/communities/get_rules/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name);
@@ -69,8 +75,9 @@ communityRouter.get("/communities/get_rules/:community_name", async (req, res, n
     }
 
 })
-//TODO : not tested untill we have users 
-communityRouter.get("/communities/get_approved_users/:community_name", async (req, res, next) => {
+//testing done
+//documenation updated
+communityRouter.get("/communities/about/approved_users/:community_name", async (req, res, next) => {
     try {
         const { err, users } = await getApprovedUsers(req.params.community_name)
 
@@ -124,6 +131,7 @@ communityRouter.get("/communities/get_approved_users/:community_name", async (re
 
 */
 //testing done 
+//documenation updated
 communityRouter.post("/communities/edit_general_settings", async (req, res, next) => {
     try {
         const { err, settings } = await editCommunityGeneralSettings(req.body)
@@ -136,6 +144,7 @@ communityRouter.post("/communities/edit_general_settings", async (req, res, next
         next(error)
     }
 })
+//i use this api just for testing because i cant open the database :) , it has nothing todo with community endpoints 
 communityRouter.get("/all_users", async (req, res, next) => {
     try {
         const { err, users } = await getAllUsers()
@@ -148,7 +157,8 @@ communityRouter.get("/all_users", async (req, res, next) => {
         next(error)
     }
 })
-//approve user psot request
+//testing done
+//documenation updated
 communityRouter.post("/communities/approve_user", async (req, res, next) => {
     try {
         console.log(req.body)
@@ -162,4 +172,33 @@ communityRouter.post("/communities/approve_user", async (req, res, next) => {
         next(error)
     }
 })
+//testing done
+//documenation updated
+communityRouter.get("/communities/get_approved_users/:community_name", async (req, res, next) => {
+    try {
+        const { err, users } = await getApprovedUsers(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(users)
+
+    } catch (error) {
+        next(error)
+    }
+})
+//testing done
+//documenation updated
+communityRouter.post("/communities/edit_details_widget", async (req, res, next) => {
+    try {
+        const { err, widget } = await editDetailsWidget(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(widget)
+
+    } catch (error) {
+        next(error)
+    }
+})
+
 export { communityRouter }
