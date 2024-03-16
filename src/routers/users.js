@@ -23,7 +23,16 @@ import {
   forgetUsername,
   changeEmail,
   changePassword,
-} from "../utils/userAuth.js";
+  isUsernameAvailable,
+  isEmailAvailable,
+} from "../controller/userAuth.js";
+
+import {
+  getFollowers,
+  getFollowing,
+  getFollowersCount,
+  getFollowingCount,
+} from "../controller/userInfo.js";
 
 export const usersRouter = express.Router();
 
@@ -69,16 +78,16 @@ usersRouter.post("/users/login", async (req, res) => {
 
 usersRouter.post("/users/logout", async (req, res) => {
   try {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).send("Access Denied");
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).send("Access Denied: Expired token");
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).send("Access Denied");
     }
-  });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).send("Access Denied: Expired token");
+      }
+    });
 
     const { username } = req.body;
 
@@ -205,6 +214,37 @@ usersRouter.get("/auth/facebook", (req, res) => {
   res.redirect(url);
 });
 
+usersRouter.get("/available-username", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await isUsernameAvailable(
+      req.body.username
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/available-email", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await isEmailAvailable(
+      req.body.email
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
 //the front end does't directly access this api, i call it after the sign up route
 usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
   console.log("TOKEN", req.params.token);
@@ -319,6 +359,59 @@ usersRouter.patch("/users/change-password", async (req, res) => {
     }
     console.log(msg);
     res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/followers", async (req, res) => {
+  try {
+    const { success, err, status, users, msg } = await getFollowers(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/following", async (req, res) => {
+  try {
+    const { success, err, status, users, msg } = await getFollowing(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/followers-count", async (req, res) => {
+  try {
+    const { success, err, status, count, msg } = await getFollowersCount(req);
+    console.log(success, err, status, count, msg);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send({ "followers-count": count });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/following-count", async (req, res) => {
+  try {
+    const { success, err, status, count, msg } = await getFollowingCount(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send({ "following-count": count });
   } catch (error) {
     res.status(500).json({ error });
   }
