@@ -1,5 +1,4 @@
 import { User } from "../db/models/User.js";
-import jwt from "jsonwebtoken";
 import { getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 
