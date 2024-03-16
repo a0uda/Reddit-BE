@@ -53,19 +53,6 @@ const userSchema = new mongoose.Schema({
     },
   },
 
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    unique: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Email is invalid");
-      }
-    },
-  },
-
   verified_email_flag: {
     type: Boolean,
     default: false,
@@ -101,9 +88,11 @@ const userSchema = new mongoose.Schema({
     },
     profile_picture: {
       type: String, //URL
+      default: "",
     },
     banner_picture: {
       type: String, //URL
+      default: "",
     },
     nsfw_flag: {
       type: Boolean,
@@ -150,40 +139,37 @@ const userSchema = new mongoose.Schema({
       default: true,
     },
     communitiy_content_sort: {
-      type: Object,
-      properties: {
-        type: {
-          type: String,
-          enum: ["top", "hot", "new", "rising"],
-        },
-        duration: {
-          type: String,
-          enum: [
-            "now",
-            "today",
-            "this_week",
-            "this_month",
-            "this_year",
-            "all_time",
-          ],
-        },
-        sort_remember_per_community: {
-          type: Boolean,
-          default: false,
-        },
+      type: {
+        type: String,
+        enum: ["top", "hot", "new", "rising"],
+        default: "top",
+      },
+      duration: {
+        type: String,
+        enum: [
+          "now",
+          "today",
+          "this_week",
+          "this_month",
+          "this_year",
+          "all_time",
+        ],
+        default: "now",
+      },
+      sort_remember_per_community: {
+        type: Boolean,
+        default: false,
       },
     },
     global_content: {
-      type: Object,
-      properties: {
-        global_content_view: {
-          type: String,
-          enum: ["card", "classical", "compact"],
-        },
-        global_remember_per_community: {
-          type: Boolean,
-          default: false,
-        },
+      global_content_view: {
+        type: String,
+        enum: ["card", "classical", "compact"],
+        default: "card",
+      },
+      global_remember_per_community: {
+        type: Boolean,
+        default: false,
       },
     },
     Open_posts_in_new_tab: {
@@ -229,10 +215,12 @@ const userSchema = new mongoose.Schema({
     who_send_chat_requests_flag: {
       type: String,
       enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
+      default: "Everyone",
     },
     who_send_private_messages_flag: {
       type: String,
       enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
+      default: "Everyone",
     },
   },
   email_settings: {
@@ -246,11 +234,11 @@ const userSchema = new mongoose.Schema({
     },
     unsubscribe_from_all_emails: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   posts_ids: {
-    type: [Object],
+    type: Array,
     items: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",

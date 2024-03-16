@@ -34,6 +34,8 @@ import {
   getFollowingCount,
 } from "../controller/userInfo.js";
 
+import { getSettings } from "../controller/userSettings.js";
+
 export const usersRouter = express.Router();
 
 usersRouter.post("/users/signup", async (req, res) => {
@@ -412,6 +414,97 @@ usersRouter.get("/users/following-count", async (req, res) => {
       return;
     }
     res.status(200).send({ "following-count": count });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/profile-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Profile"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+usersRouter.get("/users/feed-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Feed"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+usersRouter.get("/users/notification-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Notification"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+usersRouter.get("/users/email-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Email"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Chat"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+usersRouter.get("/users/safety-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Safety"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
   } catch (error) {
     res.status(500).json({ error });
   }
