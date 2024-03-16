@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     minlength: 8,
+    minlength: 8,
   },
   connected_google: {
     type: Boolean,
@@ -52,6 +53,19 @@ const userSchema = new mongoose.Schema({
     },
   },
 
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    validate(value) {
+      if (!validator.isEmail(value)) {
+        throw new Error("Email is invalid");
+      }
+    },
+  },
+
   verified_email_flag: {
     type: Boolean,
     default: false,
@@ -59,9 +73,13 @@ const userSchema = new mongoose.Schema({
 
   gmail: {
     type: String,
+    unique: true,
+    sparse: true,
   },
   facebook_email: {
     type: String,
+    unique: true,
+    sparse: true,
   },
   profile_settings: {
     type: Object,
@@ -323,7 +341,6 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ["Male", "Female"],
-    required: true,
   },
   followers_ids: {
     type: Array,
