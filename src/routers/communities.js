@@ -1,5 +1,8 @@
 import express from "express";
-import { getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings, getAllUsers, approveUser, editDetailsWidget } from "../services/communities.js";
+import {
+    getApprovedUsers, addNewCommunity, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule, getCommunityRules, editCommunityGeneralSettings, getAllUsers, approveUser, editDetailsWidget, addCommunityProfilePicture,
+    addCommunityBannerPicture, deleteCommunityBannerPicture, deleteCommunityProfilePicture
+} from "../services/communities.js";
 
 const communityRouter = express.Router();
 //testing done 
@@ -200,5 +203,58 @@ communityRouter.post("/communities/edit_details_widget", async (req, res, next) 
         next(error)
     }
 })
+//testing done
+//documenation updated
+communityRouter.post("/communities/add_profile_picture", async (req, res, next) => {
+    try {
+        const { err, community } = await addCommunityProfilePicture(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(community)
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.post("/communities/add_banner_picture", async (req, res, next) => {
+    try {
+        const { err, community } = await addCommunityBannerPicture(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(community)
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.post("/communities/delete_profile_picture", async (req, res, next) => {
+    try {
+        const { err, community } = await deleteCommunityProfilePicture(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(community)
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.post("/communities/delete_banner_picture", async (req, res, next) => {
+    try {
+        const { err, community } = await deleteCommunityBannerPicture(req.body)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(community)
+
+    } catch (error) {
+        next(error)
+    }
+})
+
+
+
 
 export { communityRouter }

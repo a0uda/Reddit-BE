@@ -229,6 +229,58 @@ const editDetailsWidget = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 }
+const addCommunityProfilePicture = async (requestBody) => {
+  const { community_name, profile_picture } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.profile_picture = profile_picture;
+      await community.save();
+    }
+    return { community: community };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+const addCommunityBannerPicture = async (requestBody) => {
+  const { community_name, banner_picture } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.banner_picture = banner_picture;
+      await community.save();
+    }
+    return { community: community };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+const deleteCommunityBannerPicture = async (requestBody) => {
+  const { community_name } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.banner_picture = "none";
+      await community.save();
+    }
+    return { community: community };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+const deleteCommunityProfilePicture = async (requestBody) => {
+  const { community_name } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (community) {
+      community.profile_picture = "none";
+      await community.save();
+    }
+    return { community: community };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
 
 export {
   addNewCommunity,
@@ -241,5 +293,9 @@ export {
   editCommunityGeneralSettings,
   approveUser,
   getAllUsers,
-  editDetailsWidget
+  editDetailsWidget,
+  addCommunityProfilePicture,
+  addCommunityBannerPicture,
+  deleteCommunityBannerPicture,
+  deleteCommunityProfilePicture
 };
