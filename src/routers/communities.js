@@ -217,6 +217,8 @@ communityRouter.post("/communities/add_profile_picture", async (req, res, next) 
         next(error)
     }
 })
+//testing done
+//documenation updated
 communityRouter.post("/communities/add_banner_picture", async (req, res, next) => {
     try {
         const { err, community } = await addCommunityBannerPicture(req.body)
@@ -229,6 +231,8 @@ communityRouter.post("/communities/add_banner_picture", async (req, res, next) =
         next(error)
     }
 })
+//testing done
+//documenation updated
 communityRouter.post("/communities/delete_profile_picture", async (req, res, next) => {
     try {
         const { err, community } = await deleteCommunityProfilePicture(req.body)
@@ -241,6 +245,8 @@ communityRouter.post("/communities/delete_profile_picture", async (req, res, nex
         next(error)
     }
 })
+//testing done
+//documenation updated
 communityRouter.post("/communities/delete_banner_picture", async (req, res, next) => {
     try {
         const { err, community } = await deleteCommunityBannerPicture(req.body)
@@ -253,8 +259,5 @@ communityRouter.post("/communities/delete_banner_picture", async (req, res, next
         next(error)
     }
 })
-
-
-
 
 export { communityRouter }
