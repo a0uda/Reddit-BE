@@ -33,7 +33,13 @@ import {
   getFollowersCount,
   getFollowingCount,
 } from "../controller/userInfo.js";
-
+import {
+  blockUser,
+  reportUser,
+  addOrRemovePicture,
+  muteCommunity,
+  followUser,
+} from "../controller/userActions.js";
 import { getSettings } from "../controller/userSettings.js";
 
 export const usersRouter = express.Router();
@@ -507,5 +513,118 @@ usersRouter.get("/users/safety-settings", async (req, res) => {
     res.status(200).send(settings);
   } catch (error) {
     res.status(500).json({ error });
+  }
+});
+
+usersRouter.post("/users/block-unblock-user", async (req, res) => {
+  try {
+    const result = await blockUser(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/report-user", async (req, res) => {
+  try {
+    const result = await reportUser(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/add-profile-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "profile_picture");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-profile-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "profile_picture", true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/add-banner-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "banner_picture");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-banner-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "banner_picture", true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/mute-unmute-community", async (req, res) => {
+  try {
+    const result = await muteCommunity(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
+  try {
+    const result = await followUser(req);
+
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
   }
 });
