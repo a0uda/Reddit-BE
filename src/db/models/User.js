@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
 
 const userSchema = new mongoose.Schema({
   created_at: {
@@ -29,14 +30,6 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
   },
   connected_google: {
-    type: Boolean,
-    default: false,
-  },
-  connected_apple: {
-    type: Boolean,
-    default: false,
-  },
-  connected_twitter: {
     type: Boolean,
     default: false,
   },
@@ -80,12 +73,37 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: "",
     },
-    social_links: {
-      type: Array,
-      items: {
-        type: String,
+    social_links: [
+      {
+        _id: Schema.Types.ObjectId,
+        username: {
+          type: String,
+        },
+        display_text: {
+          type: String,
+        },
+        type: {
+          type: String,
+          enum: [
+            "instagram",
+            "facebook",
+            "custom_url",
+            "reddit",
+            "twitter",
+            "tiktok",
+            "twitch",
+            "youtube",
+            "spotify",
+            "soundcloud",
+            "discord",
+            "paypal",
+          ],
+        },
+        custom_url: {
+          type: String,
+        },
       },
-    },
+    ],
     profile_picture: {
       type: String, //URL
       default: "",
@@ -112,21 +130,28 @@ const userSchema = new mongoose.Schema({
     },
   },
   safety_and_privacy_settings: {
-    blocked_users: {
-      type: Array,
-      //Forigen key
-      items: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+    blocked_users: [
+      {
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        blocked_date: {
+          type: Date,
+        },
       },
-    },
-    muted_communities: {
-      type: Array,
-      items: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Community",
+    ],
+    muted_communities: [
+      {
+        id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Community",
+        },
+        muted_date: {
+          type: Date,
+        },
       },
-    },
+    ],
   },
 
   feed_settings: {
@@ -190,7 +215,11 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
-    upvotes: {
+    upvotes_posts: {
+      type: Boolean,
+      default: true,
+    },
+    upvotes_comments: {
       type: Boolean,
       default: true,
     },
@@ -207,6 +236,18 @@ const userSchema = new mongoose.Schema({
       default: true,
     },
     posts: {
+      type: Boolean,
+      default: true,
+    },
+    private_messages: {
+      type: Boolean,
+      default: true,
+    },
+    chat_messages: {
+      type: Boolean,
+      default: true,
+    },
+    chat_requests: {
       type: Boolean,
       default: true,
     },
@@ -419,6 +460,12 @@ userSchema.pre("save", async function (next) {
       parseInt(process.env.PASSWORD_HASH_SALT)
     );
   }
+
+  //set an id for social link
+  user.profile_settings.social_links.forEach((link) => {
+    link._id = new mongoose.Types.ObjectId();
+  });
+
   next();
 });
 
