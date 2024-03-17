@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { ObjectId } from "mongodb";
 
 const userSchema = new mongoose.Schema({
   created_at: {
@@ -75,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     social_links: [
       {
-        _id: Schema.Types.ObjectId,
+        _id: mongoose.Schema.Types.ObjectId,
         username: {
           type: String,
         },
