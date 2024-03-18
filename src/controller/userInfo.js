@@ -145,4 +145,5 @@ export async function getCommunities(request, communityType) {
   if (!user) {
     return { success, err, status, user, msg };
   }
+  // to be continued...
 }
