@@ -47,7 +47,6 @@ import {
   followUser,
   joinCommunity,
 } from "../controller/userActions.js";
-import { getSettings } from "../controller/userSettings.js";
 
 export const usersRouter = express.Router();
 
