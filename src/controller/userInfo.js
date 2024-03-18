@@ -1,6 +1,7 @@
 import { User } from "../db/models/User.js";
 import { getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
+import { Comment } from "../db/models/Comment.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -70,5 +71,25 @@ export async function getFollowingCount(request) {
   return {
     success: true,
     count: followingUsers.length,
+  };
+}
+
+export async function getComments(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const comments = await Comment.find({
+    _id: { $in: user.comments_ids },
+  }).exec();
+
+  const filteredComments = comments.filter((comment) => comment != null);
+
+  return {
+    success: true,
+    msg: "Your comments are retrieved successfully",
+    comments: filteredComments,
   };
 }
