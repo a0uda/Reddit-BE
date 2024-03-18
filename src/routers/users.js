@@ -39,6 +39,7 @@ import {
   addOrRemovePicture,
   muteCommunity,
   followUser,
+  joinCommunity,
 } from "../controller/userActions.js";
 import { getSettings } from "../controller/userSettings.js";
 
@@ -618,6 +619,34 @@ usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
   try {
     const result = await followUser(req);
 
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/join-community", async (req, res) => {
+  try {
+    const result = await joinCommunity(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/leave-community", async (req, res) => {
+  try {
+    const result = await joinCommunity(req, true);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

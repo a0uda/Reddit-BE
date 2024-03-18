@@ -3,7 +3,7 @@ import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { getSafetySettingsFormat } from "../utils/userSettings.js";
 import { encodeXText } from "nodemailer/lib/shared/index.js";
-
+import { followUserHelper } from "../services/users.js";
 export async function blockUser(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -32,6 +32,8 @@ export async function blockUser(request) {
       userBlockedList.push(userToBlock._id);
       console.log("User added to blocked users.");
       operation = "blocked";
+      followUserHelper(user, userToBlock, false);
+      followUserHelper(userToBlock, user, false);
     }
     user.safety_and_privacy_settings.blocked_users = userBlockedList;
     await user.save();
@@ -202,36 +204,39 @@ export async function followUser(request) {
     let operation = "";
 
     if (index !== -1) {
-      userFollowingList.splice(index, 1);
-      console.log("User unfollowed.");
+      followUserHelper(user, userToFollow, false);
+
+      // userFollowingList.splice(index, 1);
+      // console.log("User unfollowed.");
       operation = "unfollowed";
 
-      // Remove current user from followed user's followers list
-      const followedUserFollowersList = userToFollow.followers_ids;
-      const followerIndex = followedUserFollowersList.indexOf(user._id);
+      // // Remove current user from followed user's followers list
+      // const followedUserFollowersList = userToFollow.followers_ids;
+      // const followerIndex = followedUserFollowersList.indexOf(user._id);
 
-      if (followerIndex !== -1) {
-        followedUserFollowersList.splice(followerIndex, 1);
-        userToFollow.followers_ids = followedUserFollowersList;
-        await userToFollow.save();
-      }
+      // if (followerIndex !== -1) {
+      //   followedUserFollowersList.splice(followerIndex, 1);
+      //   userToFollow.followers_ids = followedUserFollowersList;
+      //   await userToFollow.save();
+      // }
     } else {
-      userFollowingList.push(userToFollow._id);
-      console.log("User followed.");
+      followUserHelper(user, userToFollow, true);
+      // userFollowingList.push(userToFollow._id);
+      // console.log("User followed.");
       operation = "followed";
 
-      // Add current user to followed user's followers list
-      const followedUserFollowersList = userToFollow.followers_ids;
-      const followerIndex = followedUserFollowersList.indexOf(user._id);
+      // // Add current user to followed user's followers list
+      // const followedUserFollowersList = userToFollow.followers_ids;
+      // const followerIndex = followedUserFollowersList.indexOf(user._id);
 
-      if (followerIndex === -1) {
-        userToFollow.followers_ids.push(user._id);
-        await userToFollow.save();
-      }
+      // if (followerIndex === -1) {
+      //   userToFollow.followers_ids.push(user._id);
+      //   await userToFollow.save();
+      // }
     }
 
-    user.following_ids = userFollowingList;
-    await user.save();
+    // user.following_ids = userFollowingList;
+    // await user.save();
 
     return {
       success: true,
@@ -245,6 +250,89 @@ export async function followUser(request) {
       status: 500,
       err: "Internal Server Error",
       msg: "An error occurred while following/unfollowing user.",
+    };
+  }
+}
+
+export async function joinCommunity(request, leave = false) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const community = await Community.findOne({
+      name: request.body.community_name,
+    });
+    if (!community) {
+      return {
+        success: false,
+        err: `Community ${request.community_name} Not Found`,
+        status: 404,
+      };
+    }
+
+    if (leave) {
+      const index = community.approved_users.indexOf(user._id);
+      if (index !== -1) {
+        community.approved_users.splice(index, 1);
+        await community.save();
+      }
+
+      const communityIndex = user.communities.findIndex(
+        (c) => c.id.toString() === community._id.toString()
+      );
+      if (communityIndex !== -1) {
+        user.communities.splice(communityIndex, 1);
+        await user.save();
+      }
+
+      return {
+        success: true,
+        status: 200,
+        msg: `User ${user.username} left community ${community.name} successfully.`,
+      };
+    } else {
+      // Join the community
+      if (!community.banned_users.includes(user._id)) {
+        if (!community.approved_users.includes(user._id)) {
+          community.approved_users.push(user._id);
+          await community.save();
+        }
+
+        if (
+          !user.communities.some(
+            (c) => c.id.toString() === community._id.toString()
+          )
+        ) {
+          user.communities.push({
+            id: community._id,
+            favorite_flag: false,
+            disable_updates: false,
+          });
+          await user.save();
+        }
+
+        return {
+          success: true,
+          status: 200,
+          msg: `User ${user.username} joined community ${community.name} successfully.`,
+        };
+      } else {
+        return {
+          success: false,
+          status: 400,
+          msg: `User ${user.username} is banned from community ${community.name} .`,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while joining or leaving the community.",
     };
   }
 }
