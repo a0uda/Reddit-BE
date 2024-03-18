@@ -412,6 +412,10 @@ const userSchema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           ref: "Community",
         },
+        favorite_flag: {
+          type: Boolean,
+          default: false,
+        },
       },
     },
   },
