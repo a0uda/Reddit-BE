@@ -40,10 +40,10 @@ export async function getMutedCommunities(user) {
     user.safety_and_privacy_settings.muted_communities.map(async (muted) => {
       const mutedCommunity = await Community.findById(muted.id);
       if (mutedCommunity) {
-        const { title, profile_picture } = mutedCommunity;
+        const { name, profile_picture } = mutedCommunity;
         return {
           id: muted.id.toString(),
-          title,
+          name,
           profile_picture,
           muted_date: muted.muted_date,
         };
@@ -75,3 +75,4 @@ export function getAboutFormat(user) {
     gender: user.gender,
   };
 }
+

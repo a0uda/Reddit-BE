@@ -1,8 +1,7 @@
 import { User } from "../db/models/User.js";
-import { Post } from "../db/models/Post.js";
 import { getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
-import { Comment } from "../db/models/Comment.js";
+import { getCommentsHelper, getPostsHelper } from "../services/users.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -83,9 +82,8 @@ export async function getPosts(request) {
       return { success, err, status, user, msg };
     }
 
-    const userPostIds = user.posts_ids;
+    const posts = await getPostsHelper(user, "posts_ids");
 
-    const posts = await Post.find({ _id: { $in: userPostIds } }).exec();
     return {
       success: true,
       status: 200,
@@ -110,15 +108,28 @@ export async function getComments(request) {
     return { success, err, status, user, msg };
   }
 
-  const comments = await Comment.find({
-    _id: { $in: user.comments_ids },
-  }).exec();
-
-  const filteredComments = comments.filter((comment) => comment != null);
+  const comments = await getCommentsHelper(user, "comments_ids");
 
   return {
     success: true,
     msg: "Your comments are retrieved successfully",
-    comments: filteredComments,
+    comments: comments,
+  };
+}
+
+export async function getOverview(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const posts = await getPostsHelper(user, "posts_ids");
+  const comments = await getCommentsHelper(user, "comments_ids");
+
+  return {
+    success: true,
+    msg: "Your comments are retrieved successfully",
+    overview: { Posts: posts, Comments: comments },
   };
 }

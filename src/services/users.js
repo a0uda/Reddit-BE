@@ -1,4 +1,5 @@
-import { User } from "../db/models/User.js";
+import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -32,4 +33,20 @@ export async function followUserHelper(user1, user2, follow = true) {
   } catch (error) {
     console.error("Error:", error);
   }
+}
+
+export async function getPostsHelper(user, postsType) {
+  const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
+
+  const filteredPosts = posts.filter((post) => post != null);
+  return filteredPosts;
+}
+
+export async function getCommentsHelper(user, commentsType) {
+  const comments = await Comment.find({
+    _id: { $in: user[commentsType] },
+  }).exec();
+
+  const filteredComments = comments.filter((comment) => comment != null);
+  return filteredComments;
 }

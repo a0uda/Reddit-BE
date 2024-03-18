@@ -33,6 +33,7 @@ import {
   getFollowersCount,
   getFollowingCount,
   getPosts,
+  getOverview,
 } from "../controller/userInfo.js";
 
 import {
@@ -425,6 +426,32 @@ usersRouter.get("/users/following-count", async (req, res) => {
       return;
     }
     res.status(200).send({ "following-count": count });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/about", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/overview", async (req, res) => {
+  try {
+    const { success, err, status, overview, msg } = await getOverview(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(overview);
   } catch (error) {
     res.status(500).json({ error });
   }
