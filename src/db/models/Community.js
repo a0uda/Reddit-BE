@@ -9,19 +9,19 @@ const communitySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    unique: true,
   },
   title: {
     type: String,
-    required: true,
   },
   type: {
-    type: String,
+    type: String,//TODO : employee only de leh ?
     enum: ["public", "private", "restricted", "employee only"],
   },
   category: {
     type: String,
   },
-  nswf_flag: {
+  nsfw_flag: {
     type: Boolean,
     default: false,
   },
@@ -41,29 +41,46 @@ const communitySchema = new mongoose.Schema({
     type: String,
     default: "Online",
   },
-  description: {
-    type: String,
-  },
-  welcome_message: {
-    send_welcome_message_flag: {
+  general_settings: {
+    description: {
+      type: String,
+    },
+    welcome_message: {
+      send_welcome_message_flag: {
+        type: Boolean,
+        default: false,
+      },
+      message: {
+        type: String,
+      },
+    },
+    language: {
+      type: String,
+      default: "English",
+    },
+    region: {
+      type: String,
+    },
+    visibility: {
+      type: String,
+      enum: ["public", "private", "restricted"],
+    },
+    nsfw_flag: {
       type: Boolean,
       default: false,
     },
-    message: {
+    accepting_requests_to_join: {
       type: String,
-    },
+      default: true,
+    }
+    , approved_users_have_the_ability_to:
+    {
+      type: String,
+      enum: ["comment only", "post only", "comment and post"],
+      default: "post only",
+    }
   },
-  language: {
-    type: String,
-    default: "English",
-  },
-  region: {
-    type: String,
-  },
-  accepting_requests_to_join: {
-    type: String,
-    default: true,
-  },
+
   content_controls: {
     providing_members_with_posting_guidlines: {
       flag: {
@@ -221,7 +238,7 @@ const communitySchema = new mongoose.Schema({
       ref: "User",
     },
   ],
-  users: [
+  approved_users: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -402,21 +419,26 @@ const communitySchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  rules: [
+  rules: [ // All rule validations are assumed to be handled in the front-end.
     {
-      rule_title: String,
-      rule_order: {
+      rule_title:
+      {
+        type: String,
+      },
+      rule_order: {  // => determined by db
         type: Number,
         min: 1,
       },
-      applies_to: {
+      applies_to: { // => chosen by default
         type: String,
         enum: ["posts_and_comments", "posts_only", "comments_only"],
       },
-      report_reason: String,
-      full_description: String,
+      report_reason: String, // => if not provided, use rule_title
+      full_description: String, // => optional
     },
   ],
 });
 
-export const Community = mongoose.model("Community", communitySchema);
+const Community = mongoose.model("Community", communitySchema);
+
+module.exports = Community;
