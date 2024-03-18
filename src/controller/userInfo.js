@@ -10,9 +10,10 @@ export async function getFollowers(request) {
   const followerDetails = await Promise.all(
     user.followers_ids.map(async (followerId) => {
       const follower = await User.findById(followerId);
-      return getFriendsFormat(follower);
+      if (follower) return getFriendsFormat(follower);
     })
-  );
+  ).then((details) => details.filter((detail) => detail != null));
+
   if (followerDetails.length == 0) {
     return { success: false, status: 400, err: "User has no followers" };
   }
@@ -47,7 +48,7 @@ export async function getFollowing(request) {
 export async function getFollowersCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-  console.log(success, err, status, user, msg);
+  // console.log(success, err, status, user, msg);
   if (!user) {
     return { success, err, status, user, msg };
   }

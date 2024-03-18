@@ -60,57 +60,57 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  display_name: {
+    type: String,
+    required: true,
+    default: function () {
+      return this.username;
+    },
+  },
+  about: {
+    type: String,
+    default: "",
+  },
+  social_links: [
+    {
+      _id: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
+      },
+      display_text: {
+        type: String,
+      },
+      type: {
+        type: String,
+        enum: [
+          "instagram",
+          "facebook",
+          "custom_url",
+          "reddit",
+          "twitter",
+          "tiktok",
+          "twitch",
+          "youtube",
+          "spotify",
+          "soundcloud",
+          "discord",
+          "paypal",
+        ],
+      },
+      custom_url: {
+        type: String,
+      },
+    },
+  ],
+  profile_picture: {
+    type: String, //URL
+    default: "",
+  },
+  banner_picture: {
+    type: String, //URL
+    default: "",
+  },
   profile_settings: {
-    display_name: {
-      type: String,
-      required: true,
-      default: function () {
-        return this.username;
-      },
-    },
-    about: {
-      type: String,
-      default: "",
-    },
-    social_links: [
-      {
-        _id: mongoose.Schema.Types.ObjectId,
-        username: {
-          type: String,
-        },
-        display_text: {
-          type: String,
-        },
-        type: {
-          type: String,
-          enum: [
-            "instagram",
-            "facebook",
-            "custom_url",
-            "reddit",
-            "twitter",
-            "tiktok",
-            "twitch",
-            "youtube",
-            "spotify",
-            "soundcloud",
-            "discord",
-            "paypal",
-          ],
-        },
-        custom_url: {
-          type: String,
-        },
-      },
-    ],
-    profile_picture: {
-      type: String, //URL
-      default: "",
-    },
-    banner_picture: {
-      type: String, //URL
-      default: "",
-    },
     nsfw_flag: {
       type: Boolean,
       default: false,
@@ -461,7 +461,7 @@ userSchema.pre("save", async function (next) {
   }
 
   //set an id for social link
-  user.profile_settings.social_links.forEach((link) => {
+  user.social_links.forEach((link) => {
     link._id = new mongoose.Types.ObjectId();
   });
 

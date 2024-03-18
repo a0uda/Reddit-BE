@@ -1,13 +1,35 @@
+export function getAccountSettingsFormat(user) {
+  const {
+    email,
+    verified_email_flag,
+    country,
+    gender,
+    gmail,
+    connected_google,
+  } = user;
+
+  return {
+    account_settings: {
+      email,
+      verified_email_flag,
+      country,
+      gender,
+      gmail: gmail || "", // Handling optional property with default value
+      connected_google,
+    },
+  };
+}
+
 export function getProfileSettingsFormat(user) {
   return {
     profile_settings: {
-      display_name: user.profile_settings.display_name,
-      about: user.profile_settings.about,
-      social_links: user.profile_settings.social_links,
-      country: user.profile_settings.country,
-      gender: user.profile_settings.gender,
-      profile_picture: user.profile_settings.profile_picture,
-      banner_picture: user.profile_settings.banner_picture,
+      display_name: user.display_name,
+      about: user.about,
+      social_links: user.social_links,
+      country: user.country,
+      gender: user.gender,
+      profile_picture: user.profile_picture,
+      banner_picture: user.banner_picture,
       nsfw_flag: user.profile_settings.nsfw_flag,
       allow_followers: user.profile_settings.allow_followers,
       content_visibility: user.profile_settings.content_visibility,
@@ -17,11 +39,14 @@ export function getProfileSettingsFormat(user) {
   };
 }
 
-export function getSafetySettingsFormat(user) {
+export function getSafetySettingsFormat(
+  blockedUsersDetails,
+  mutedCommunitiesDetails
+) {
   return {
     safety_and_privacy_settings: {
-      blocked_users: user.safety_and_privacy_settings.blocked_users,
-      muted_communities: user.safety_and_privacy_settings.muted_communities,
+      blocked_users: blockedUsersDetails,
+      muted_communities: mutedCommunitiesDetails,
     },
   };
 }
@@ -55,11 +80,15 @@ export function getNotificationsSettingsFormat(user) {
     notifications_settings: {
       mentions: user.notifications_settings.mentions,
       comments: user.notifications_settings.comments,
-      upvotes: user.notifications_settings.upvotes,
+      upvotes_posts: user.notifications_settings.upvotes_posts,
+      upvotes_comments: user.notifications_settings.upvotes_comments,
       replies: user.notifications_settings.replies,
       new_followers: user.notifications_settings.new_followers,
       invitations: user.notifications_settings.invitations,
       posts: user.notifications_settings.posts,
+      private_messages: user.notifications_settings.private_messages,
+      chat_messages: user.notifications_settings.chat_messages,
+      chat_requests: user.notifications_settings.chat_requests,
     },
   };
 }
