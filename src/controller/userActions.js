@@ -22,7 +22,11 @@ export async function blockUser(request) {
       };
     }
     const userBlockedList = user.safety_and_privacy_settings.blocked_users;
-    const index = userBlockedList.indexOf(userToBlock._id);
+
+    const index = user.safety_and_privacy_settings.blocked_users.findIndex(
+      (blockedUser) => blockedUser._id.toString() == userToBlock._id.toString()
+    );
+    console.log(index);
     let operation = "";
     if (index !== -1) {
       userBlockedList.splice(index, 1);
@@ -32,8 +36,8 @@ export async function blockUser(request) {
       userBlockedList.push(userToBlock._id);
       console.log("User added to blocked users.");
       operation = "blocked";
-      followUserHelper(user, userToBlock, false);
-      followUserHelper(userToBlock, user, false);
+      await followUserHelper(user, userToBlock, false);
+      await followUserHelper(userToBlock, user, false);
     }
     user.safety_and_privacy_settings.blocked_users = userBlockedList;
     await user.save();
@@ -181,6 +185,69 @@ export async function muteCommunity(request) {
   }
 }
 
+export async function favoriteCommunity(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const communityToFav = await Community.findOne({
+      name: request.body.community_name,
+    });
+    if (!communityToFav) {
+      return {
+        success: false,
+        err: "Community Not Found",
+        status: 404,
+      };
+    }
+    const userCommunities = user.communities;
+
+    // console.log(communityToFav._id)
+    // console.log(communityToFav._id)
+    const index = userCommunities.findIndex(
+      (community) => community.id === communityToFav._id.toString()
+    );
+    if (index !== -1) {
+      userCommunities[index].favorite_flag =
+        !userCommunities[index].favorite_flag;
+      user.markModified("communities");
+      await user.save();
+      return {
+        success: true,
+        msg: `Community modified successfully.`,
+      };
+    }
+
+    const userModCommunities = user.moderated_communities;
+
+    const index2 = userModCommunities.findIndex(
+      (community) => community.id === communityToFav._id.toString()
+    );
+    if (index2 !== -1) {
+      userModCommunities[index2].favorite_flag =
+        !userModCommunities[index2].favorite_flag;
+      user.markModified("moderated_communities");
+      await user.save();
+      return {
+        success: true,
+        msg: `Moderated community modified successfully.`,
+      };
+    }
+
+    return {
+      success: false,
+      err: "Community Not Found in user",
+      status: 404,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      err: "Internal Server Error",
+    };
+  }
+}
+
 export async function followUser(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -204,7 +271,7 @@ export async function followUser(request) {
     let operation = "";
 
     if (index !== -1) {
-      followUserHelper(user, userToFollow, false);
+      await followUserHelper(user, userToFollow, false);
 
       // userFollowingList.splice(index, 1);
       // console.log("User unfollowed.");
@@ -220,7 +287,7 @@ export async function followUser(request) {
       //   await userToFollow.save();
       // }
     } else {
-      followUserHelper(user, userToFollow, true);
+      await followUserHelper(user, userToFollow, true);
       // userFollowingList.push(userToFollow._id);
       // console.log("User followed.");
       operation = "followed";

@@ -1,5 +1,3 @@
-import { User } from "../db/models/User.js";
-import { Community } from "../db/models/Community.js";
 
 export function getFriendsFormat(user) {
   return {
@@ -16,47 +14,7 @@ export function getFriendsFormat(user) {
   };
 }
 
-export async function getBlockedUser(user) {
-  const blockedUsers = await Promise.all(
-    user.safety_and_privacy_settings.blocked_users.map(async (block) => {
-      const blockedUser = await User.findById(block.id);
-      if (blockedUser) {
-        const { username, profile_picture } = blockedUser;
-        return {
-          id: block.id.toString(),
-          username,
-          profile_picture,
-          blocked_date: block.blocked_date,
-        };
-      }
-    })
-  );
-  const filteredBlockedUsers = blockedUsers.filter((user) => user != null);
-  return filteredBlockedUsers;
-}
-
-export async function getMutedCommunities(user) {
-  const mutedCommunities = await Promise.all(
-    user.safety_and_privacy_settings.muted_communities.map(async (muted) => {
-      const mutedCommunity = await Community.findById(muted.id);
-      if (mutedCommunity) {
-        const { title, profile_picture } = mutedCommunity;
-        return {
-          id: muted.id.toString(),
-          title,
-          profile_picture,
-          muted_date: muted.muted_date,
-        };
-      }
-    })
-  );
-  const filteredMutedCommunities = mutedCommunities.filter(
-    (community) => community != null
-  );
-  return filteredMutedCommunities;
-}
-
-export function getAboutFormat(user) {
+export async function getAboutFormat(user) {
   return {
     _id: user._id,
     username: user.username,

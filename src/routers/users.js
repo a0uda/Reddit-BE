@@ -32,6 +32,10 @@ import {
   getFollowing,
   getFollowersCount,
   getFollowingCount,
+  getPosts,
+  getOverview,
+  getAbout,
+  getComments,
 } from "../controller/userInfo.js";
 
 import {
@@ -46,6 +50,7 @@ import {
   muteCommunity,
   followUser,
   joinCommunity,
+  favoriteCommunity,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -429,6 +434,36 @@ usersRouter.get("/users/following-count", async (req, res) => {
   }
 });
 
+usersRouter.get("/users/about", async (req, res) => {
+  try {
+    const { success, err, status, about, msg } = await getAbout(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(about);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/overview", async (req, res) => {
+  try {
+    const { success, err, status, overview, msg } = await getOverview(
+      req,
+      "posts_ids",
+      "comments_ids"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(overview);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 usersRouter.get("/users/account-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -719,6 +754,19 @@ usersRouter.post("/users/mute-unmute-community", async (req, res) => {
   }
 });
 
+usersRouter.patch("/users/favorite-unfavorite-community", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await favoriteCommunity(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
   try {
     const result = await followUser(req);
@@ -752,6 +800,136 @@ usersRouter.post("/users/leave-community", async (req, res) => {
   try {
     const result = await joinCommunity(req, true);
     res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/upvoted-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "upvotes_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/downvoted-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "downvotes_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/history-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "history_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "hidden_and_reported_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/comments", async (req, res) => {
+  try {
+    const result = await getComments(req, "comments_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
+  try {
+    const result = await getOverview(
+      req,
+      "saved_posts_ids",
+      "saved_comments_ids"
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/communities", async (req, res) => {
+  try {
+    const result = //write the function
+      res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/moderated-communities", async (req, res) => {
+  try {
+    const result = //write the function
+      res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({

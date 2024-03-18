@@ -1,6 +1,12 @@
 import { User } from "../db/models/User.js";
-import { getFriendsFormat } from "../utils/userInfo.js";
+import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
+import {
+  getCommentsHelper,
+  getPostsHelper,
+  getCommunitiesHelper,
+  getModeratedCommunitiesHelper,
+} from "../services/users.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -71,4 +77,89 @@ export async function getFollowingCount(request) {
     success: true,
     count: followingUsers.length,
   };
+}
+
+export async function getPosts(request, postType) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const posts = await getPostsHelper(user, postType);
+
+    return {
+      success: true,
+      status: 200,
+      posts: posts,
+      msg: "Posts retrieved successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getComments(request, commentType) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const comments = await getCommentsHelper(user, commentType);
+
+  return {
+    success: true,
+    msg: "Your comments are retrieved successfully",
+    comments: comments,
+  };
+}
+
+export async function getOverview(request, postType, commentType) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const posts = await getPostsHelper(user, postType);
+  const comments = await getCommentsHelper(user, commentType);
+
+  return {
+    success: true,
+    msg: "Your comments are retrieved successfully",
+    overview: { Posts: posts, Comments: comments },
+  };
+}
+
+export async function getAbout(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const about = await getAboutFormat(user);
+
+  return {
+    success: true,
+    msg: "Your about is retrieved successfully",
+    about,
+  };
+}
+
+export async function getCommunities(request, communityType) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+  // to be continued...
 }
