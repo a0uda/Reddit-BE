@@ -56,6 +56,49 @@ export async function getMutedCommunities(user) {
   return filteredMutedCommunities;
 }
 
+export async function getCommunities(user) {
+  const communities = await Promise.all(
+    user.communities.map(async (community) => {
+      const community = await Community.findById(community.id);
+      if (community) {
+        const { name, profile_picture } = community;
+        return {
+          id: community.id.toString(),
+          name,
+          profile_picture,
+          favorite_flag: community.favorite_flag,
+          disable_updates: community.disable_updates,
+        };
+      }
+    })
+  );
+  const filteredCommunities = communities.filter(
+    (community) => community != null
+  );
+  return filteredCommunities;
+}
+
+export async function getModeratedCommunities(user) {
+  const moderatedCommunities = await Promise.all(
+    user.communities.map(async (community) => {
+      const community = await Community.findById(community.id);
+      if (community) {
+        const { name, profile_picture } = community;
+        return {
+          id: community.id.toString(),
+          name,
+          profile_picture,
+          favorite_flag: community.favorite_flag,
+        };
+      }
+    })
+  );
+  const filteredCommunities = moderatedCommunities.filter(
+    (community) => community != null
+  );
+  return filteredCommunities;
+}
+
 export function getAboutFormat(user) {
   return {
     _id: user._id,
@@ -75,4 +118,3 @@ export function getAboutFormat(user) {
     gender: user.gender,
   };
 }
-
