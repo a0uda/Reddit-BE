@@ -50,3 +50,46 @@ export async function getCommentsHelper(user, commentsType) {
   const filteredComments = comments.filter((comment) => comment != null);
   return filteredComments;
 }
+
+export async function getCommunitiesHelper(user) {
+  const communities = await Promise.all(
+    user.communities.map(async (community) => {
+      const community = await Community.findById(community.id);
+      if (community) {
+        const { name, profile_picture } = community;
+        return {
+          id: community.id.toString(),
+          name,
+          profile_picture,
+          favorite_flag: community.favorite_flag,
+          disable_updates: community.disable_updates,
+        };
+      }
+    })
+  );
+  const filteredCommunities = communities.filter(
+    (community) => community != null
+  );
+  return filteredCommunities;
+}
+
+export async function getModeratedCommunitiesHelper(user) {
+  const moderatedCommunities = await Promise.all(
+    user.communities.map(async (community) => {
+      const community = await Community.findById(community.id);
+      if (community) {
+        const { name, profile_picture } = community;
+        return {
+          id: community.id.toString(),
+          name,
+          profile_picture,
+          favorite_flag: community.favorite_flag,
+        };
+      }
+    })
+  );
+  const filteredCommunities = moderatedCommunities.filter(
+    (community) => community != null
+  );
+  return filteredCommunities;
+}
