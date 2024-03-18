@@ -1,5 +1,7 @@
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
+import { User } from "../db/models/User.js";
+import { Community } from "../db/models/Community.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -53,16 +55,16 @@ export async function getCommentsHelper(user, commentsType) {
 
 export async function getCommunitiesHelper(user) {
   const communities = await Promise.all(
-    user.communities.map(async (community) => {
-      const community = await Community.findById(community.id);
+    user.communities.map(async (userCommunity) => {
+      const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture } = community;
         return {
-          id: community.id.toString(),
+          id: userCommunity.id.toString(),
           name,
           profile_picture,
-          favorite_flag: community.favorite_flag,
-          disable_updates: community.disable_updates,
+          favorite_flag: userCommunity.favorite_flag,
+          disable_updates: userCommunity.disable_updates,
         };
       }
     })
@@ -75,15 +77,15 @@ export async function getCommunitiesHelper(user) {
 
 export async function getModeratedCommunitiesHelper(user) {
   const moderatedCommunities = await Promise.all(
-    user.communities.map(async (community) => {
-      const community = await Community.findById(community.id);
+    user.communities.map(async (userCommunity) => {
+      const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture } = community;
         return {
-          id: community.id.toString(),
+          id: userCommunity.id.toString(),
           name,
           profile_picture,
-          favorite_flag: community.favorite_flag,
+          favorite_flag: userCommunity.favorite_flag,
         };
       }
     })
@@ -92,4 +94,44 @@ export async function getModeratedCommunitiesHelper(user) {
     (community) => community != null
   );
   return filteredCommunities;
+}
+
+export async function getBlockedUserHelper(user) {
+  const blockedUsers = await Promise.all(
+    user.safety_and_privacy_settings.blocked_users.map(async (block) => {
+      const blockedUser = await User.findById(block.id);
+      if (blockedUser) {
+        const { username, profile_picture } = blockedUser;
+        return {
+          id: block.id.toString(),
+          username,
+          profile_picture,
+          blocked_date: block.blocked_date,
+        };
+      }
+    })
+  );
+  const filteredBlockedUsers = blockedUsers.filter((user) => user != null);
+  return filteredBlockedUsers;
+}
+
+export async function getMutedCommunitiesHelper(user) {
+  const mutedCommunities = await Promise.all(
+    user.safety_and_privacy_settings.muted_communities.map(async (muted) => {
+      const mutedCommunity = await Community.findById(muted.id);
+      if (mutedCommunity) {
+        const { name, profile_picture } = mutedCommunity;
+        return {
+          id: muted.id.toString(),
+          name,
+          profile_picture,
+          muted_date: muted.muted_date,
+        };
+      }
+    })
+  );
+  const filteredMutedCommunities = mutedCommunities.filter(
+    (community) => community != null
+  );
+  return filteredMutedCommunities;
 }

@@ -1,5 +1,3 @@
-import { User } from "../db/models/User.js";
-import { Community } from "../db/models/Community.js";
 
 export function getFriendsFormat(user) {
   return {
@@ -14,89 +12,6 @@ export function getFriendsFormat(user) {
     country: user.country,
     gender: user.gender,
   };
-}
-
-export async function getBlockedUser(user) {
-  const blockedUsers = await Promise.all(
-    user.safety_and_privacy_settings.blocked_users.map(async (block) => {
-      const blockedUser = await User.findById(block.id);
-      if (blockedUser) {
-        const { username, profile_picture } = blockedUser;
-        return {
-          id: block.id.toString(),
-          username,
-          profile_picture,
-          blocked_date: block.blocked_date,
-        };
-      }
-    })
-  );
-  const filteredBlockedUsers = blockedUsers.filter((user) => user != null);
-  return filteredBlockedUsers;
-}
-
-export async function getMutedCommunities(user) {
-  const mutedCommunities = await Promise.all(
-    user.safety_and_privacy_settings.muted_communities.map(async (muted) => {
-      const mutedCommunity = await Community.findById(muted.id);
-      if (mutedCommunity) {
-        const { name, profile_picture } = mutedCommunity;
-        return {
-          id: muted.id.toString(),
-          name,
-          profile_picture,
-          muted_date: muted.muted_date,
-        };
-      }
-    })
-  );
-  const filteredMutedCommunities = mutedCommunities.filter(
-    (community) => community != null
-  );
-  return filteredMutedCommunities;
-}
-
-export async function getCommunities(user) {
-  const communities = await Promise.all(
-    user.communities.map(async (userCommunity) => {
-      const community = await Community.findById(userCommunity.id);
-      if (community) {
-        const { name, profile_picture } = community;
-        return {
-          id: userCommunity.id.toString(),
-          name,
-          profile_picture,
-          favorite_flag: userCommunity.favorite_flag,
-          disable_updates: userCommunity.disable_updates,
-        };
-      }
-    })
-  );
-  const filteredCommunities = communities.filter(
-    (community) => community != null
-  );
-  return filteredCommunities;
-}
-
-export async function getModeratedCommunities(user) {
-  const moderatedCommunities = await Promise.all(
-    user.communities.map(async (userCommunity) => {
-      const community = await Community.findById(userCommunity.id);
-      if (community) {
-        const { name, profile_picture } = community;
-        return {
-          id: userCommunity.id.toString(),
-          name,
-          profile_picture,
-          favorite_flag: userCommunity.favorite_flag,
-        };
-      }
-    })
-  );
-  const filteredCommunities = moderatedCommunities.filter(
-    (community) => community != null
-  );
-  return filteredCommunities;
 }
 
 export async function getAboutFormat(user) {

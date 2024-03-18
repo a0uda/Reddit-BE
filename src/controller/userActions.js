@@ -185,6 +185,69 @@ export async function muteCommunity(request) {
   }
 }
 
+export async function favoriteCommunity(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const communityToFav = await Community.findOne({
+      name: request.body.community_name,
+    });
+    if (!communityToFav) {
+      return {
+        success: false,
+        err: "Community Not Found",
+        status: 404,
+      };
+    }
+    const userCommunities = user.communities;
+
+    // console.log(communityToFav._id)
+    // console.log(communityToFav._id)
+    const index = userCommunities.findIndex(
+      (community) => community.id === communityToFav._id.toString()
+    );
+    if (index !== -1) {
+      userCommunities[index].favorite_flag =
+        !userCommunities[index].favorite_flag;
+      user.markModified("communities");
+      await user.save();
+      return {
+        success: true,
+        msg: `Community modified successfully.`,
+      };
+    }
+
+    const userModCommunities = user.moderated_communities;
+
+    const index2 = userModCommunities.findIndex(
+      (community) => community.id === communityToFav._id.toString()
+    );
+    if (index2 !== -1) {
+      userModCommunities[index2].favorite_flag =
+        !userModCommunities[index2].favorite_flag;
+      user.markModified("moderated_communities");
+      await user.save();
+      return {
+        success: true,
+        msg: `Moderated community modified successfully.`,
+      };
+    }
+
+    return {
+      success: false,
+      err: "Community Not Found in user",
+      status: 404,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      err: "Internal Server Error",
+    };
+  }
+}
+
 export async function followUser(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);

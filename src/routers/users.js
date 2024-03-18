@@ -50,6 +50,7 @@ import {
   muteCommunity,
   followUser,
   joinCommunity,
+  favoriteCommunity,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -448,7 +449,11 @@ usersRouter.get("/users/about", async (req, res) => {
 
 usersRouter.get("/users/overview", async (req, res) => {
   try {
-    const { success, err, status, overview, msg } = await getOverview(req);
+    const { success, err, status, overview, msg } = await getOverview(
+      req,
+      "posts_ids",
+      "comments_ids"
+    );
     if (!success) {
       res.status(status).send(err);
       return;
@@ -746,6 +751,19 @@ usersRouter.post("/users/mute-unmute-community", async (req, res) => {
       err: "Internal Server Error",
       msg: "An error occurred while processing the request.",
     });
+  }
+});
+
+usersRouter.patch("/users/favorite-unfavorite-community", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await favoriteCommunity(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
   }
 });
 
