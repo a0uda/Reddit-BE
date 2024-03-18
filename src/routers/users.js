@@ -32,6 +32,7 @@ import {
   getFollowing,
   getFollowersCount,
   getFollowingCount,
+  getPosts,
 } from "../controller/userInfo.js";
 
 import {
@@ -751,6 +752,20 @@ usersRouter.post("/users/join-community", async (req, res) => {
 usersRouter.post("/users/leave-community", async (req, res) => {
   try {
     const result = await joinCommunity(req, true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/posts", async (req, res) => {
+  try {
+    const result = await getPosts(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

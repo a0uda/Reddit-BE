@@ -1,4 +1,5 @@
 import { User } from "../db/models/User.js";
+import { Post } from "../db/models/Post.js";
 import { getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { Comment } from "../db/models/Comment.js";
@@ -72,6 +73,34 @@ export async function getFollowingCount(request) {
     success: true,
     count: followingUsers.length,
   };
+}
+
+export async function getPosts(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const userPostIds = user.posts_ids;
+
+    const posts = await Post.find({ _id: { $in: userPostIds } }).exec();
+    return {
+      success: true,
+      status: 200,
+      posts: posts,
+      msg: "Posts retrieved successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
 }
 
 export async function getComments(request) {
