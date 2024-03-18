@@ -13,9 +13,9 @@ import {
   setChatSettings,
   setFeedSettings,
 } from "../utils/userSettings.js";
+
 import { verifyAuthToken } from "./userAuth.js";
-import { User } from "../db/models/User.js";
-import { Community } from "../db/models/Community.js";
+import { getBlockedUser, getMutedCommunities } from "../utils/userInfo.js";
 
 export async function getSettings(request, flag) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -43,45 +43,10 @@ export async function getSafetySettings(request) {
       return { success, err, status, user, msg };
     }
 
-    const blockedUsers = await Promise.all(
-      user.safety_and_privacy_settings.blocked_users.map(async (block) => {
-        const blockedUser = await User.findById(block.id);
-        if (blockedUser) {
-          const { username, profile_picture } = blockedUser;
-          return {
-            id: block.id.toString(),
-            username,
-            profile_picture,
-            blocked_date: block.blocked_date,
-          };
-        }
-      })
-    );
+    const blockedUsers = await getBlockedUser(user);
+    const mutedCommunities = await getMutedCommunities(user);
 
-    const mutedCommunities = await Promise.all(
-      user.safety_and_privacy_settings.muted_communities.map(async (muted) => {
-        const mutedCommunity = await Community.findById(muted.id);
-        if (mutedCommunity) {
-          const { title, profile_picture } = mutedCommunity;
-          return {
-            id: muted.id.toString(),
-            title,
-            profile_picture,
-            muted_date: muted.muted_date,
-          };
-        }
-      })
-    );
-
-    const filteredBlockedUsers = blockedUsers.filter((user) => user != null);
-    const filteredMutedCommunities = mutedCommunities.filter(
-      (community) => community != null
-    );
-
-    const settings = getSafetySettingsFormat(
-      filteredBlockedUsers,
-      filteredMutedCommunities
-    );
+    const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
     return { success: true, settings };
   } catch (error) {
     return { success: false, error };
