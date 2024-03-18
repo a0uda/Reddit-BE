@@ -6,6 +6,12 @@ import {
   getNotificationsSettingsFormat,
   getEmailSettingsFormat,
   getChatAndMsgsSettingsFormat,
+  setAccountSettings,
+  setProfileSettings,
+  setNotificationSettings,
+  setEmailSettings,
+  setChatSettings,
+  setFeedSettings,
 } from "../utils/userSettings.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { User } from "../db/models/User.js";
@@ -16,7 +22,6 @@ export async function getSettings(request, flag) {
   if (!user) {
     return { success, err, status, user, msg };
   }
-
   var settings;
   if (flag == "Account") settings = getAccountSettingsFormat(user);
   else if (flag == "Profile") settings = getProfileSettingsFormat(user);
@@ -81,4 +86,38 @@ export async function getSafetySettings(request) {
   } catch (error) {
     return { success: false, error };
   }
+}
+
+export async function setSettings(request, flag) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const settings = request.body;
+  console.log(settings);
+  var updatedUser;
+  if (flag == "Account")
+    updatedUser = setAccountSettings(user, settings.account_settings);
+  else if (flag == "Profile")
+    updatedUser = setProfileSettings(user, settings.profile_settings);
+  else if (flag == "Feed")
+    updatedUser = setFeedSettings(user, settings.feed_settings);
+  else if (flag == "Notification")
+    updatedUser = setNotificationSettings(
+      user,
+      settings.notifications_settings
+    );
+  else if (flag == "Email")
+    updatedUser = setEmailSettings(user, settings.email_settings);
+  else if (flag == "Chat")
+    updatedUser = setChatSettings(user, settings.chat_and_messaging_settings);
+
+  // console.log("HIII", x);
+  await updatedUser.save();
+
+  return {
+    success: true,
+    msg: "Settings set successfully",
+  };
 }

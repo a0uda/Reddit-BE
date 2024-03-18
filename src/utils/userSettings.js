@@ -3,9 +3,9 @@ export function getAccountSettingsFormat(user) {
     account_settings: {
       email: user.email,
       verified_email_flag: user.verified_email_flag,
-      country: user.country,
+      country: user.country || "",
       gender: user.gender,
-      gmail: user.gmail || "", // Handling optional property with default value
+      gmail: user.gmail || "",
       connected_google: user.connected_google,
     },
   };
@@ -17,8 +17,6 @@ export function getProfileSettingsFormat(user) {
       display_name: user.display_name,
       about: user.about,
       social_links: user.social_links,
-      country: user.country,
-      gender: user.gender,
       profile_picture: user.profile_picture,
       banner_picture: user.banner_picture,
       nsfw_flag: user.profile_settings.nsfw_flag,
@@ -98,10 +96,85 @@ export function getEmailSettingsFormat(user) {
 export function getChatAndMsgsSettingsFormat(user) {
   return {
     chat_and_messaging_settings: {
-      who_send_chat_request_flag:
+      who_send_chat_requests_flag:
         user.chat_and_messaging_settings.who_send_chat_requests_flag,
       who_send_private_messages_flag:
         user.chat_and_messaging_settings.who_send_private_messages_flag,
     },
   };
+}
+
+export function setAccountSettings(user, accountSettings) {
+  if (accountSettings?.gender) {
+    user.gender = accountSettings.gender;
+  }
+  if (accountSettings?.country) {
+    user.country = accountSettings.country;
+  }
+  return user;
+}
+
+export function setProfileSettings(user, profileSettings) {
+  if (profileSettings && typeof profileSettings === "object") {
+    if (profileSettings?.hasOwnProperty("display_name")) {
+      user.display_name = profileSettings.display_name;
+    }
+    if (profileSettings?.hasOwnProperty("about")) {
+      user.about = profileSettings.about;
+    }
+    user.profile_settings = {
+      ...user.profile_settings,
+      ...profileSettings,
+    };
+  }
+  return user;
+}
+
+export function setFeedSettings(user, feedSettings) {
+  if (
+    feedSettings?.communitiy_content_sort &&
+    typeof feedSettings?.communitiy_content_sort === "object"
+  ) {
+    user.feed_settings.communitiy_content_sort = {
+      ...user.feed_settings.communitiy_content_sort,
+      ...feedSettings.communitiy_content_sort,
+    };
+  }
+  if (feedSettings && typeof feedSettings === "object") {
+    user.feed_settings = {
+      ...user.feed_settings,
+      ...feedSettings,
+    };
+  }
+  return user;
+}
+
+export function setNotificationSettings(user, notifSettings) {
+  if (notifSettings && typeof notifSettings === "object") {
+    user.notifications_settings = {
+      ...user.notifications_settings,
+      ...notifSettings,
+    };
+  }
+  return user;
+}
+
+export function setEmailSettings(user, emailSettings) {
+  if (emailSettings && typeof emailSettings === "object") {
+    user.email_settings = {
+      ...user.email_settings,
+      ...emailSettings,
+    };
+  }
+  return user;
+}
+
+export function setChatSettings(user, chatSettings) {
+  if (chatSettings && typeof chatSettings === "object") {
+    user.chat_and_messaging_settings = {
+      ...user.chat_and_messaging_settings,
+      ...chatSettings,
+    };
+  }
+  return user;
 }
