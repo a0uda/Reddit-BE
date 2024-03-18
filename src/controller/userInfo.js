@@ -1,7 +1,12 @@
 import { User } from "../db/models/User.js";
 import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
-import { getCommentsHelper, getPostsHelper } from "../services/users.js";
+import {
+  getCommentsHelper,
+  getPostsHelper,
+  getCommunitiesHelper,
+  getModeratedCommunitiesHelper,
+} from "../services/users.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -74,7 +79,7 @@ export async function getFollowingCount(request) {
   };
 }
 
-export async function getPosts(request) {
+export async function getPosts(request, postType) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
 
@@ -82,7 +87,7 @@ export async function getPosts(request) {
       return { success, err, status, user, msg };
     }
 
-    const posts = await getPostsHelper(user, "posts_ids");
+    const posts = await getPostsHelper(user, postType);
 
     return {
       success: true,
@@ -101,14 +106,14 @@ export async function getPosts(request) {
   }
 }
 
-export async function getComments(request) {
+export async function getComments(request, commentType) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
     return { success, err, status, user, msg };
   }
 
-  const comments = await getCommentsHelper(user, "comments_ids");
+  const comments = await getCommentsHelper(user, commentType);
 
   return {
     success: true,
@@ -117,15 +122,15 @@ export async function getComments(request) {
   };
 }
 
-export async function getOverview(request) {
+export async function getOverview(request, postType, commentType) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
     return { success, err, status, user, msg };
   }
 
-  const posts = await getPostsHelper(user, "posts_ids");
-  const comments = await getCommentsHelper(user, "comments_ids");
+  const posts = await getPostsHelper(user, postType);
+  const comments = await getCommentsHelper(user, commentType);
 
   return {
     success: true,
@@ -148,4 +153,13 @@ export async function getAbout(request) {
     msg: "Your about is retrieved successfully",
     about,
   };
+}
+
+export async function getCommunities(request, communityType) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+  // to be continued...
 }
