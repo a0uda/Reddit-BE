@@ -129,17 +129,19 @@ const userSchema = new mongoose.Schema({
     },
   },
   safety_and_privacy_settings: {
-    blocked_users: [
-      {
+    blocked_users: {
+      type: Array,
+      properties: {
         id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
         blocked_date: {
           type: Date,
+          default: Date.now(),
         },
       },
-    ],
+    },
     muted_communities: [
       {
         id: {

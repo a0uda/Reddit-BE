@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const postSchema = new Schema({
+export const postSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -108,5 +108,4 @@ const postSchema = new Schema({
     },
   ],
 });
-
-module.exports = mongoose.model("Post", postSchema);
+export const Post = mongoose.model("Post", postSchema);
