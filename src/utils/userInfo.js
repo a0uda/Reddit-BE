@@ -58,16 +58,16 @@ export async function getMutedCommunities(user) {
 
 export async function getCommunities(user) {
   const communities = await Promise.all(
-    user.communities.map(async (community) => {
-      const community = await Community.findById(community.id);
+    user.communities.map(async (userCommunity) => {
+      const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture } = community;
         return {
-          id: community.id.toString(),
+          id: userCommunity.id.toString(),
           name,
           profile_picture,
-          favorite_flag: community.favorite_flag,
-          disable_updates: community.disable_updates,
+          favorite_flag: userCommunity.favorite_flag,
+          disable_updates: userCommunity.disable_updates,
         };
       }
     })
@@ -80,15 +80,15 @@ export async function getCommunities(user) {
 
 export async function getModeratedCommunities(user) {
   const moderatedCommunities = await Promise.all(
-    user.communities.map(async (community) => {
-      const community = await Community.findById(community.id);
+    user.communities.map(async (userCommunity) => {
+      const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture } = community;
         return {
-          id: community.id.toString(),
+          id: userCommunity.id.toString(),
           name,
           profile_picture,
-          favorite_flag: community.favorite_flag,
+          favorite_flag: userCommunity.favorite_flag,
         };
       }
     })
@@ -99,7 +99,7 @@ export async function getModeratedCommunities(user) {
   return filteredCommunities;
 }
 
-export function getAboutFormat(user) {
+export async function getAboutFormat(user) {
   return {
     _id: user._id,
     username: user.username,

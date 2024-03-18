@@ -34,6 +34,7 @@ import {
   getFollowingCount,
   getPosts,
   getOverview,
+  getAbout,
 } from "../controller/userInfo.js";
 
 import {
@@ -433,12 +434,12 @@ usersRouter.get("/users/following-count", async (req, res) => {
 
 usersRouter.get("/users/about", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(req);
+    const { success, err, status, about, msg } = await getAbout(req);
     if (!success) {
       res.status(status).send(err);
       return;
     }
-    res.status(200).send(settings);
+    res.status(200).send(about);
   } catch (error) {
     res.status(500).json({ error });
   }
