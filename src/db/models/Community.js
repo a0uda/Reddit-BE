@@ -15,7 +15,7 @@ const communitySchema = new mongoose.Schema({
     type: String,
   },
   type: {
-    type: String,//TODO : employee only de leh ?
+    type: String, //TODO : employee only de leh ?
     enum: ["public", "private", "restricted", "employee only"],
   },
   category: {
@@ -72,13 +72,12 @@ const communitySchema = new mongoose.Schema({
     accepting_requests_to_join: {
       type: String,
       default: true,
-    }
-    , approved_users_have_the_ability_to:
-    {
+    },
+    approved_users_have_the_ability_to: {
       type: String,
       enum: ["comment only", "post only", "comment and post"],
       default: "post only",
-    }
+    },
   },
 
   content_controls: {
@@ -419,17 +418,19 @@ const communitySchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  rules: [ // All rule validations are assumed to be handled in the front-end.
+  rules: [
+    // All rule validations are assumed to be handled in the front-end.
     {
-      rule_title:
-      {
+      rule_title: {
         type: String,
       },
-      rule_order: {  // => determined by db
+      rule_order: {
+        // => determined by db
         type: Number,
         min: 1,
       },
-      applies_to: { // => chosen by default
+      applies_to: {
+        // => chosen by default
         type: String,
         enum: ["posts_and_comments", "posts_only", "comments_only"],
       },
@@ -439,6 +440,4 @@ const communitySchema = new mongoose.Schema({
   ],
 });
 
-const Community = mongoose.model("Community", communitySchema);
-
-module.exports = Community;
+export const Community = mongoose.model("Community", communitySchema);

@@ -1,21 +1,12 @@
 export function getAccountSettingsFormat(user) {
-  const {
-    email,
-    verified_email_flag,
-    country,
-    gender,
-    gmail,
-    connected_google,
-  } = user;
-
   return {
     account_settings: {
-      email,
-      verified_email_flag,
-      country,
-      gender,
-      gmail: gmail || "", // Handling optional property with default value
-      connected_google,
+      email: user.email,
+      verified_email_flag: user.verified_email_flag,
+      country: user.country,
+      gender: user.gender,
+      gmail: user.gmail || "", // Handling optional property with default value
+      connected_google: user.connected_google,
     },
   };
 }
