@@ -34,7 +34,11 @@ import {
   getFollowingCount,
 } from "../controller/userInfo.js";
 
-import { getSettings } from "../controller/userSettings.js";
+import {
+  getSafetySettings,
+  getSettings,
+  setSettings,
+} from "../controller/userSettings.js";
 
 export const usersRouter = express.Router();
 
@@ -144,10 +148,8 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         gmail: userData.email,
         gender: userData.gender,
         connected_google: true,
-      });
-      user.profile_settings = {
         display_name: userData.name,
-      };
+      });
     }
     await user.generateAuthToken();
     await user.save();
@@ -419,6 +421,22 @@ usersRouter.get("/users/following-count", async (req, res) => {
   }
 });
 
+usersRouter.get("/users/account-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Account"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 usersRouter.get("/users/profile-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -434,6 +452,7 @@ usersRouter.get("/users/profile-settings", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
 usersRouter.get("/users/feed-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -449,6 +468,7 @@ usersRouter.get("/users/feed-settings", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
 usersRouter.get("/users/notification-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -464,6 +484,7 @@ usersRouter.get("/users/notification-settings", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
 usersRouter.get("/users/email-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -479,6 +500,7 @@ usersRouter.get("/users/email-settings", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
 usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
   try {
     const { success, err, status, settings, msg } = await getSettings(
@@ -494,17 +516,98 @@ usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
     res.status(500).json({ error });
   }
 });
+
 usersRouter.get("/users/safety-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
-      req,
-      "Safety"
+    const { success, err, status, settings, msg } = await getSafetySettings(
+      req
     );
     if (!success) {
       res.status(status).send(err);
       return;
     }
     res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-account-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Account");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-profile-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Profile");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-feed-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Feed");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-notification-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(
+      req,
+      "Notification"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-email-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Email");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-chats-and-msgs-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Chat");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
   } catch (error) {
     res.status(500).json({ error });
   }
