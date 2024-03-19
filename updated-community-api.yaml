@@ -1,0 +1,925 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: modified community
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/HebaBoudy/heba/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/MALAKYASSER8/SW_API_Documentation_Final/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/MALAKYASSER8/SW_API_Documentation_FInal/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/HEBABOUDY11/reddit/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/HEBABOUDY11/Reddit-Back-End-API/1.0.0
+
+  - url: "{protocol}://api.reddit.com/v1"
+    description: Production server (uses live data)
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+
+  - url: "{protocol}://sandbox-api.reddit.com:{port}/v1"
+    description: Sandbox server (uses test data)
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+      port:
+        enum:
+          - "443"
+          - "8443"
+        default: "3000"
+components:
+  schemas:
+    widget: #why is this array ?
+      type: object
+      properties:
+        members_nickname:
+          type: string
+        currently_viewing_nickname:
+          type: string
+        description:
+          type: string
+
+    UpdateRule:
+      type: object
+      required:
+        - rule_id
+
+      properties:
+        rule_id:
+          type: string
+        community_name: #community name is required to validate it has no duplicate titles after updating
+          type: string
+        rule_title:
+          type: string
+
+        rule_order:
+          type: number
+          minimum: 1
+        applies_to:
+          type: string
+          enum:
+            - posts_and_comments
+            - posts_only
+            - comments_only
+        report_reason:
+          type: string
+        full_description:
+          type: string
+    Rule:
+      type: object
+      required:
+        - community_name
+      properties:
+        community_name:
+          type: string
+        rule_title:
+          type: string
+
+        rule_order:
+          type: number
+          minimum: 1
+        applies_to:
+          type: string
+          enum:
+            - posts_and_comments
+            - posts_only
+            - comments_only
+        report_reason:
+          type: string
+        full_description:
+          type: string
+    RuleWithoutOrder:
+      type: object
+      required:
+        - rule_title
+      properties:
+        community_name:
+          type: string
+        rule_title:
+          type: string
+        applies_to:
+          type: string
+          enum:
+            - posts_and_comments
+            - posts_only
+            - comments_only
+        report_reason:
+          type: string
+        full_description:
+          type: string
+    Community:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: ["public", "private", "restricted", "employee only"]
+        category:
+          type: string
+        nsfw_flag:
+          type: boolean
+        profile_picture:
+          type: string
+
+        banner_picture:
+          type: string
+        members_nickname:
+          type: string
+        currently_viewing_nickname:
+          type: string
+        general_settings:
+          $ref: "#/components/schemas/general_settings"
+
+        content_controls:
+          type: object
+          properties:
+            providing_members_with_posting_guidlines:
+              type: object
+              properties:
+                flag:
+                  type: boolean
+                guidline_text:
+                  type: string
+            require_words_in_post_title:
+              type: object
+              properties:
+                flag:
+                  type: boolean
+                add_required_words:
+                  type: string
+            ban_words_in_post_body:
+              type: object
+              properties:
+                flag:
+                  type: boolean
+                add_banned_words:
+                  type: string
+            require_or_ban_links_from_specific_domains:
+              type: object
+              properties:
+                flag:
+                  type: boolean
+                restriction_type:
+                  type: string
+                  enum: ["required_domains", "blocked_domains"]
+                block_link_posts_with_these_domains:
+                  type: string
+            restrict_how_often_the_same_link_can_be_posted:
+              type: object
+              properties:
+                flag:
+                  type: boolean
+                number_of_days:
+                  type: number
+                  minimum: 0
+        posts_and_comments:
+          type: object
+          properties:
+            post_type_options:
+              type: string
+              enum: ["any", "links only", "text posts only"]
+            allow_crossposting_of_posts:
+              type: boolean
+            archive_posts:
+              type: boolean
+            enable_spoiler_tag:
+              type: boolean
+            allow_image_uploads_and_links_to_image_hosting_sites:
+              type: boolean
+            allow_multiple_images_per_post:
+              type: boolean
+            allow_polls:
+              type: boolean
+            spam_filter_strength:
+              type: object
+              properties:
+                posts:
+                  type: string
+                  enum: ["low", "high (default)", "all"]
+                links:
+                  type: string
+                  enum: ["low", "high (default)", "all"]
+                comments:
+                  type: string
+                  enum: ["low (default)", "high", "all"]
+            comments:
+              type: object
+              properties:
+                suggested_sort:
+                  type: string
+                  enum:
+                    [
+                      "None (Recommended)",
+                      "Best",
+                      "Old",
+                      "Top",
+                      "Q&A",
+                      "Live (Beta)",
+                      "Controversial",
+                      "New",
+                    ]
+                collapse_deleted_and_removed_comments:
+                  type: boolean
+                minutes_to_hide_comment_scores:
+                  type: number
+                  minimum: 0
+                media_in_comments:
+                  type: object
+                  properties:
+                    gifs_from_giphy:
+                      type: boolean
+                    collectible_expressions:
+                      type: boolean
+                    images:
+                      type: boolean
+                    gifs:
+                      type: boolean
+        traffic:
+          type: string
+        topics:
+          type: string
+        owner:
+          type: string
+        views_count:
+          type: number
+          minimum: 0
+        members_count:
+          type: number
+          minimum: 0
+        moderators:
+          type: array
+          items:
+            type: string
+        invited_moderators:
+          type: array
+          items:
+            type: string
+        approved_users:
+          type: array
+          items:
+            type: string
+        muted_users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              muted_by_id:
+                type: string
+              mute_date:
+                type: string
+                format: date-time
+              mute_reason:
+                type: string
+        banned_users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              username:
+                type: string
+              banned_date:
+                type: string
+                format: date-time
+              reason_for_ban:
+                type: string
+                enum: ["none", "rule", "spam", "personal", "threat", "others"]
+              mod_note:
+                type: string
+              permanent_flag:
+                type: boolean
+              banned_until:
+                type: string
+                format: date-time
+              note_for_ban_message:
+                type: string
+        posts_ids:
+          type: array
+          items:
+            type: string
+        removed_posts_ids:
+          type: array
+          items:
+            type: string
+        removed_comments_ids:
+          type: array
+          items:
+            type: string
+        edited_posts_ids:
+          type: array
+          items:
+            type: string
+        edited_comments_ids:
+          type: array
+          items:
+            type: string
+        unmoderated_posts_ids:
+          type: array
+          items:
+            type: string
+        unmoderated_comments_ids:
+          type: array
+          items:
+            type: string
+        reported_posts_ids:
+          type: array
+          items:
+            type: string
+        reported_comments_ids:
+          type: array
+          items:
+            type: string
+        scheduled_posts:
+          type: array
+          items:
+            type: object
+            properties:
+              post_id:
+                type: string
+              submit_date:
+                type: string
+                format: date-time
+              submitted_flag:
+                type: boolean
+              submit_time:
+                type: string
+                format: date-time
+              time_zone:
+                type: string
+              title:
+                type: string
+              repeat_options:
+                type: string
+                enum:
+                  [
+                    "does_not_repeat",
+                    "hourly",
+                    "daily",
+                    "weekly_on_day",
+                    "monthly_on_date",
+                  ]
+              repeat_every:
+                type: object
+                properties:
+                  number:
+                    type: number
+                  duration:
+                    type: string
+                    enum: ["hours", "days", "weeks", "months"]
+              advanced_options:
+                type: object
+                properties:
+                  default_comment_order:
+                    type: string
+                    enum:
+                      [
+                        "Default comment order",
+                        "Best",
+                        "Top",
+                        "New",
+                        "Controversial",
+                        "Old",
+                        "Q",
+                      ]
+        who_send_chat_request_flag:
+          type: string
+          enum:
+            - Everyone
+            - Accounts Older than 30 days
+            - Nobody
+        who_send_private_messages_flag:
+          type: string
+          enum:
+            - Everyone
+            - Accounts Older than 30 days
+            - Nobody
+    general_settings:
+      type: object
+      properties:
+        description:
+          type: string
+        welcome_message:
+          type: object
+          properties:
+            send_welcome_message_flag:
+              type: boolean
+              default: false
+            message:
+              type: string
+        language:
+          type: string
+          default: "English"
+        region:
+          type: string
+        visibility:
+          type: string
+          enum: ["public", "private", "restricted"]
+        nsfw_flag:
+          type: boolean
+          default: false
+        accepting_requests_to_join:
+          type: string
+          default: true
+        approved_users_have_the_ability_to:
+          type: string
+          enum: ["comment only", "post only", "comment and post"]
+          default: "post only"
+
+paths:
+  /communities/add_community: #done
+    post:
+      tags:
+        - Communities
+      operationId: new_community
+      requestBody:
+        description: New community
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                community_name:
+                  type: string
+                  description: "this field is required and unique"
+                description:
+                  type: string
+
+                content_visibility:
+                  enum: [public, private, restricted]
+                mature_content:
+                  type: boolean
+
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: failed ,community name exists
+  /communities/get_rules/{community_name}: #done
+    get:
+      tags:
+        - Communities
+      operationId: get_rules
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rule"
+
+  /communities/add_rule: #done
+    post:
+      tags:
+        - Communities
+      description: applies_to options are only one of those
+        {posts_and_comments
+        , posts_only
+        , comments_only}
+        rule_id and community_name are required .
+      operationId: add-rule
+      requestBody:
+        description: rule
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleWithoutOrder"
+      responses:
+        "200":
+          description: Success
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/edit_rule: #done
+    post:
+      tags:
+        - Communities
+      operationId: edit_rule
+
+      requestBody:
+        description: rule
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRule"
+      responses:
+        "200":
+          description: Success
+        "500":
+          description: Internal Server error
+  /communities/delete_rule/: #done
+    post:
+      tags:
+        - Communities
+      operationId: delete-rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+                  description: Name of the community
+                rule_id:
+                  type: string
+
+      responses:
+        "200":
+          description: Rule deleted successfully
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+
+  /communities/about/approved_users/{community_name}:
+    get:
+      tags:
+        - Communities
+      operationId: approved_users
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        profile_picture:
+                          type: string
+                          description: URL of the user's profile     picture
+                        username:
+                          type: string
+                          description: Username of the user
+                        approved_at:
+                          type: string
+                          format: date-time
+                          description: Date and time when the user was approved
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+
+  /communities/add_banner_picture:
+    post:
+      tags:
+        - Communities
+      requestBody:
+        description: banner picture path and community name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+                profile_picture:
+                  type: string
+              required:
+                - community_name
+                - banner_picture
+      responses:
+        "200":
+          description: Success
+
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/delete_banner_picture:
+    post:
+      tags:
+        - Communities
+      operationId: delete-community-banner-picture
+      requestBody:
+        description: banner picture path and community name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+                banner_picture:
+                  type: string
+              required:
+                - community_name
+                - profile_picture
+      responses:
+        "200":
+          description: Success
+
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/add_profile_picture:
+    post:
+      tags:
+        - Communities
+      operationId: add-community-profile-picture
+      requestBody:
+        description: Profile picture path and community name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+                profile_picture:
+                  type: string
+              required:
+                - community_name
+                - profile_picture
+      responses:
+        "200":
+          description: Success
+
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/delete_profile_picture:
+    post:
+      tags:
+        - Communities
+      operationId: delete_profile_picture
+      requestBody:
+        description: Community name
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+              required:
+                - community_name
+      responses:
+        "200":
+          description: sucess
+
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+
+  /communities/approve_user:
+    post:
+      tags:
+        - Communities
+      operationId: approve_user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                community_name:
+                  type: string
+                username:
+                  type: string
+                  description: username of the user to approve
+              required:
+                - community_name
+      responses:
+        "200":
+          description: sucess
+        "400":
+          description: username not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 400
+                      message:
+                        type: string
+                        example: Internal Server Error
+
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/edit_general_settings/{community_name}: #done
+    post:
+      tags:
+        - Communities
+
+      operationId: edit_general_settings
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/general_settings"
+      responses:
+        "200":
+          description: Success
+        "500":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        format: int32
+                        example: 500
+                      message:
+                        type: string
+                        example: Internal Server Error
+  /communities/get_details_widget/{community_name}:
+    get:
+      tags:
+        - Communities
+      operationId: get_details_widget
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/widget"

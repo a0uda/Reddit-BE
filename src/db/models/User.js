@@ -102,6 +102,7 @@ const userSchema = new mongoose.Schema({
       },
       profile_picture: {
         type: String, //URL
+        default: "none "
       },
       banner_picture: {
         type: String, //URL

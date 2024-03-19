@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-//import { Rule } from "./Rule";
 
 const communitySchema = new mongoose.Schema({
   created_at: {
@@ -239,8 +238,14 @@ const communitySchema = new mongoose.Schema({
   ],
   approved_users: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      approved_at: {
+        type: Date,
+        default: Date.now
+      }
     },
   ],
   muted_users: [
@@ -418,26 +423,14 @@ const communitySchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  rules: [ // All rule validations are assumed to be handled in the front-end.
+  rules_ids: [
     {
-      rule_title:
-      {
-        type: String,
-      },
-      rule_order: {  // => determined by db
-        type: Number,
-        min: 1,
-      },
-      applies_to: { // => chosen by default
-        type: String,
-        enum: ["posts_and_comments", "posts_only", "comments_only"],
-      },
-      report_reason: String, // => if not provided, use rule_title
-      full_description: String, // => optional
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Rule",
     },
   ],
+
 });
 
 export const Community = mongoose.model("Community", communitySchema);
 
-// module.exports = Community;
