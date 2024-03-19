@@ -35,6 +35,7 @@ import {
   getPosts,
   getOverview,
   getComments,
+  getCommunities,
 } from "../controller/userInfo.js";
 
 import {
@@ -49,6 +50,7 @@ import {
   muteCommunity,
   followUser,
   joinCommunity,
+  clearHistory,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -895,8 +897,8 @@ usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
 
 usersRouter.get("/users/communities", async (req, res) => {
   try {
-    const result = //write the function
-      res.status(result.status).json(result);
+    const result = await getCommunities(req, "");
+    res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({
@@ -909,8 +911,22 @@ usersRouter.get("/users/communities", async (req, res) => {
 
 usersRouter.get("/users/moderated-communities", async (req, res) => {
   try {
-    const result = //write the function
-      res.status(result.status).json(result);
+    const result = await getCommunities(req, "moderated");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/clear-history", async (req, res) => {
+  try {
+    const result = await clearHistory(req);
+    res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({

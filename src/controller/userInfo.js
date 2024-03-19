@@ -107,19 +107,29 @@ export async function getPosts(request, postType) {
 }
 
 export async function getComments(request, commentType) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-  if (!user) {
-    return { success, err, status, user, msg };
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const comments = await getCommentsHelper(user, commentType);
+
+    return {
+      success: true,
+      msg: "Your comments are retrieved successfully",
+      comments: comments,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
   }
-
-  const comments = await getCommentsHelper(user, commentType);
-
-  return {
-    success: true,
-    msg: "Your comments are retrieved successfully",
-    comments: comments,
-  };
 }
 
 export async function getOverview(request, postType, commentType) {
@@ -140,10 +150,34 @@ export async function getOverview(request, postType, commentType) {
 }
 
 export async function getCommunities(request, communityType) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-  if (!user) {
-    return { success, err, status, user, msg };
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    if (communityType == "moderated") {
+      const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+      return {
+        success: true,
+        msg: "Your moderated communities are retrieved successfully",
+        moderatedCommunities: moderatedCommunities,
+      };
+    } else {
+      const communities = await getCommunitiesHelper(user);
+      return {
+        success: true,
+        msg: "Your communities are retrieved successfully",
+        communities: communities,
+      };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
   }
-  // to be continued...
 }
