@@ -1,3 +1,4 @@
+import { getBlockedUserHelper, getMutedCommunitiesHelper } from "../services/users.js";
 import {
   getAccountSettingsFormat,
   getProfileSettingsFormat,
@@ -15,7 +16,6 @@ import {
 } from "../utils/userSettings.js";
 
 import { verifyAuthToken } from "./userAuth.js";
-import { getBlockedUser, getMutedCommunities } from "../utils/userInfo.js";
 
 export async function getSettings(request, flag) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -43,8 +43,8 @@ export async function getSafetySettings(request) {
       return { success, err, status, user, msg };
     }
 
-    const blockedUsers = await getBlockedUser(user);
-    const mutedCommunities = await getMutedCommunities(user);
+    const blockedUsers = await getBlockedUserHelper(user);
+    const mutedCommunities = await getMutedCommunitiesHelper(user);
 
     const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
     return { success: true, settings };

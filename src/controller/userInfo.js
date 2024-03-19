@@ -1,5 +1,5 @@
 import { User } from "../db/models/User.js";
-import { getFriendsFormat } from "../utils/userInfo.js";
+import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
   getCommentsHelper,
@@ -146,6 +146,22 @@ export async function getOverview(request, postType, commentType) {
     success: true,
     msg: "Your comments are retrieved successfully",
     overview: { Posts: posts, Comments: comments },
+  };
+}
+
+export async function getAbout(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const about = await getAboutFormat(user);
+
+  return {
+    success: true,
+    msg: "Your about is retrieved successfully",
+    about,
   };
 }
 
