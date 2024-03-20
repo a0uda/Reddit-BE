@@ -141,14 +141,14 @@ const changeCommunityPostsCommentsSettings = async (community_name, posts_and_co
 
 //////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
 const addPostToCommunity = async (community_name, requestBody) => {
-  const { title, body } = requestBody;
+  const { title, description } = requestBody;
 
   try {
     const community = await Community.findOne({ name: community_name });
 
     const post = new Post({
       title,
-      body,
+      description,
     });
 
     await post.save();
