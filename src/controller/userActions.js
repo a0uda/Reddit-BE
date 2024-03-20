@@ -403,3 +403,30 @@ export async function joinCommunity(request, leave = false) {
     };
   }
 }
+
+export async function clearHistory(req) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    user.history_posts_ids = [];
+
+    await user.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "History cleared successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while clearing history.",
+    };
+  }
+}
