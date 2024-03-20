@@ -20,7 +20,32 @@ const communitySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["Technology", "Science", "Music", "Sports", "Gaming", "News", "Movies", "Books", "Fashion", "Food", "Travel", "Health", "Art", "Photography", "Education", "Business", "Finance", "Politics", "Religion", "DIY", "Pets", "Environment", "Humor", "Personal"],
+    enum: [
+      "Technology",
+      "Science",
+      "Music",
+      "Sports",
+      "Gaming",
+      "News",
+      "Movies",
+      "Books",
+      "Fashion",
+      "Food",
+      "Travel",
+      "Health",
+      "Art",
+      "Photography",
+      "Education",
+      "Business",
+      "Finance",
+      "Politics",
+      "Religion",
+      "DIY",
+      "Pets",
+      "Environment",
+      "Humor",
+      "Personal",
+    ],
     default: "Personal",
   },
   nsfw_flag: {
@@ -33,11 +58,13 @@ const communitySchema = new mongoose.Schema({
     default: 0,
   },
   posts: {
-    type: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    }],
-    default: []
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+    default: [],
   },
   // TODO: There are constraints related to the number of characters and the number of words in some of the fields in the following subdocuments. Am I supposed to do them or will the frontend handle them?
   // TODO: Eng Loay said that we aren't expected to cover the advanced settings in any of these subdocuments.
@@ -98,12 +125,12 @@ const communitySchema = new mongoose.Schema({
     {
       id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
       approved_at: {
         type: Date,
-        default: Date.now
-      }
+        default: Date.now,
+      },
     },
   ],
   muted_users: [
@@ -280,8 +307,7 @@ const communitySchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Rule",
     },
-  ]
+  ],
 });
 
-const Community = mongoose.model("Community", communitySchema);
-export default Community;
+export const Community = mongoose.model("Community", communitySchema);
