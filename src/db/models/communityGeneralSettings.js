@@ -31,5 +31,8 @@ const communityGeneralSettingsSchema = new mongoose.Schema({
     }
 });
 
-const CommunityGeneralSettings = mongoose.model("CommunityGeneralSettings", communityGeneralSettingsSchema);
-export default CommunityGeneralSettings;
+
+export const CommunityGeneralSettings = mongoose.model(
+    "CommunityGeneralSettings",
+    communityGeneralSettingsSchema
+  );
