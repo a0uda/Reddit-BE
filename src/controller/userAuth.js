@@ -50,6 +50,9 @@ export async function verifyAuthToken(request) {
   const userToken = jwt.verify(token, process.env.JWT_SECRET);
   const userId = userToken._id;
   const user = await User.findById(userId);
+  if (!user) {
+    return { success: false, err: "User not found", status: 404 };
+  }
   return { success: true, user: user };
 }
 

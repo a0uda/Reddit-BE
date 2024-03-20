@@ -1,6 +1,12 @@
 import { User } from "../db/models/User.js";
-import { getFriendsFormat } from "../utils/userInfo.js";
+import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
+import {
+  getCommentsHelper,
+  getPostsHelper,
+  getCommunitiesHelper,
+  getModeratedCommunitiesHelper,
+} from "../services/users.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -10,9 +16,10 @@ export async function getFollowers(request) {
   const followerDetails = await Promise.all(
     user.followers_ids.map(async (followerId) => {
       const follower = await User.findById(followerId);
-      return getFriendsFormat(follower);
+      if (follower) return getFriendsFormat(follower);
     })
-  );
+  ).then((details) => details.filter((detail) => detail != null));
+
   if (followerDetails.length == 0) {
     return { success: false, status: 400, err: "User has no followers" };
   }
@@ -47,7 +54,7 @@ export async function getFollowing(request) {
 export async function getFollowersCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-  console.log(success, err, status, user, msg);
+  // console.log(success, err, status, user, msg);
   if (!user) {
     return { success, err, status, user, msg };
   }
@@ -70,4 +77,123 @@ export async function getFollowingCount(request) {
     success: true,
     count: followingUsers.length,
   };
+}
+
+export async function getPosts(request, postType) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const posts = await getPostsHelper(user, postType);
+
+    return {
+      success: true,
+      status: 200,
+      posts: posts,
+      msg: "Posts retrieved successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getComments(request, commentType) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const comments = await getCommentsHelper(user, commentType);
+
+    return {
+      success: true,
+      msg: "Your comments are retrieved successfully",
+      comments: comments,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getOverview(request, postType, commentType) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const posts = await getPostsHelper(user, postType);
+  const comments = await getCommentsHelper(user, commentType);
+
+  return {
+    success: true,
+    msg: "Your comments are retrieved successfully",
+    overview: { Posts: posts, Comments: comments },
+  };
+}
+
+export async function getAbout(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const about = await getAboutFormat(user);
+
+  return {
+    success: true,
+    msg: "Your about is retrieved successfully",
+    about,
+  };
+}
+
+export async function getCommunities(request, communityType) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    if (communityType == "moderated") {
+      const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+      return {
+        success: true,
+        msg: "Your moderated communities are retrieved successfully",
+        moderatedCommunities: moderatedCommunities,
+      };
+    } else {
+      const communities = await getCommunitiesHelper(user);
+      return {
+        success: true,
+        msg: "Your communities are retrieved successfully",
+        communities: communities,
+      };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
 }

@@ -57,9 +57,11 @@ const communitySchema = new mongoose.Schema({
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   profile_picture: {
     type: String,
+    default: "",
   },
   banner_picture: {
     type: String,
+    default: "",
   },
   members_nickname: {
     type: String,
