@@ -82,7 +82,7 @@ usersRouter.post("/users/login", async (req, res) => {
     const { success, err, user, refreshToken } = await loginUser(req.body);
 
     if (!success) {
-      res.status(400).send(err);
+      res.status(400).send({ err });
       return;
     }
 
