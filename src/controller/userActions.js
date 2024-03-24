@@ -4,6 +4,8 @@ import { verifyAuthToken } from "./userAuth.js";
 import { getSafetySettingsFormat } from "../utils/userSettings.js";
 import { encodeXText } from "nodemailer/lib/shared/index.js";
 import { followUserHelper } from "../services/users.js";
+import bcrypt from "bcryptjs";
+
 export async function blockUser(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -404,7 +406,7 @@ export async function joinCommunity(request, leave = false) {
   }
 }
 
-export async function clearHistory(req) {
+export async function clearHistory(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
@@ -419,6 +421,54 @@ export async function clearHistory(req) {
       success: true,
       status: 200,
       msg: "History cleared successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while clearing history.",
+    };
+  }
+}
+
+//Note: still handle the followers/following count and his activities
+export async function deleteAccount(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const username = user.username;
+    if (username != request.body.username) {
+      return {
+        success: false,
+        status: 400,
+        err: "Incorrect Username",
+      };
+    }
+
+    const result = await bcrypt.compare(request.body.password, user.password);
+    if (!result) {
+      return {
+        success: false,
+        status: 400,
+        err: "Incorrect Password",
+      };
+    }
+
+    user.username = "[deleted]";
+    user.deleted = true;
+    user.deleted_at = Date.now();
+
+    await user.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Account deleted successfully.",
     };
   } catch (error) {
     console.error("Error:", error);

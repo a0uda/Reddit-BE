@@ -25,6 +25,7 @@ import {
   changePassword,
   isUsernameAvailable,
   isEmailAvailable,
+  changeUsername,
 } from "../controller/userAuth.js";
 
 import {
@@ -53,6 +54,7 @@ import {
   joinCommunity,
   favoriteCommunity,
   clearHistory,
+  deleteAccount,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -164,6 +166,7 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         gender: userData.gender,
         connected_google: true,
         display_name: userData.name,
+        is_password_set_flag: false,
       });
     }
     await user.generateAuthToken();
@@ -216,6 +219,7 @@ usersRouter.get("/auth/facebook/callback", async (req, res) => {
         username: userData.id,
         email: userData.email,
         connected_facebook: true,
+        is_password_set_flag: false,
       });
     }
     await user.generateAuthToken();
@@ -362,6 +366,21 @@ usersRouter.patch("/users/change-email", async (req, res) => {
       return;
     }
     console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+//This endpoint is used only once when the user signs up with google he
+//can change the generated random username only once
+usersRouter.patch("/users/change-username", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await changeUsername(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
     res.status(200).send(msg);
   } catch (error) {
     res.status(500).json({ error });
@@ -945,6 +964,20 @@ usersRouter.get("/users/moderated-communities", async (req, res) => {
 usersRouter.post("/users/clear-history", async (req, res) => {
   try {
     const result = await clearHistory(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-account", async (req, res) => {
+  try {
+    const result = await deleteAccount(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

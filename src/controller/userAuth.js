@@ -67,6 +67,7 @@ export async function signupUser(requestBody) {
   if (emailAvailableResponse.success == false) return emailAvailableResponse;
 
   const user = new User({ username, email, password, gender });
+  user.is_password_set_flag = true;
   try {
     await user.generateAuthToken();
     await user.save();
@@ -214,6 +215,7 @@ export async function resetPassword(request) {
 
   try {
     user.password = new_password;
+    user.is_password_set_flag = true;
 
     await user.save();
 
@@ -311,6 +313,8 @@ export async function changePassword(request) {
 
   try {
     user.password = new_password;
+    user.is_password_set_flag = true;
+
     await user.save();
 
     if (user.verified_email_flag) {
@@ -325,5 +329,33 @@ export async function changePassword(request) {
     };
   } catch (error) {
     return { succes: false, status: 403, err: error.message };
+  }
+}
+
+export async function changeUsername(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const username = request.body.username;
+  const usernameAvailableResponse = await isUsernameAvailable(username);
+
+  if (usernameAvailableResponse.success == false)
+    return usernameAvailableResponse;
+
+  try {
+    user.username = username;
+
+    await user.save();
+
+    return {
+      success: true,
+      user,
+      msg: "Username has been changed successfully",
+    };
+  } catch (error) {
+    return { succes: false, status: 400, err: error.message };
   }
 }
