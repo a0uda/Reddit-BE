@@ -4,6 +4,7 @@ import { usersRouter } from "./routers/users.js";
 import { communityRouter } from "./routers/communities.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
+
 //const connect_to_db = require("./db/mongoose")
 
 const app = express();
