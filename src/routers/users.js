@@ -25,6 +25,7 @@ import {
   changePassword,
   isUsernameAvailable,
   isEmailAvailable,
+  changeUsername,
 } from "../controller/userAuth.js";
 
 import {
@@ -165,6 +166,7 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         gender: userData.gender,
         connected_google: true,
         display_name: userData.name,
+        is_password_set_flag: false,
       });
     }
     await user.generateAuthToken();
@@ -217,6 +219,7 @@ usersRouter.get("/auth/facebook/callback", async (req, res) => {
         username: userData.id,
         email: userData.email,
         connected_facebook: true,
+        is_password_set_flag: false,
       });
     }
     await user.generateAuthToken();
@@ -363,6 +366,21 @@ usersRouter.patch("/users/change-email", async (req, res) => {
       return;
     }
     console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+//This endpoint is used only once when the user signs up with google he
+//can change the generated random username only once
+usersRouter.patch("/users/change-username", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await changeUsername(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
     res.status(200).send(msg);
   } catch (error) {
     res.status(500).json({ error });

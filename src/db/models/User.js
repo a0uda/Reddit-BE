@@ -26,7 +26,10 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     minlength: 8,
-    minlength: 8,
+  },
+  is_password_set_flag: {
+    type: Boolean,
+    default: false,
   },
   connected_google: {
     type: Boolean,
@@ -472,6 +475,11 @@ userSchema.pre("save", async function (next) {
   });
 
   next();
+});
+
+//Don't return user if he is deleted
+userSchema.pre("find", function () {
+  this.where({ deleted: false });
 });
 
 userSchema.methods.generateAuthToken = async function () {
