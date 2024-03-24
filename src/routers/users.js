@@ -53,6 +53,7 @@ import {
   joinCommunity,
   favoriteCommunity,
   clearHistory,
+  deleteAccount,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -945,6 +946,20 @@ usersRouter.get("/users/moderated-communities", async (req, res) => {
 usersRouter.post("/users/clear-history", async (req, res) => {
   try {
     const result = await clearHistory(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-account", async (req, res) => {
+  try {
+    const result = await deleteAccount(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
