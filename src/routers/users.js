@@ -455,7 +455,7 @@ usersRouter.get("/users/following-count", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/about", async (req, res) => {
+usersRouter.get("/users/:username/about", async (req, res) => {
   try {
     const { success, err, status, about, msg } = await getAbout(req);
     if (!success) {
@@ -468,13 +468,9 @@ usersRouter.get("/users/about", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/overview", async (req, res) => {
+usersRouter.get("/users/:username/overview", async (req, res) => {
   try {
-    const { success, err, status, overview, msg } = await getOverview(
-      req,
-      "posts_ids",
-      "comments_ids"
-    );
+    const { success, err, status, overview, msg } = await getOverview(req);
     if (!success) {
       res.status(status).send(err);
       return;
@@ -831,7 +827,7 @@ usersRouter.post("/users/leave-community", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/posts", async (req, res) => {
+usersRouter.get("/users/:username/posts", async (req, res) => {
   try {
     const result = await getPosts(req, "posts_ids");
     res.status(result.status).json(result);
@@ -901,7 +897,7 @@ usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/comments", async (req, res) => {
+usersRouter.get("/users/:username/comments", async (req, res) => {
   try {
     const result = await getComments(req, "comments_ids");
     res.status(result.status).json(result);
