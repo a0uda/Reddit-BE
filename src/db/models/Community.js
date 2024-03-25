@@ -308,6 +308,7 @@ const communitySchema = new mongoose.Schema({
       ref: "Rule",
     },
   ],
+
 });
 
 export const Community = mongoose.model("Community", communitySchema);

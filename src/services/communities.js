@@ -48,7 +48,7 @@ const addNewCommunity = async (requestBody) => {
 
     const savedCommunity = await community.save();
 
-    return { community: savedCommunity };
+    return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
