@@ -1,32 +1,227 @@
+import { Post } from "../db/models/Post.js";
 import { Community } from "../db/models/Community.js";
+import { CommunityContentControls } from "../db/models/communityContentControls.js";
+import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
+import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
+
 import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
-import { isUserAlreadyApproved, communityNameExists, getRuleByTitle, getUsersByIds, getRuleById, deleteRule, getApprovedUserView } from "../utils/communities.js";
+import {
+  isUserAlreadyApproved,
+  communityNameExists,
+  getRuleByTitle,
+  getUsersByIds,
+  getRuleById,
+  deleteRule,
+  getApprovedUserView,
+} from "../utils/communities.js";
 
-// Return { err: { status: XX, message: "XX" }} or { community }
-//testing done
-//documantation updated
 const addNewCommunity = async (requestBody) => {
-  const { community_name, description, content_visibility, mature_content } = requestBody;
-  try {
-    const found_community = await communityNameExists(community_name);
-    if (found_community) {
-      return { err: { status: 400, message: "Community name exists." } };
-    }
-    const community = new Community({
-      name: community_name,
-      description,
-      type: content_visibility,
-      nswf_flag: mature_content,
-    });
-    await community.save();
+  const { name, type, nsfw_flag, category } = requestBody;
 
+  const communityGeneralSettings = new CommunityGeneralSettings();
+  const communityContentControls = new CommunityContentControls();
+  const communityPostsAndComments = new CommunityPostsAndComments();
+
+  const community = new Community({
+    name,
+    type,
+    nsfw_flag,
+    category,
+    general_settings: communityGeneralSettings._id,
+    content_controls: communityContentControls._id,
+    posts_and_comments: communityPostsAndComments._id,
+  });
+
+  try {
+    const duplicate_community = await Community.findOne({ name: name });
+
+    if (duplicate_community) {
+      return {
+        err: { status: 400, message: "Community name is already taken." },
+      };
+    }
+
+    await communityGeneralSettings.save();
+    await communityContentControls.save();
+    await communityPostsAndComments.save();
+
+    const savedCommunity = await community.save();
 
     return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
+
+//////////////////////////////////////////////////////////////////////// Get Settings //////////////////////////////////////////////////////////////
+const getCommunityGenerlSettings = async (community_name) => {
+  try {
+    const community = await Community.findOne({ name: community_name })
+      .populate("general_settings")
+      .exec();
+
+    return { general_settings: community.general_settings };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getCommunityContentControls = async (community_name) => {
+  try {
+    let community = await Community.findOne({ name: community_name })
+      .populate("content_controls")
+      .exec();
+
+    return { content_controls: community.content_controls };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getCommunityPostsCommentsSettings = async (community_name) => {
+  try {
+    let community = await Community.findOne({ name: community_name })
+      .populate("posts_and_comments")
+      .exec();
+
+    return { posts_and_comments: community.posts_and_comments };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Change Settings //////////////////////////////////////////////////////////////
+const changeCommunityGeneralSettings = async (
+  community_name,
+  general_settings
+) => {
+  try {
+    const community = await Community.findOne({ name: community_name });
+
+    const communityGeneralSettings = await CommunityGeneralSettings.findById(
+      community.general_settings
+    );
+
+    Object.assign(communityGeneralSettings, general_settings);
+
+    await communityGeneralSettings.save();
+
+    return { updated_general_settings: communityGeneralSettings };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const changeCommunityContentControls = async (
+  community_name,
+  content_controls
+) => {
+  try {
+    const community = await Community.findOne({ name: community_name });
+
+    const communityContentControls = await CommunityContentControls.findById(
+      community.content_controls
+    );
+
+    Object.assign(communityContentControls, content_controls);
+
+    await communityContentControls.save();
+
+    return { updated_content_controls: communityContentControls };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const changeCommunityPostsCommentsSettings = async (
+  community_name,
+  posts_and_comments
+) => {
+  try {
+    const community = await Community.findOne({ name: community_name });
+
+    const communityPostsAndComments = await CommunityPostsAndComments.findById(
+      community.posts_and_comments
+    );
+
+    Object.assign(communityPostsAndComments, posts_and_comments);
+
+    await communityPostsAndComments.save();
+
+    return { updated_posts_and_comments: communityPostsAndComments };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
+const addPostToCommunity = async (community_name, requestBody) => {
+  const { title, description } = requestBody;
+
+  try {
+    const community = await Community.findOne({ name: community_name });
+
+    const post = new Post({
+      title,
+      description,
+    });
+
+    await post.save();
+
+    community.posts.push(post._id);
+
+    await community.save();
+
+    return { post: post };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getPostsByCommunityCategory = async (category) => {
+  try {
+    const posts = await Community.aggregate([
+      {
+        $match: { category: category },
+      },
+      {
+        $lookup: {
+          from: "posts",
+          localField: "posts",
+          foreignField: "_id",
+          as: "mergedPosts",
+        },
+      },
+      {
+        $unwind: "$mergedPosts",
+      },
+      {
+        $replaceRoot: { newRoot: "$mergedPosts" },
+      },
+    ]);
+
+    return { posts: posts };
+  } catch (error) {
+    console.error(error);
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Statistics //////////////////////////////////////////////////////////////
+const getCommunityMembersCount = async (community_name) => {
+  try {
+    const community = await Community.findOne({ name: community_name });
+
+    console.log(community.members_count);
+
+    return { members_count: community.members_count };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 const addNewRuleToCommunity = async (requestBody) => {
   let {
     community_name,
@@ -39,7 +234,9 @@ const addNewRuleToCommunity = async (requestBody) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
     const rule_order = community.rules_ids.length + 1;
     report_reason = report_reason || rule_title;
@@ -58,9 +255,9 @@ const addNewRuleToCommunity = async (requestBody) => {
     community.rules_ids.push(new_rule._id);
     await new_rule.save();
     await community.save();
-    console.log("inside add")
-    console.log(new_rule)
-    console.log(community)
+    console.log("inside add");
+    console.log(new_rule);
+    console.log(community);
     return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -76,7 +273,7 @@ const editCommunityRule = async (requestBody) => {
       rule_order,
       applies_to,
       report_reason,
-      full_description
+      full_description,
     } = requestBody;
     const rule = await getRuleById(rule_id);
 
@@ -87,7 +284,9 @@ const editCommunityRule = async (requestBody) => {
     if (rule_title) {
       const new_title = await getRuleByTitle(community_name, rule_title);
       if (new_title && new_title._id.toString() !== rule._id.toString()) {
-        return { err: "The updated title already exists, enter a different title." };
+        return {
+          err: "The updated title already exists, enter a different title.",
+        };
       }
     }
     rule.rule_title = rule_title || rule.rule_title;
@@ -106,8 +305,9 @@ const deleteCommunityRule = async (requestBody) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
 
     community.rules_ids = community.rules_ids.filter(
@@ -115,18 +315,17 @@ const deleteCommunityRule = async (requestBody) => {
     );
 
     await community.save();
-    await deleteRule(rule_id)
+    await deleteRule(rule_id);
     return { success: true };
-
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
+
 const getCommunityRules = async (community_name) => {
   const community = await communityNameExists(community_name);
   if (!community) {
     return { err: { status: 500, message: "community name does not exist " } };
-
   }
   const ids = community.rules_ids;
   const rules = [];
@@ -136,24 +335,13 @@ const getCommunityRules = async (community_name) => {
       rules.push(rule);
     }
   }
-  console.log(rules)
-  console.log(community)
-  return { rules: rules }
+  console.log(rules);
+  console.log(community);
+  return { rules: rules };
 };
 
-
-// TODO: Implement the "Reorder Rules" API.
-const setCommunitySettings = async (requestBody) => { };
-//i use this function {getAllUsers} is just for testing purposes , has nothing todo wth communities end points 
-const getAllUsers = async () => {
-  try {
-    const users = await User.find({});
-    return { users: users };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
+//////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
+// TODO: Validation - User already approved.
 const approveUser = async (requestBody) => {
   try {
     const { username, community_name } = requestBody;
@@ -168,11 +356,16 @@ const approveUser = async (requestBody) => {
     if (!community) {
       return { err: { status: 400, message: "Community not found." } };
     }
-    console.log(community)
+    console.log(community);
     // Check if user ID already exists in the approved_users array of the community
     const isAlreadyApproved = isUserAlreadyApproved(community, user._id);
     if (isAlreadyApproved) {
-      return { err: { status: 400, message: "User is already approved in this community." } };
+      return {
+        err: {
+          status: 400,
+          message: "User is already approved in this community.",
+        },
+      };
     }
 
     community.approved_users.push({ id: user._id, approved_at: new Date() });
@@ -184,22 +377,28 @@ const approveUser = async (requestBody) => {
   }
 };
 
-//Profile picture is not showing 
+//Profile picture is not showing
 const getApprovedUsers = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
 
     // Fetch user views for each approved user
-    const users = await Promise.all(community.approved_users.map(async (userObj) => {
-      const userView = await getApprovedUserView({ id: userObj.id, approved_at: userObj.approved_at });
-      return userView;
-    }));
+    const users = await Promise.all(
+      community.approved_users.map(async (userObj) => {
+        const userView = await getApprovedUserView({
+          id: userObj.id,
+          approved_at: userObj.approved_at,
+        });
+        return userView;
+      })
+    );
 
-    console.log(users)
+    console.log(users);
 
     return { users }; // Return the users array
   } catch (error) {
@@ -207,60 +406,24 @@ const getApprovedUsers = async (community_name) => {
   }
 };
 
-//testing done
-const editCommunityGeneralSettings = async (community_name, requestBody) => {
-  const {
-    description,
-    send_welcome_message_flag,
-    message,
-    language,
-    region,
-    visibility,
-    nsfw_flag,
-    accepting_requests_to_join,
-    approved_users_have_the_ability_to,
-  } = requestBody;
+const getAllUsers = async () => {
   try {
-    const community = await communityNameExists(community_name);
-    if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
-    }
-    community.general_settings.description =
-      description || community.general_settings.description;
-    community.general_settings.welcome_message.send_welcome_message_flag =
-      send_welcome_message_flag ||
-      community.general_settings.welcome_message.send_welcome_message_flag;
-    community.general_settings.welcome_message.message =
-      message || community.general_settings.welcome_message.message;
-    community.general_settings.language =
-      language || community.general_settings.language;
-    community.general_settings.region =
-      region || community.general_settings.region;
-    community.general_settings.visibility =
-      visibility || community.general_settings.visibility;
-    community.general_settings.nsfw_flag =
-      nsfw_flag || community.general_settings.nsfw_flag;
-    community.general_settings.accepting_requests_to_join =
-      accepting_requests_to_join ||
-      community.general_settings.accepting_requests_to_join;
-    community.general_settings.approved_users_have_the_ability_to =
-      approved_users_have_the_ability_to ||
-      community.general_settings.approved_users_have_the_ability_to;
-    const savedCommunity = await community.save();
-    console.log(savedCommunity);
-    return { success: true };
+    const users = await User.find({});
+    return { users: users };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
+
+//////////////////////////////////////////////////////////////////////// Details Widget //////////////////////////////////////////////////////////////
 //new
 const getDetailsWidget = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
     return {
       widget: {
@@ -274,71 +437,104 @@ const getDetailsWidget = async (community_name) => {
   }
 };
 const editDetailsWidget = async (requestBody) => {
-  const { community_name, members_nickname, currently_viewing_nickname, description } = requestBody;
+  const {
+    community_name,
+    members_nickname,
+    currently_viewing_nickname,
+    description,
+  } = requestBody;
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
     if (community) {
-      community.members_nickname = members_nickname || community.members_nickname;
-      community.currently_viewing_nickname = currently_viewing_nickname || community.currently_viewing_nickname;
+      community.members_nickname =
+        members_nickname || community.members_nickname;
+      community.currently_viewing_nickname =
+        currently_viewing_nickname || community.currently_viewing_nickname;
       community.description = description || community.description;
       await community.save();
     }
 
-    return { widget: { members_nickname, currently_viewing_nickname, description } };
-  }
-  catch (error) {
+    return {
+      widget: { members_nickname, currently_viewing_nickname, description },
+    };
+  } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
-}
+};
+
+//////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 const addCommunityProfilePicture = async (requestBody) => {
   const { community_name, profile_picture } = requestBody;
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
     community.profile_picture = profile_picture;
     const savedCommunity = await community.save();
 
     console.log(savedCommunity);
     return { success: true };
-
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
-}
+};
+
+const deleteCommunityProfilePicture = async (requestBody) => {
+  const { community_name } = requestBody;
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
+    }
+    community.profile_picture = "none";
+    const savedCommunity = await community.save();
+
+    console.log(savedCommunity);
+    return { sucess: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 const addCommunityBannerPicture = async (requestBody) => {
   const { community_name, banner_picture } = requestBody;
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
 
     community.banner_picture = banner_picture;
     const savedCommunity = await community.save();
     console.log(savedCommunity);
-    console.log(savedCommunity.banner_picture)
-
+    console.log(savedCommunity.banner_picture);
 
     return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
-}
+};
 const deleteCommunityBannerPicture = async (requestBody) => {
   const { community_name } = requestBody;
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
     }
 
     community.banner_picture = "none";
@@ -349,40 +545,30 @@ const deleteCommunityBannerPicture = async (requestBody) => {
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
-}
-const deleteCommunityProfilePicture = async (requestBody) => {
-  const { community_name } = requestBody;
-  try {
-    const community = await communityNameExists(community_name);
-    if (!community) {
-      return { err: { status: 500, message: "community name does not exist " } };
-
-    }
-    community.profile_picture = "none";
-    const savedCommunity = await community.save();
-
-    console.log(savedCommunity);
-    return { sucess: true };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-}
+};
 
 export {
   addNewCommunity,
+  getCommunityGenerlSettings,
+  getCommunityContentControls,
+  getCommunityPostsCommentsSettings,
+  changeCommunityGeneralSettings,
+  changeCommunityContentControls,
+  changeCommunityPostsCommentsSettings,
+  addPostToCommunity,
+  getPostsByCommunityCategory,
+  getCommunityMembersCount,
   addNewRuleToCommunity,
   editCommunityRule,
   deleteCommunityRule,
   getCommunityRules,
-  setCommunitySettings,
-  getApprovedUsers,
-  editCommunityGeneralSettings,
   approveUser,
+  getApprovedUsers,
   getAllUsers,
+  getDetailsWidget,
   editDetailsWidget,
   addCommunityProfilePicture,
+  deleteCommunityProfilePicture,
   addCommunityBannerPicture,
   deleteCommunityBannerPicture,
-  deleteCommunityProfilePicture,
-  getDetailsWidget
 };

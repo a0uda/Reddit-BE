@@ -1,6 +1,8 @@
 import express from "express";
+import { User } from "../db/models/User.js"; //if error put .js
 import dotenv from "dotenv";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -10,8 +12,7 @@ const REDIRECT_URI = "http://localhost:3000/users/signup-google/callback";
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
 const REDIRECT_URI_fb = "http://localhost:3000/auth/facebook/callback";
-import { User } from "../db/models/User.js";
-import { Token } from "../db/models/Token.js";
+
 import {
   signupUser,
   loginUser,
@@ -22,7 +23,39 @@ import {
   forgetUsername,
   changeEmail,
   changePassword,
-} from "../utils/userAuth.js";
+  isUsernameAvailable,
+  isEmailAvailable,
+  changeUsername,
+} from "../controller/userAuth.js";
+
+import {
+  getFollowers,
+  getFollowing,
+  getFollowersCount,
+  getFollowingCount,
+  getPosts,
+  getOverview,
+  getAbout,
+  getComments,
+  getCommunities,
+} from "../controller/userInfo.js";
+
+import {
+  getSafetySettings,
+  getSettings,
+  setSettings,
+} from "../controller/userSettings.js";
+import {
+  blockUser,
+  reportUser,
+  addOrRemovePicture,
+  muteCommunity,
+  followUser,
+  joinCommunity,
+  favoriteCommunity,
+  clearHistory,
+  deleteAccount,
+} from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
 
@@ -46,15 +79,16 @@ usersRouter.post("/users/signup", async (req, res) => {
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, err, user } = await loginUser(req.body);
+    const { success, err, user, refreshToken } = await loginUser(req.body);
 
     if (!success) {
-      res.status(400).send(err);
+      res.status(400).send({ err });
       return;
     }
 
     // Set the token in the response header
-    res.header("Authorization", `Bearer ${user.token}`);
+    res.header("Authorization", `Bearer ${user.token} `);
+    res.setHeader("RefreshToken", refreshToken);
 
     // Send a response without the token in the body
     res.status(200).send({ username: user.username });
@@ -67,10 +101,17 @@ usersRouter.post("/users/login", async (req, res) => {
 
 usersRouter.post("/users/logout", async (req, res) => {
   try {
-    const token = request.headers.authorization?.split(" ")[1];
+    const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res.status(401).send("Access Denied");
     }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).send("Access Denied: Expired token");
+      }
+    });
+
     const { username } = req.body;
 
     const { success, msg, err } = await logoutUser({ token, username });
@@ -124,10 +165,9 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         gmail: userData.email,
         gender: userData.gender,
         connected_google: true,
-      });
-      user.profile_settings = {
         display_name: userData.name,
-      };
+        is_password_set_flag: false,
+      });
     }
     await user.generateAuthToken();
     await user.save();
@@ -179,6 +219,7 @@ usersRouter.get("/auth/facebook/callback", async (req, res) => {
         username: userData.id,
         email: userData.email,
         connected_facebook: true,
+        is_password_set_flag: false,
       });
     }
     await user.generateAuthToken();
@@ -196,6 +237,37 @@ usersRouter.get("/auth/facebook", (req, res) => {
   res.redirect(url);
 });
 
+usersRouter.get("/available-username", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await isUsernameAvailable(
+      req.body.username
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/available-email", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await isEmailAvailable(
+      req.body.email
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    console.log(msg);
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
 //the front end does't directly access this api, i call it after the sign up route
 usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
   console.log("TOKEN", req.params.token);
@@ -300,6 +372,21 @@ usersRouter.patch("/users/change-email", async (req, res) => {
   }
 });
 
+//This endpoint is used only once when the user signs up with google he
+//can change the generated random username only once
+usersRouter.patch("/users/change-username", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await changeUsername(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
 usersRouter.patch("/users/change-password", async (req, res) => {
   try {
     const { success, err, status, user, msg } = await changePassword(req);
@@ -312,5 +399,588 @@ usersRouter.patch("/users/change-password", async (req, res) => {
     res.status(200).send(msg);
   } catch (error) {
     res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/followers", async (req, res) => {
+  try {
+    const { success, err, status, users, msg } = await getFollowers(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/following", async (req, res) => {
+  try {
+    const { success, err, status, users, msg } = await getFollowing(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/followers-count", async (req, res) => {
+  try {
+    const { success, err, status, count, msg } = await getFollowersCount(req);
+    console.log(success, err, status, count, msg);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send({ "followers-count": count });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/following-count", async (req, res) => {
+  try {
+    const { success, err, status, count, msg } = await getFollowingCount(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send({ "following-count": count });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/:username/about", async (req, res) => {
+  try {
+    const { success, err, status, about, msg } = await getAbout(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(about);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/:username/overview", async (req, res) => {
+  try {
+    const { success, err, status, overview, msg } = await getOverview(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(overview);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/account-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Account"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/profile-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Profile"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/feed-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Feed"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/notification-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Notification"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/email-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Email"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSettings(
+      req,
+      "Chat"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.get("/users/safety-settings", async (req, res) => {
+  try {
+    const { success, err, status, settings, msg } = await getSafetySettings(
+      req
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(settings);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-account-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Account");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-profile-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Profile");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-feed-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Feed");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-notification-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(
+      req,
+      "Notification"
+    );
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-email-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Email");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.patch("/users/change-chats-and-msgs-settings", async (req, res) => {
+  try {
+    const { success, err, status, msg } = await setSettings(req, "Chat");
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.post("/users/block-unblock-user", async (req, res) => {
+  try {
+    const result = await blockUser(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/report-user", async (req, res) => {
+  try {
+    const result = await reportUser(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/add-profile-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "profile_picture");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-profile-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "profile_picture", true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/add-banner-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "banner_picture");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-banner-picture", async (req, res) => {
+  try {
+    const result = await addOrRemovePicture(req, "banner_picture", true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/mute-unmute-community", async (req, res) => {
+  try {
+    const result = await muteCommunity(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.patch("/users/favorite-unfavorite-community", async (req, res) => {
+  try {
+    const { success, err, status, user, msg } = await favoriteCommunity(req);
+    if (!success) {
+      res.status(status).send(err);
+      return;
+    }
+    res.status(200).send(msg);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
+
+usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
+  try {
+    const result = await followUser(req);
+
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/join-community", async (req, res) => {
+  try {
+    const result = await joinCommunity(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/leave-community", async (req, res) => {
+  try {
+    const result = await joinCommunity(req, true);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/:username/posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/upvoted-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "upvotes_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/downvoted-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "downvotes_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/history-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "history_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
+  try {
+    const result = await getPosts(req, "hidden_and_reported_posts_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/:username/comments", async (req, res) => {
+  try {
+    const result = await getComments(req, "comments_ids");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
+  try {
+    const result = await getOverview(
+      req,
+      "saved_posts_ids",
+      "saved_comments_ids"
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/communities", async (req, res) => {
+  try {
+    const result = await getCommunities(req, "");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/moderated-communities", async (req, res) => {
+  try {
+    const result = await getCommunities(req, "moderated");
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/clear-history", async (req, res) => {
+  try {
+    const result = await clearHistory(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.post("/users/delete-account", async (req, res) => {
+  try {
+    const result = await deleteAccount(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
   }
 });

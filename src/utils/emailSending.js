@@ -5,7 +5,7 @@ import {
   forgetPasswordEmail,
   forgetUsernameEmail,
   changeOldEmail,
-  changePasswordEmail
+  changePasswordEmail,
 } from "../templates/email.js";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
@@ -68,7 +68,7 @@ export async function redirectToForgetUsername(userId, userEmail, username) {
   // const expirationDate = new Date();
   // expirationDate.setDate(expirationDate.getDate() + 3); // Adding 3 days
   // const token = await saveToken(userId, expirationDate);
-  const link = `http://localhost:3000/userprofilepage/${username}`;//frontend
+  const link = `http://localhost:3000/userprofilepage/${username}`; //frontend
   let message = forgetUsernameEmail(link, userEmail, username);
   await sendEmail(message);
   console.log("email sent pt2");
@@ -79,6 +79,7 @@ export async function sendChangeEmail(userEmail, username) {
   await sendEmail(message);
   console.log("email sent pt2");
 }
+
 export async function sendChangePassword(userEmail, username) {
   let message = changePasswordEmail(userEmail, username);
   await sendEmail(message);
