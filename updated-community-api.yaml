@@ -1,20 +1,25 @@
 openapi: 3.0.0
 info:
-  version: 1.0.0
-  title: modified community
+  version: '1.0'
+  title: Code Anatomy API - Community 
+  description: >-
+    This API is designed for our software engineering project, which aims to
+    create a simplified version of Reddit. We are adopting an API-first or
+    Design-first approach, which means the API’s structure and documentation are
+    being established prior to implementation. This approach may lead to
+    modifications as we progress with the implementation. However, we anticipate
+    that the fundamental aspects such as query parameters, request and response
+    bodies, and status codes will remain relatively stable. Please note that as
+    the project evolves, updates to this documentation will be made to reflect
+    any changes.
 
+
+##################################################################################### Servers #####################################################################################
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/HebaBoudy/heba/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/MALAKYASSER8/SW_API_Documentation_Final/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/MALAKYASSER8/SW_API_Documentation_FInal/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/HEBABOUDY11/reddit/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/HEBABOUDY11/Reddit-Back-End-API/1.0.0
+    url: https://virtserver.swaggerhub.com/FatemaKotb/Community-Fatema-Individual/1.0
+
 
   - url: "{protocol}://api.reddit.com/v1"
     description: Production server (uses live data)
@@ -37,7 +42,9 @@ servers:
         enum:
           - "443"
           - "8443"
-        default: "3000"
+        default: "8443"
+
+##################################################################################### Components #####################################################################################
 components:
   schemas:
     widget: #why is this array ?
@@ -118,95 +125,161 @@ components:
           type: string
         full_description:
           type: string
-    Community:
+    
+    ################################################## Community - General Settings Schema ###############################
+    community_general_settings_schema:
       type: object
       properties:
-        created_at:
+        description:
           type: string
-          format: date-time
-        name:
-          type: string
-        title:
-          type: string
-        type:
-          type: string
-          enum: ["public", "private", "restricted", "employee only"]
-        category:
-          type: string
-        nsfw_flag:
-          type: boolean
-        profile_picture:
-          type: string
-
-        banner_picture:
-          type: string
-        members_nickname:
-          type: string
-        currently_viewing_nickname:
-          type: string
-        general_settings:
-          $ref: "#/components/schemas/general_settings"
-
-        content_controls:
+        welcome_message:
           type: object
           properties:
-            providing_members_with_posting_guidlines:
-              type: object
-              properties:
-                flag:
-                  type: boolean
-                guidline_text:
-                  type: string
-            require_words_in_post_title:
-              type: object
-              properties:
-                flag:
-                  type: boolean
-                add_required_words:
-                  type: string
-            ban_words_in_post_body:
-              type: object
-              properties:
-                flag:
-                  type: boolean
-                add_banned_words:
-                  type: string
-            require_or_ban_links_from_specific_domains:
-              type: object
-              properties:
-                flag:
-                  type: boolean
-                restriction_type:
-                  type: string
-                  enum: ["required_domains", "blocked_domains"]
-                block_link_posts_with_these_domains:
-                  type: string
-            restrict_how_often_the_same_link_can_be_posted:
-              type: object
-              properties:
-                flag:
-                  type: boolean
-                number_of_days:
-                  type: number
-                  minimum: 0
-        posts_and_comments:
+            send_welcome_message_flag:
+              type: boolean
+              default: false
+            message:
+              type: string
+        language:
+          type: string
+          default: "English"
+        region:
+          type: string
+        visibility:
+          type: string
+          enum: ["public", "private", "restricted"]
+        nsfw_flag:
+          type: boolean
+          default: false
+        accepting_requests_to_join:
+          type: boolean
+          default: true
+        approved_users_have_the_ability_to:
+          type: string
+          enum: ["comment only", "post only", "comment and post"]
+          default: "post only"
+
+    ################################################## Community - Content Controls Settings Schema ###############################
+    community_content_controls_schema:
+      type: object
+      properties:
+        providing_members_with_posting_guidlines:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            guidline_text:
+              type: string
+        require_words_in_post_title:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            add_required_words:
+              type: array
+              items:
+                type: string
+        ban_words_from_post_title:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            add_banned_words:
+              type: array
+              items:
+                type: string
+        ban_words_from_post_body:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            add_banned_words:
+              type: string
+        require_or_ban_links_from_specific_domains:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            restriction_type:
+              type: string
+              enum: ["required_domains", "blocked_domains"]
+            require_or_block_link_posts_with_these_domains:
+              type: string
+        restrict_how_often_the_same_link_can_be_posted:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            number_of_days:
+              type: integer
+              minimum: 0
+        allow_posts_to_have_body_text:
+          type: string
+          enum: ["Text body is optional for all post types", "Text body is required for text-only posts", "Text body is not allowed"]
+        restrict_post_title_length:
+          type: object
+          properties:
+            minimum_length:
+              type: integer
+              minimum: 0
+            maximum_length:
+              type: integer
+              minimum: 0
+        use_title_text_RegEx_requirements:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            RegEx_pattern:
+              type: array
+              items:
+                type: string
+        use_body_text_RegEx_requirements:
+          type: object
+          properties:
+            flag:
+              type: boolean
+              default: false
+            RegEx_pattern:
+              type: array
+              items:
+                type: string
+
+    ################################################## Community - Posts and Comments Schema Schema ##################################################
+    community_posts_and_comments_schema:
+      type: object
+      properties:
+        posts:
           type: object
           properties:
             post_type_options:
               type: string
-              enum: ["any", "links only", "text posts only"]
+              enum: ["Any", "Links Only", "Text Posts Only"]
             allow_crossposting_of_posts:
               type: boolean
+              default: true
             archive_posts:
               type: boolean
+              default: false
             enable_spoiler_tag:
               type: boolean
+              default: true
             allow_image_uploads_and_links_to_image_hosting_sites:
               type: boolean
+              default: true
             allow_multiple_images_per_post:
               type: boolean
+              default: true
             allow_polls:
               type: boolean
+              default: true
             spam_filter_strength:
               type: object
               properties:
@@ -219,38 +292,74 @@ components:
                 comments:
                   type: string
                   enum: ["low (default)", "high", "all"]
-            comments:
+        comments:
+          type: object
+          properties:
+            suggested_sort:
+              type: string
+              enum: ["None (Recommended)", "Best", "Old", "Top", "Q&A", "Live (Beta)", "Controversial", "New"]
+            collapse_deleted_and_removed_comments:
+              type: boolean
+              default: true
+            minutes_to_hide_comment_scores:
+              type: number
+              minimum: 0
+            media_in_comments:
               type: object
               properties:
-                suggested_sort:
-                  type: string
-                  enum:
-                    [
-                      "None (Recommended)",
-                      "Best",
-                      "Old",
-                      "Top",
-                      "Q&A",
-                      "Live (Beta)",
-                      "Controversial",
-                      "New",
-                    ]
-                collapse_deleted_and_removed_comments:
+                gifs_from_giphy:
                   type: boolean
-                minutes_to_hide_comment_scores:
-                  type: number
-                  minimum: 0
-                media_in_comments:
-                  type: object
-                  properties:
-                    gifs_from_giphy:
-                      type: boolean
-                    collectible_expressions:
-                      type: boolean
-                    images:
-                      type: boolean
-                    gifs:
-                      type: boolean
+                  default: true
+                collectible_expressions:
+                  type: boolean
+                  default: true
+                images:
+                  type: boolean
+                  default: true
+                gifs:
+                  type: boolean
+                  default: true
+
+    ################################################## Community Schema ##################################################
+    community_schema:
+      required:
+        - created_at
+        - name
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          default: (current date-time)
+        name:
+          type: string
+          description: The name of the community is unique and cannot be changed.
+        title:
+          type: string
+        type:
+          type: string
+          enum: ["public", "private", "restricted", "employee only"]
+        category:
+          type: string
+        nsfw_flag:
+          type: boolean
+          default: false
+        profile_picture:
+          type: string
+        banner_picture:
+          type: string
+        members_nickname:
+          type: string
+          default: "Members"
+        currently_viewing_nickname:
+          type: string
+          default: "Online"
+        general_settings:
+          $ref: "#/components/schemas/community_general_settings_schema"
+        content_controls:
+          $ref: "#/components/schemas/community_content_controls_schema"
+        posts_and_comments:
+          $ref: "#/components/schemas/community_posts_and_comments_schema"
         traffic:
           type: string
         topics:
@@ -258,11 +367,9 @@ components:
         owner:
           type: string
         views_count:
-          type: number
+          type: integer
           minimum: 0
-        members_count:
-          type: number
-          minimum: 0
+          default: 0
         moderators:
           type: array
           items:
@@ -274,7 +381,14 @@ components:
         approved_users:
           type: array
           items:
-            type: string
+            type: object
+            properties:
+              id:
+                type: string
+              approved_at:
+                type: string
+                format: date-time
+                default: now
         muted_users:
           type: array
           items:
@@ -308,15 +422,12 @@ components:
                 type: string
               permanent_flag:
                 type: boolean
+                default: true
               banned_until:
                 type: string
                 format: date-time
               note_for_ban_message:
                 type: string
-        posts_ids:
-          type: array
-          items:
-            type: string
         removed_posts_ids:
           type: array
           items:
@@ -361,28 +472,23 @@ components:
                 format: date-time
               submitted_flag:
                 type: boolean
+                default: false
               submit_time:
                 type: string
                 format: date-time
               time_zone:
                 type: string
+                format: date-time
               title:
                 type: string
               repeat_options:
                 type: string
-                enum:
-                  [
-                    "does_not_repeat",
-                    "hourly",
-                    "daily",
-                    "weekly_on_day",
-                    "monthly_on_date",
-                  ]
+                enum: ["does_not_repeat", "hourly", "daily", "weekly_on_day", "monthly_on_date"]
               repeat_every:
                 type: object
                 properties:
                   number:
-                    type: number
+                    type: integer
                   duration:
                     type: string
                     enum: ["hours", "days", "weeks", "months"]
@@ -391,90 +497,47 @@ components:
                 properties:
                   default_comment_order:
                     type: string
-                    enum:
-                      [
-                        "Default comment order",
-                        "Best",
-                        "Top",
-                        "New",
-                        "Controversial",
-                        "Old",
-                        "Q",
-                      ]
-        who_send_chat_request_flag:
-          type: string
-          enum:
-            - Everyone
-            - Accounts Older than 30 days
-            - Nobody
-        who_send_private_messages_flag:
-          type: string
-          enum:
-            - Everyone
-            - Accounts Older than 30 days
-            - Nobody
-    general_settings:
+                    enum: ["Default comment order", "Best", "Top", "New", "Controversial", "Old", "Q&A"]
+                  not_a_sticky_post:
+                    type: string
+                    enum: ["not_a_sticky_post", "submit_as_first_sticky_post", "submit_as_second_sticky_post"]
+              contest_mode_flag:
+                type: boolean
+                default: false
+              post_as_auto_moderator_flag:
+                type: boolean
+                default: false
+        allow_image_posts:
+          type: boolean
+          default: true
+        allow_url_posts:
+          type: boolean
+          default: true
+        allow_polls_posts:
+          type: boolean
+          default: true
+        rules_ids:
+          type: array
+          items:
+            type: string
+
+    ################################################## Post Schema ##################################################
+    Post:
       type: object
+      required:
+        - title
+        - body
       properties:
+        title:
+          type: string
+          description: The title of the post
         description:
           type: string
-        welcome_message:
-          type: object
-          properties:
-            send_welcome_message_flag:
-              type: boolean
-              default: false
-            message:
-              type: string
-        language:
-          type: string
-          default: "English"
-        region:
-          type: string
-        visibility:
-          type: string
-          enum: ["public", "private", "restricted"]
-        nsfw_flag:
-          type: boolean
-          default: false
-        accepting_requests_to_join:
-          type: string
-          default: true
-        approved_users_have_the_ability_to:
-          type: string
-          enum: ["comment only", "post only", "comment and post"]
-          default: "post only"
+          description: The body content of the post
+
 
 paths:
-  /communities/add_community: #done
-    post:
-      tags:
-        - Communities
-      operationId: new_community
-      requestBody:
-        description: New community
-        required: true
-        content:
-          application/json:
-            schema:
-              properties:
-                community_name:
-                  type: string
-                  description: "this field is required and unique"
-                description:
-                  type: string
-
-                content_visibility:
-                  enum: [public, private, restricted]
-                mature_content:
-                  type: boolean
-
-      responses:
-        "200":
-          description: Success
-        "400":
-          description: failed ,community name exists
-  /communities/get_rules/{community_name}: #done
+  /communities/get-rules/{community_name}: #done
     get:
       tags:
         - Communities
@@ -496,7 +559,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/Rule"
 
-  /communities/add_rule: #done
+  /communities/add-rule: #done
     post:
       tags:
         - Communities
@@ -533,7 +596,7 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  /communities/edit_rule: #done
+  /communities/edit-rule: #done
     post:
       tags:
         - Communities
@@ -551,7 +614,7 @@ paths:
           description: Success
         "500":
           description: Internal Server error
-  /communities/delete_rule/: #done
+  /communities/delete-rule/: #done
     post:
       tags:
         - Communities
@@ -590,7 +653,7 @@ paths:
                         type: string
                         example: Internal Server Error
 
-  /communities/about/approved_users/{community_name}:
+  /communities/about/approved-users/{community_name}:
     get:
       tags:
         - Communities
@@ -643,7 +706,7 @@ paths:
                         type: string
                         example: Internal Server Error
 
-  /communities/add_banner_picture:
+  /communities/add-banner-picture:
     post:
       tags:
         - Communities
@@ -683,7 +746,7 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  /communities/delete_banner_picture:
+  /communities/delete-banner-picture:
     post:
       tags:
         - Communities
@@ -724,7 +787,7 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  /communities/add_profile_picture:
+  /communities/add-profile-picture:
     post:
       tags:
         - Communities
@@ -765,7 +828,7 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  /communities/delete_profile_picture:
+  /communities/delete-profile-picture:
     post:
       tags:
         - Communities
@@ -804,7 +867,7 @@ paths:
                         type: string
                         example: Internal Server Error
 
-  /communities/approve_user:
+  /communities/approve-user:
     post:
       tags:
         - Communities
@@ -861,65 +924,371 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  /communities/edit_general_settings/{community_name}: #done
+  
+  /communities/add-community:
     post:
       tags:
         - Communities
-
-      operationId: edit_general_settings
-      parameters:
-        - name: community_name
-          in: path
-          description: Name of the community
-          required: true
-          schema:
-            type: string
-
+      summary: Add a new community
+      operationId: addCommunity
       requestBody:
-        required: true
+        description: Community object that needs to be added
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/general_settings"
+              $ref: '#/components/schemas/community_schema'
+        required: true
       responses:
-        "200":
-          description: Success
-        "500":
-          description: Error response
+        '201':
+          description: Community was successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_schema'
+        '400':
+          description: Community name is already taken
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error:
-                    type: object
-                    properties:
-                      status:
-                        type: integer
-                        format: int32
-                        example: 500
-                      message:
-                        type: string
-                        example: Internal Server Error
-  /communities/get_details_widget/{community_name}:
-    get:
-      tags:
-        - Communities
-      operationId: get_details_widget
-      parameters:
-        - name: community_name
-          in: path
-          description: Name of the community
-          required: true
-          schema:
-            type: string
-
-      responses:
-        "200":
-          description: Success
+                  status:
+                    type: integer
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:
                 type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+
+  ################################################## Get Settings ##################################################
+  /communities/get-general-settings/{community_name}:
+    get:
+      tags:
+        - Communities
+      summary: Get general settings of a community
+      operationId: getCommunityGeneralSettings
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to retrieve general settings
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: General settings of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_general_settings_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+  /communities/get-content-controls/{community_name}:
+    get:
+      tags:
+        - Communities
+      summary: Get content controls of a community
+      operationId: getCommunityContentControls
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to retrieve content controls
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Content controls of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_content_controls_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+  /communities/get-posts-and-comments/{community_name}:
+    get:
+      tags:
+        - Communities
+      summary: Get posts and comments settings of a community
+      operationId: getCommunityPostsCommentsSettings
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to retrieve posts and comments settings
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Posts and comments settings of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_posts_and_comments_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+
+  ################################################## Change Settings ##################################################
+  /communities/change-general-settings/{community_name}:
+    post:
+      tags:
+        - Communities
+      summary: Change general settings of a community
+      operationId: changeCommunityGeneralSettings
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to change general settings
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: New general settings
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/community_general_settings_schema'
+        required: true
+      responses:
+        '200':
+          description: Updated general settings of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_general_settings_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+  /communities/change-content-controls/{community_name}:
+    post:
+      tags:
+        - Communities
+      summary: Change content controls of a community
+      operationId: changeCommunityContentControls
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to change content controls
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: New content controls
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/community_content_controls_schema'
+        required: true
+      responses:
+        '200':
+          description: Updated content controls of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_content_controls_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+  /communities/change-posts-and-comments/{community_name}:
+    post:
+      tags:
+        - Communities
+      summary: Change posts and comments settings of a community
+      operationId: changeCommunityPostsCommentsSettings
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to change posts and comments settings
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: New posts and comments settings
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/community_posts_and_comments_schema'
+        required: true
+      responses:
+        '200':
+          description: Updated posts and comments settings of the community
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/community_posts_and_comments_schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+
+  ################################################## Posts Retrieval ##################################################
+  /communities/add-post/{community_name}:
+    post:
+      tags:
+        - Communities
+      summary: Add a post to a specific community
+      operationId: addPostToCommunity
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to add the post to
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Post to be added to the community
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+        required: true
+      responses:
+        '201':
+          description: Post successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+  /communities/get-posts-by-category/{category}:
+    get:
+      tags:
+        - Communities
+      summary: Get posts by community category
+      operationId: getPostsByCommunityCategory
+      parameters:
+        - name: category
+          in: path
+          description: Category of the community to get posts from
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Posts successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
                 items:
-                  $ref: "#/components/schemas/widget"
+                  $ref: '#/components/schemas/Post'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string
+
+  ################################################## Statistics ##################################################
+  /communities/get-members-count/{community_name}:
+    get:
+      tags:
+        - Communities
+      summary: Get the member count of a specific community
+      operationId: getCommunityMembersCount
+      parameters:
+        - name: community_name
+          in: path
+          description: Name of the community to get the member count from
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Member count successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members_count:
+                    type: integer
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  message:
+                    type: string

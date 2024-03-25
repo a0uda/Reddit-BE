@@ -33,15 +33,13 @@ import {
 
 const communityRouter = express.Router();
 
-communityRouter.post("/communities/add_community", async (req, res, next) => {
-    console.log("hi");
+communityRouter.post("/communities/add-community", async (req, res, next) => {
     try {
-        const { err, success } = await addNewCommunity(req.body)
-        console.log(err, success)
+        const { err, community } = await addNewCommunity(req.body)
 
         if (err) { return next(err) }
 
-        res.status(200).json({ message: 'OK' });
+        return res.status(201).send(community)
 
     } catch (error) {
         next(error)
@@ -49,7 +47,7 @@ communityRouter.post("/communities/add_community", async (req, res, next) => {
 })
 
 //////////////////////////////////////////////////////////////////////// Get Settings //////////////////////////////////////////////////////////////
-communityRouter.get("/communities/get_general_settings/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-general-settings/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
@@ -64,7 +62,7 @@ communityRouter.get("/communities/get_general_settings/:community_name", async (
     }
 })
 
-communityRouter.get("/communities/get_content_controls/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-content-controls/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
@@ -79,7 +77,7 @@ communityRouter.get("/communities/get_content_controls/:community_name", async (
     }
 })
 
-communityRouter.get("/communities/get_posts_and_comments/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-posts-and-comments/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
@@ -95,7 +93,7 @@ communityRouter.get("/communities/get_posts_and_comments/:community_name", async
 })
 
 //////////////////////////////////////////////////////////////////////// Change Settings //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/change_general_settings/:community_name", async (req, res, next) => {
+communityRouter.post("/communities/change-general-settings/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
         const general_settings = req.body
@@ -111,7 +109,7 @@ communityRouter.post("/communities/change_general_settings/:community_name", asy
     }
 })
 
-communityRouter.post("/communities/change_content_controls/:community_name", async (req, res, next) => {
+communityRouter.post("/communities/change-content-controls/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
         const content_controls = req.body
@@ -127,7 +125,7 @@ communityRouter.post("/communities/change_content_controls/:community_name", asy
     }
 })
 
-communityRouter.post("/communities/change_posts_and_comments/:community_name", async (req, res, next) => {
+communityRouter.post("/communities/change-posts-and-comments/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
         const posts_and_comments = req.body
@@ -144,7 +142,7 @@ communityRouter.post("/communities/change_posts_and_comments/:community_name", a
 })
 
 //////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/add_post/:community_name", async (req, res, next) => {
+communityRouter.post("/communities/add-post/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
@@ -159,7 +157,7 @@ communityRouter.post("/communities/add_post/:community_name", async (req, res, n
     }
 })
 
-communityRouter.get("/communities/get_posts_by_category/:category", async (req, res, next) => {
+communityRouter.get("/communities/get-posts-by-category/:category", async (req, res, next) => {
     try {
         const category = req.params.category
 
@@ -175,7 +173,7 @@ communityRouter.get("/communities/get_posts_by_category/:category", async (req, 
 })
 
 //////////////////////////////////////////////////////////////////////// Statistics //////////////////////////////////////////////////////////////
-communityRouter.get("/communities/get_members_count/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-members-count/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
@@ -192,7 +190,7 @@ communityRouter.get("/communities/get_members_count/:community_name", async (req
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.
-communityRouter.post("/communities/add_rule", async (req, res, next) => {
+communityRouter.post("/communities/add-rule", async (req, res, next) => {
     try {
         const { err, success } = await addNewRuleToCommunity(req.body)
 
@@ -205,7 +203,7 @@ communityRouter.post("/communities/add_rule", async (req, res, next) => {
     }
 })
 
-communityRouter.post("/communities/edit_rule", async (req, res, next) => {
+communityRouter.post("/communities/edit-rule", async (req, res, next) => {
     try {
         const { err, success } = await editCommunityRule(req.body)
         console.log("the response is :")
@@ -220,7 +218,7 @@ communityRouter.post("/communities/edit_rule", async (req, res, next) => {
     }
 })
 
-communityRouter.post("/communities/delete_rule", async (req, res, next) => {
+communityRouter.post("/communities/delete-rule", async (req, res, next) => {
     try {
         const { err, success } = await deleteCommunityRule(req.body)
 
@@ -233,7 +231,7 @@ communityRouter.post("/communities/delete_rule", async (req, res, next) => {
     }
 })
 
-communityRouter.get("/communities/get_rules/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-rules/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name);
         const { err, rules } = await getCommunityRules(req.params.community_name)
@@ -250,7 +248,7 @@ communityRouter.get("/communities/get_rules/:community_name", async (req, res, n
 })
 
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
-communityRouter.get("/communities/about/approved_users/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/about/approved-users/:community_name", async (req, res, next) => {
     try {
         const { err, users } = await getApprovedUsers(req.params.community_name)
 
@@ -264,7 +262,7 @@ communityRouter.get("/communities/about/approved_users/:community_name", async (
 })
 
 //i use this api just for testing because i cant open the database :) , it has nothing todo with community endpoints 
-communityRouter.get("/all_users", async (req, res, next) => {
+communityRouter.get("/all-users", async (req, res, next) => {
     try {
         const { err, users } = await getAllUsers()
 
@@ -278,7 +276,7 @@ communityRouter.get("/all_users", async (req, res, next) => {
 })
 //testing done
 //documenation updated
-communityRouter.post("/communities/approve_user", async (req, res, next) => {
+communityRouter.post("/communities/approve-user", async (req, res, next) => {
     try {
         console.log(req.body)
         const { err, success } = await approveUser(req.body)
@@ -293,7 +291,7 @@ communityRouter.post("/communities/approve_user", async (req, res, next) => {
 })
 
 //////////////////////////////////////////////////////////////////////// Details Widget //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/edit_details_widget", async (req, res, next) => {
+communityRouter.post("/communities/edit-details-widget", async (req, res, next) => {
     try {
         const { err, success } = await editDetailsWidget(req.body)
 
@@ -305,7 +303,7 @@ communityRouter.post("/communities/edit_details_widget", async (req, res, next) 
         next(error)
     }
 })
-communityRouter.get("/communities/get_details_widget/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/get-details-widget/:community_name", async (req, res, next) => {
     try {
         const { err, widget } = await getDetailsWidget(req.params.community_name)
 
@@ -319,7 +317,7 @@ communityRouter.get("/communities/get_details_widget/:community_name", async (re
 })
 
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/add_profile_picture", async (req, res, next) => {
+communityRouter.post("/communities/add-profile-picture", async (req, res, next) => {
     try {
         const { err, success } = await addCommunityProfilePicture(req.body)
 
@@ -333,7 +331,7 @@ communityRouter.post("/communities/add_profile_picture", async (req, res, next) 
 })
 //testing done
 //documenation updated
-communityRouter.post("/communities/delete_profile_picture", async (req, res, next) => {
+communityRouter.post("/communities/delete-profile-picture", async (req, res, next) => {
     try {
         const { err, sucess } = await deleteCommunityProfilePicture(req.body)
 
@@ -347,7 +345,7 @@ communityRouter.post("/communities/delete_profile_picture", async (req, res, nex
 })
 
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/delete_banner_picture", async (req, res, next) => {
+communityRouter.post("/communities/delete-banner-picture", async (req, res, next) => {
     try {
         const { err, success } = await deleteCommunityBannerPicture(req.body)
 
@@ -360,7 +358,7 @@ communityRouter.post("/communities/delete_banner_picture", async (req, res, next
     }
 })
 
-communityRouter.post("/communities/add_banner_picture", async (req, res, next) => {
+communityRouter.post("/communities/add-banner-picture", async (req, res, next) => {
     try {
         const { err, success } = await addCommunityBannerPicture(req.body)
 
