@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema({
+  //add community id or return community name with comment
   post_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Post",
