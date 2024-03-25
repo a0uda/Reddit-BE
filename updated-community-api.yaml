@@ -146,7 +146,6 @@ components:
           type: string
         general_settings:
           $ref: "#/components/schemas/general_settings"
-
         content_controls:
           type: object
           properties:

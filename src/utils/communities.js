@@ -1,7 +1,6 @@
 import { Community } from '../db/models/Community.js';
 import { User } from '../db/models/User.js';
 import { Rule } from '../db/models/Rule.js';
-import mongoose from 'mongoose';
 async function communityNameExists(communityName) {
     return await Community.findOne({ name: communityName })
 }
@@ -10,16 +9,6 @@ async function getRuleByTitle(communityName, ruleTitle) {
     //find community by name where rule_title exists and return the community
 
     return await Community.findOne({ name: communityName, "rules.rule_title": ruleTitle })
-
-}
-const convertToMongooseId = (id) => {
-    try {
-        return new mongoose.Types.ObjectId(id);
-    } catch (error) {
-        return {
-            err: { status: 500, message: error.message }
-        }
-    }
 }
 const getRuleById = async (id) => {
     try {
@@ -69,7 +58,7 @@ const getApprovedUserView = async ({ id, approved_at }) => {
 
         // Extract profile picture and username from the user
         let { profile_picture, username } = user;
-        profile_picture = profile_picture || "none" //this is just because if the user doen't have a profile pic , it will return undefined 
+        profile_picture = profile_picture || "none"
         return { profile_picture, username, approved_at };
     } catch (error) {
         return { error: { status: 500, message: error.message } };
@@ -78,4 +67,4 @@ const getApprovedUserView = async ({ id, approved_at }) => {
 const isUserAlreadyApproved = (community, userId) => {
     return community.approved_users.some(pair => pair.id == (userId));
 };
-export { isUserAlreadyApproved, communityNameExists, getRuleByTitle, getUsersByIds, getRuleById, convertToMongooseId, deleteRule, getApprovedUserView }
+export { isUserAlreadyApproved, communityNameExists, getRuleByTitle, getUsersByIds, getRuleById, deleteRule, getApprovedUserView }

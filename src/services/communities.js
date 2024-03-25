@@ -3,9 +3,7 @@ import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
 import { isUserAlreadyApproved, communityNameExists, getRuleByTitle, getUsersByIds, getRuleById, deleteRule, getApprovedUserView } from "../utils/communities.js";
 
-// Return { err: { status: XX, message: "XX" }} or { community }
-//testing done
-//documantation updated
+
 const addNewCommunity = async (requestBody) => {
   const { community_name, description, content_visibility, mature_content } = requestBody;
   try {
