@@ -26,33 +26,15 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     minlength: 8,
-    minlength: 8,
+  },
+  is_password_set_flag: {
+    type: Boolean,
+    default: false,
   },
   connected_google: {
     type: Boolean,
     default: false,
   },
-  connected_apple: {
-    type: Boolean,
-    default: false,
-  },
-  connected_twitter: {
-    type: Boolean,
-    default: false,
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    unique: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Email is invalid");
-      }
-    },
-  },
-
   email: {
     type: String,
     required: true,
@@ -81,190 +63,227 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  display_name: {
+    type: String,
+    required: true,
+    default: function () {
+      return this.username;
+    },
+  },
+  about: {
+    type: String,
+    default: "",
+  },
+  social_links: [
+    {
+      _id: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
+      },
+      display_text: {
+        type: String,
+      },
+      type: {
+        type: String,
+        enum: [
+          "instagram",
+          "facebook",
+          "custom_url",
+          "reddit",
+          "twitter",
+          "tiktok",
+          "twitch",
+          "youtube",
+          "spotify",
+          "soundcloud",
+          "discord",
+          "paypal",
+        ],
+      },
+      custom_url: {
+        type: String,
+      },
+    },
+  ],
+  profile_picture: {
+    type: String, //URL
+    default: "",
+  },
+  banner_picture: {
+    type: String, //URL
+    default: "",
+  },
   profile_settings: {
-    type: Object,
-    properties: {
-      display_name: {
-        type: String,
-        required: true,
-        default: function () {
-          return this.username;
-        },
-      },
-      about: {
-        type: String,
-      },
-      social_links: {
-        type: Array,
-        items: {
-          type: String,
-        },
-      },
-      profile_picture: {
-        type: String, //URL
-        default: "none "
-      },
-      banner_picture: {
-        type: String, //URL
-      },
-      nsfw_flag: {
-        type: Boolean,
-        default: false,
-      },
-      allow_followers: {
-        type: Boolean,
-        default: true,
-      },
-      content_visibility: {
-        type: Boolean,
-        default: true,
-      },
-      active_communities_visibility: {
-        type: Boolean,
-        default: true,
-      },
+    nsfw_flag: {
+      type: Boolean,
+      default: false,
+    },
+    allow_followers: {
+      type: Boolean,
+      default: true,
+    },
+    content_visibility: {
+      type: Boolean,
+      default: true,
+    },
+    active_communities_visibility: {
+      type: Boolean,
+      default: true,
     },
   },
   safety_and_privacy_settings: {
-    type: Object,
-    properties: {
-      blocked_users: {
-        type: Array,
-        //Forigen key
-        items: {
+    blocked_users: {
+      type: Array,
+      properties: {
+        id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
+        blocked_date: {
+          type: Date,
+          default: Date.now(),
+        },
       },
-      muted_communities: {
-        type: Array,
-        items: {
+    },
+    muted_communities: [
+      {
+        id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Community",
         },
+        muted_date: {
+          type: Date,
+        },
       },
-    },
+    ],
   },
 
   feed_settings: {
-    type: {
-      Adult_content_flag: {
+    Adult_content_flag: {
+      type: Boolean,
+      default: false,
+    },
+    autoplay_media: {
+      type: Boolean,
+      default: true,
+    },
+    communitiy_content_sort: {
+      type: {
+        type: String,
+        enum: ["top", "hot", "new", "rising"],
+        default: "top",
+      },
+      duration: {
+        type: String,
+        enum: [
+          "now",
+          "today",
+          "this_week",
+          "this_month",
+          "this_year",
+          "all_time",
+        ],
+        default: "now",
+      },
+      sort_remember_per_community: {
         type: Boolean,
         default: false,
       },
-      autoplay_media: {
-        type: Boolean,
-        default: true,
+    },
+    global_content: {
+      global_content_view: {
+        type: String,
+        enum: ["card", "classical", "compact"],
+        default: "card",
       },
-      communitiy_content_sort: {
-        type: Object,
-        properties: {
-          type: {
-            type: String,
-            enum: ["top", "hot", "new", "rising"],
-          },
-          duration: {
-            type: String,
-            enum: [
-              "now",
-              "today",
-              "this_week",
-              "this_month",
-              "this_year",
-              "all_time",
-            ],
-          },
-          sort_remember_per_community: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      },
-      global_content: {
-        type: Object,
-        properties: {
-          global_content_view: {
-            type: String,
-            enum: ["card", "classical", "compact"],
-          },
-          global_remember_per_community: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      },
-      Open_posts_in_new_tab: {
+      global_remember_per_community: {
         type: Boolean,
         default: false,
       },
-      community_themes: {
-        type: Boolean,
-        default: true,
-      },
+    },
+    Open_posts_in_new_tab: {
+      type: Boolean,
+      default: false,
+    },
+    community_themes: {
+      type: Boolean,
+      default: true,
     },
   },
   notifications_settings: {
-    type: {
-      mentions: {
-        type: Boolean,
-        default: true,
-      },
-      comments: {
-        type: Boolean,
-        default: true,
-      },
-      upvotes: {
-        type: Boolean,
-        default: true,
-      },
-      replies: {
-        type: Boolean,
-        default: true,
-      },
-      new_followers: {
-        type: Boolean,
-        default: true,
-      },
-      invitations: {
-        type: Boolean,
-        default: true,
-      },
-      posts: {
-        type: Boolean,
-        default: true,
-      },
+    mentions: {
+      type: Boolean,
+      default: true,
+    },
+    comments: {
+      type: Boolean,
+      default: true,
+    },
+    upvotes_posts: {
+      type: Boolean,
+      default: true,
+    },
+    upvotes_comments: {
+      type: Boolean,
+      default: true,
+    },
+    replies: {
+      type: Boolean,
+      default: true,
+    },
+    new_followers: {
+      type: Boolean,
+      default: true,
+    },
+    invitations: {
+      type: Boolean,
+      default: true,
+    },
+    posts: {
+      type: Boolean,
+      default: true,
+    },
+    private_messages: {
+      type: Boolean,
+      default: true,
+    },
+    chat_messages: {
+      type: Boolean,
+      default: true,
+    },
+    chat_requests: {
+      type: Boolean,
+      default: true,
     },
   },
   chat_and_messaging_settings: {
-    type: {
-      who_send_chat_requests_flag: {
-        type: String,
-        enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
-      },
-      who_send_private_messages_flag: {
-        type: String,
-        enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
-      },
+    who_send_chat_requests_flag: {
+      type: String,
+      enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
+      default: "Everyone",
+    },
+    who_send_private_messages_flag: {
+      type: String,
+      enum: ["Everyone", "Accounts Older than 30 days", "Nobody"],
+      default: "Everyone",
     },
   },
   email_settings: {
-    type: {
-      new_follower_email: {
-        type: Boolean,
-        default: true,
-      },
-      chat_request_email: {
-        type: Boolean,
-        default: true,
-      },
-      unsubscribe_from_all_emails: {
-        type: Boolean,
-        default: true,
-      },
+    new_follower_email: {
+      type: Boolean,
+      default: true,
+    },
+    chat_request_email: {
+      type: Boolean,
+      default: true,
+    },
+    unsubscribe_from_all_emails: {
+      type: Boolean,
+      default: false,
     },
   },
   posts_ids: {
-    type: [Object],
+    type: Array,
     items: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
@@ -398,6 +417,10 @@ const userSchema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           ref: "Community",
         },
+        favorite_flag: {
+          type: Boolean,
+          default: false,
+        },
       },
     },
   },
@@ -445,12 +468,32 @@ userSchema.pre("save", async function (next) {
       parseInt(process.env.PASSWORD_HASH_SALT)
     );
   }
+
+  //set an id for social link
+  user.social_links.forEach((link) => {
+    link._id = new mongoose.Types.ObjectId();
+  });
+
+  next();
+});
+
+//Don't return user if he is deleted
+userSchema.pre("find", function () {
+  this.where({ deleted: false });
   next();
 });
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
+  const refreshToken = jwt.sign(
+    { _id: user._id.toString() },
+    process.env.JWT_SECRET,
+    { expiresIn: "8d" }
+  );
+  return refreshToken;
 };
 
 export const User = mongoose.model("User", userSchema);

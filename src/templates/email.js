@@ -49,3 +49,23 @@ export function changePasswordEmail(userEmail, username) {
     html: `<p>The password for ${username} has been updated</p>`, // html body
   };
 }
+
+// Template for new follower request
+export function newFollowerEmail(userEmail,followerUsername) {
+  return {
+    from: process.env.EMAIL, // sender address
+    to: userEmail, // list of receivers
+    subject: "You have got a new follower", // Subject line
+    html: `<p> ${followerUsername} has followed you. </p>`, // html body
+  };
+}
+
+// Template for new chat request
+export function newChatRequestEmail(userEmail,followerUsername) {
+  return {
+    from: process.env.EMAIL, // sender address
+    to: userEmail, // list of receivers
+    subject: "You have got a new chat request", // Subject line
+    html: `<p> ${followerUsername} has sent  you a chat request. </p>`, // html body
+  };
+}

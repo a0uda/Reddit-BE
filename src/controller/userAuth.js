@@ -6,40 +6,54 @@ import {
   redirectToForgetUsername,
   sendChangeEmail,
   sendChangePassword,
-} from "./emailSending.js";
+} from "../utils/emailSending.js";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
+import validator from "validator";
 
 export async function isUsernameAvailable(username) {
+  console.log(username);
   const user = await User.findOne({ username });
   if (user)
-    return { success: false, err: "Username already exists, choose another" };
-  else return { success: true };
+    return {
+      success: false,
+      status: 400,
+      err: "Username already exists, choose another",
+    };
+  else return { success: true, msg: "Username is available" };
 }
 
 export async function isEmailAvailable(email) {
+  if (!validator.isEmail(email)) {
+    return {
+      success: false,
+      status: 400,
+      err: "Invalid email",
+    };
+  }
   const user = await User.findOne({ email });
   if (user)
-    return { success: false, err: "Email already exists, choose another" };
-  else return { success: true };
+    return {
+      success: false,
+      status: 400,
+      err: "Email already exists, choose another",
+    };
+  else return { success: true, msg: "Email is available" };
 }
 
 export async function verifyAuthToken(request) {
-  try {
-    const token = request.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({
-      _id: decoded._id,
-      token: token,
-    });
-    if (!user) {
-      throw new Error();
-    }
-    return user;
-  } catch (error) {
-    return null;
+  const token = request.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return { success: false, status: 401, err: "Access Denied" };
   }
+
+  const userToken = jwt.verify(token, process.env.JWT_SECRET);
+  const userId = userToken._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return { success: false, err: "User not found", status: 404 };
+  }
+  return { success: true, user: user };
 }
 
 export async function signupUser(requestBody) {
@@ -53,6 +67,7 @@ export async function signupUser(requestBody) {
   if (emailAvailableResponse.success == false) return emailAvailableResponse;
 
   const user = new User({ username, email, password, gender });
+  user.is_password_set_flag = true;
   try {
     await user.generateAuthToken();
     await user.save();
@@ -79,14 +94,15 @@ export async function loginUser(requestBody) {
     return { success: false, err: "Username or password are incorrect" };
   }
 
-  await user.generateAuthToken();
+  const refreshToken = await user.generateAuthToken();
   await user.save();
 
-  return { success: true, user };
+  return { success: true, user, refreshToken: refreshToken };
 }
 
 export async function logoutUser(requestBody) {
   const { username, token } = requestBody;
+  console.log(username, token);
   const user = await User.findOne({ username });
   if (!user || user.token != token) {
     console.log(token);
@@ -134,6 +150,13 @@ export async function forgetPassword(requestBody) {
   if (user.username != username) {
     return { success: false, status: 400, err: "Username doesn't match email" };
   }
+  if (!user.verified_email_flag) {
+    return {
+      success: false,
+      status: 400,
+      err: "User email is not verified yet",
+    };
+  }
   await redirectToResetPassword(user._id, email);
   return { success: true, user, msg: "Forget password email is sent" };
 }
@@ -143,6 +166,13 @@ export async function forgetUsername(requestBody) {
   const user = await User.findOne({ email });
   if (!user) {
     return { success: false, status: 404, err: "Email not found" };
+  }
+  if (!user.verified_email_flag) {
+    return {
+      success: false,
+      status: 400,
+      err: "User email is not verified yet",
+    };
   }
   try {
     await redirectToForgetUsername(user._id, email, user.username);
@@ -174,8 +204,18 @@ export async function resetPassword(request) {
   if (!user) {
     return { success: false, status: 404, err: "User not found" };
   }
+
+  if (!user.verified_email_flag) {
+    return {
+      success: false,
+      status: 400,
+      err: "User email is not verified yet",
+    };
+  }
+
   try {
     user.password = new_password;
+    user.is_password_set_flag = true;
 
     await user.save();
 
@@ -190,18 +230,10 @@ export async function resetPassword(request) {
 }
 
 export async function changeEmail(request) {
-  const token = request.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return { success: false, status: 401, err: "Access Denied" };
-  }
-
-  const { password, new_email } = request.body;
-  const userToken = jwt.verify(token, process.env.JWT_SECRET);
-  const userId = userToken._id;
-  const user = await User.findById(userId);
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success: false, status: 404, err: "User not found" };
+    return { success, err, status, user, msg };
   }
 
   const result = await bcrypt.compare(password, user.password);
@@ -227,8 +259,10 @@ export async function changeEmail(request) {
     user.verified_email_flag = false;
     await user.save();
 
-    //send email to old email that user email has changed
-    await sendChangeEmail(userOldEmail, user.username);
+    if (user.verified_email_flag) {
+      //send email to old email that user email has changed
+      await sendChangeEmail(userOldEmail, user.username);
+    }
 
     //send verification email to new user email
     await redirectToVerifyEmail(user._id, new_email);
@@ -244,18 +278,10 @@ export async function changeEmail(request) {
 }
 
 export async function changePassword(request) {
-  const token = request.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return { success: false, status: 401, err: "Access Denied" };
-  }
-  const { current_password, new_password, verified_new_password } =
-    request.body;
-  const userToken = jwt.verify(token, process.env.JWT_SECRET);
-  const userId = userToken._id;
-  const user = await User.findById(userId);
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success: false, status: 404, err: "User not found" };
+    return { success, err, status, user, msg };
   }
 
   const result = await bcrypt.compare(current_password, user.password);
@@ -287,10 +313,14 @@ export async function changePassword(request) {
 
   try {
     user.password = new_password;
+    user.is_password_set_flag = true;
+
     await user.save();
 
-    //send email to user that password has changed
-    await sendChangePassword(user.email, user.username);
+    if (user.verified_email_flag) {
+      //send email to user that password has changed
+      await sendChangePassword(user.email, user.username);
+    }
 
     return {
       success: true,
@@ -299,5 +329,33 @@ export async function changePassword(request) {
     };
   } catch (error) {
     return { succes: false, status: 403, err: error.message };
+  }
+}
+
+export async function changeUsername(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+  if (!user) {
+    return { success, err, status, user, msg };
+  }
+
+  const username = request.body.username;
+  const usernameAvailableResponse = await isUsernameAvailable(username);
+
+  if (usernameAvailableResponse.success == false)
+    return usernameAvailableResponse;
+
+  try {
+    user.username = username;
+
+    await user.save();
+
+    return {
+      success: true,
+      user,
+      msg: "Username has been changed successfully",
+    };
+  } catch (error) {
+    return { succes: false, status: 400, err: error.message };
   }
 }
