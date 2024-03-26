@@ -1,4 +1,4 @@
-import { Post } from "../db/models/Post.js";
+//import { Post } from "../db/models/Post.js";
 import { Community } from "../db/models/Community.js";
 import { CommunityContentControls } from "../db/models/communityContentControls.js";
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
@@ -6,6 +6,8 @@ import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.
 
 import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
+import { TempComment } from "../db/models/temp-files/TempComment.js";
+import { Post } from "../db/models/temp-files/Post.js";
 import {
   isUserAlreadyApproved,
   communityNameExists,
@@ -15,7 +17,12 @@ import {
   deleteRule,
   getApprovedUserView,
 } from "../utils/communities.js";
-
+/* where are these attributes ?1
+ "community_name": "community_44",
+  "description": "description_1",
+  "content_visibility": "public",
+  "mature_content": true
+*/
 const addNewCommunity = async (requestBody) => {
   const { name, type, nsfw_flag, category } = requestBody;
 
@@ -47,6 +54,7 @@ const addNewCommunity = async (requestBody) => {
     await communityPostsAndComments.save();
 
     const savedCommunity = await community.save();
+    console.log(savedCommunity);
 
     return { success: true };
   } catch (error) {
@@ -156,15 +164,15 @@ const changeCommunityPostsCommentsSettings = async (
 };
 
 //////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
+
 const addPostToCommunity = async (community_name, requestBody) => {
   const { title, description } = requestBody;
-
   try {
     const community = await Community.findOne({ name: community_name });
-
     const post = new Post({
       title,
       description,
+
     });
 
     await post.save();
@@ -207,7 +215,31 @@ const getPostsByCommunityCategory = async (category) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+//////////////////////////////////////////////////////////////////////// Comments Retrieval //////////////////////////////////////////////////////////////
+//to be extended -> I needed this to test moderation
+//should we store ids of posts owners or the username itself?
+const addComment = async (requestBody) => {
+  const { description } = requestBody;
+  try {
 
+    const comment = new TempComment({
+      description,
+    });
+    await comment.save();
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+//to be extended -> I needed this to test moderation
+const getComments = async () => {
+  try {
+    const comments = await TempComment.find();
+    return { comments: comments };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
 //////////////////////////////////////////////////////////////////////// Statistics //////////////////////////////////////////////////////////////
 const getCommunityMembersCount = async (community_name) => {
   try {
@@ -233,6 +265,8 @@ const addNewRuleToCommunity = async (requestBody) => {
 
   try {
     const community = await communityNameExists(community_name);
+    console.log(community);
+
     if (!community) {
       return {
         err: { status: 500, message: "community name does not exist " },
@@ -252,12 +286,11 @@ const addNewRuleToCommunity = async (requestBody) => {
     if (!community.rules_ids) {
       community.rules_ids = [];
     }
+    console.log("*******************")
+    console.log(community.rules_ids)
     community.rules_ids.push(new_rule._id);
     await new_rule.save();
     await community.save();
-    console.log("inside add");
-    console.log(new_rule);
-    console.log(community);
     return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -376,7 +409,58 @@ const approveUser = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+////////////////////////////////////////////////Mute Unmute Users///////////////////////////////////////////
+const muteUser = async (requestBody) => {
+  try {
+    const { username, community_name, action } = requestBody;
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
 
+    if (action == "mute") {
+      if (!community.muted_users) {
+        community.muted_users = [];
+      }
+      community.muted_users.push(user._id);
+      await community.save();
+
+    }
+    else if (action == "unmute") {
+      console.log("before filter")
+      console.log(community.muted_users);
+      //delete from muted users id where username is equal to the username in the request body
+      community.muted_users = community.muted_users.filter((id) => id.toString() !== user._id.toString());
+      await community.save();
+      console.log("after filter")
+      console.log(community.muted_users);
+    }
+    return { success: true };
+  }
+  catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+// TODO: I cant find this feature in reddit , i dont know what is the exact attributes we need to return here
+const getMutedUsers = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    console.log(community)
+    const muted_users_ids = community.muted_users;
+    const muted_users = await getUsersByIds(muted_users_ids);
+    console.log(muted_users);
+    return { users: muted_users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
 //Profile picture is not showing
 const getApprovedUsers = async (community_name) => {
   try {
@@ -546,6 +630,52 @@ const deleteCommunityBannerPicture = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+/////////////////MODERATION////////////////////////////////////////
+/*
+/communities/approve-discussion-item:
+  post:
+    tags:
+      - Moderation
+    summary: Moderator approves Discussion Items by members.
+    description: "This endpoint provides the functionality for a subreddit moderator to approve posts. \nThe approval action can have several implications:\n  1.Visibility Restoration: \n  3.Report Immunity: Once a post is approved by a moderator, it becomes immune to automatic removal triggered by user reports.\n\nThe endpoint is typically consumed from the Mod Queue. Alternatively, moderators can also approve posts directly from the subreddit feed by clicking on the small tick icon beneath the post.\n"
+    operationId: approveDiscussionItem
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DiscussionItem"
+      required: true
+    responses:
+      "200":
+        description: The request has succeeded.
+      "400":
+        description: The request could not be understood or was missing required parameters.
+      "500":
+        description: An error occurred on the server.
+ 
+*/
+const approveDiscussionItem = async (requestBody) => {
+  const { isPost, id } = requestBody;
+  try {
+    if (isPost) {
+      const post = await TempPost.findById(id);
+      if (!post) {
+        return { err: { status: 500, message: "post does not exist " } };
+      }
+      post.approved = true;
+      await post.save();
+    } else {
+      const comment = await TempComment.findById(id);
+      if (!comment) {
+        return { err: { status: 500, message: "comment does not exist " } };
+      }
+      comment.approved = true;
+      await comment.save();
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
 
 export {
   addNewCommunity,
@@ -571,4 +701,8 @@ export {
   deleteCommunityProfilePicture,
   addCommunityBannerPicture,
   deleteCommunityBannerPicture,
+  getComments,
+  addComment,
+  getMutedUsers,
+  muteUser,
 };

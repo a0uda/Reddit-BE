@@ -11,7 +11,7 @@ import {
     addPostToCommunity,
     getPostsByCommunityCategory,
     getCommunityMembersCount,
-  
+
     addNewRuleToCommunity,
     editCommunityRule,
     deleteCommunityRule,
@@ -28,8 +28,12 @@ import {
     deleteCommunityProfilePicture,
 
     addCommunityBannerPicture,
-    deleteCommunityBannerPicture
-  }from "../services/communities.js";
+    deleteCommunityBannerPicture,
+    getComments,
+    addComment,
+    getMutedUsers,
+    muteUser,
+} from "../services/communities.js";
 
 const communityRouter = express.Router();
 
@@ -371,4 +375,61 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
     }
 })
 
+
+////////////////////////////////COMMENTS////////////////////////////////////////////////////////////
+//this API should be completely changed , this was just a tool to test moderation it has nothing todo with comments
+communityRouter.post("/communities/add-comment", async (req, res, next) => {
+    try {
+        const { err, success } = await addComment(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+//GET COMMENT 
+communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
+    try {
+        const { err, comments } = await getComments()
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(comments)
+
+    } catch (error) {
+        next(error)
+    }
+})
+////////////////////////////////////////////////////MUTE USERS///////////////////////////////////////////////
+communityRouter.post("/communities/mute-user", async (req, res, next) => {
+    try {
+        const { err, success } = await muteUser(req.body)
+
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+
+        next(error)
+    }
+})
+//get all muted users
+communityRouter.get("/communities/get-all-muted-users/:community_name", async (req, res, next) => {
+    try {
+        console.log(req.params.community_name)
+        const { err, users } = await getMutedUsers(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(users)
+
+    } catch (error) {
+        next(error)
+    }
+})
 export { communityRouter }

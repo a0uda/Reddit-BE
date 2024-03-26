@@ -480,7 +480,7 @@ userSchema.pre("save", async function (next) {
 //Don't return user if he is deleted
 userSchema.pre("find", function () {
   this.where({ deleted: false });
-  next();
+  // next();
 });
 
 userSchema.methods.generateAuthToken = async function () {
