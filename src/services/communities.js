@@ -461,6 +461,53 @@ const getMutedUsers = async (community_name) => {
     return { err: { status: 500, message: error.message } };
   }
 }
+
+//////////////////////////////////////////////Ban Users///////////////////////////////////////////
+const banUser = async (requestBody) => {
+  try {
+    const { username, community_name, action } = requestBody;
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
+    if (action == "ban") {
+      if (!community.banned_users) {
+        community.banned_users = [];
+      }
+      community.banned_users.push(user._id);
+      await community.save();
+    }
+    else if (action == "unban") {
+      console.log(user._id.toString())
+      console.log(community.banned_users[0]._id.toString())
+      community.banned_users = community.banned_users.filter((id) => id.toString() !== user._id.toString());
+      await community.save();
+    }
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+const getBannedUsers = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const banned_users_ids = community.banned_users;
+    const banned_users = await getUsersByIds(banned_users_ids);
+    return { users: banned_users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+
+
 //Profile picture is not showing
 const getApprovedUsers = async (community_name) => {
   try {
@@ -630,30 +677,7 @@ const deleteCommunityBannerPicture = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
-/////////////////MODERATION////////////////////////////////////////
-/*
-/communities/approve-discussion-item:
-  post:
-    tags:
-      - Moderation
-    summary: Moderator approves Discussion Items by members.
-    description: "This endpoint provides the functionality for a subreddit moderator to approve posts. \nThe approval action can have several implications:\n  1.Visibility Restoration: \n  3.Report Immunity: Once a post is approved by a moderator, it becomes immune to automatic removal triggered by user reports.\n\nThe endpoint is typically consumed from the Mod Queue. Alternatively, moderators can also approve posts directly from the subreddit feed by clicking on the small tick icon beneath the post.\n"
-    operationId: approveDiscussionItem
-    requestBody:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/DiscussionItem"
-      required: true
-    responses:
-      "200":
-        description: The request has succeeded.
-      "400":
-        description: The request could not be understood or was missing required parameters.
-      "500":
-        description: An error occurred on the server.
- 
-*/
+
 const approveDiscussionItem = async (requestBody) => {
   const { isPost, id } = requestBody;
   try {
@@ -705,4 +729,6 @@ export {
   addComment,
   getMutedUsers,
   muteUser,
+  banUser,
+  getBannedUsers
 };
