@@ -700,6 +700,107 @@ const approveDiscussionItem = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+const addModerator = async (requestBody) => {
+  try {
+    const { community_name, username } = requestBody;
+
+    // Find the community by name
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 404, message: "Community not found." } };
+    }
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return { err: { status: 404, message: "User not found." } };
+    }
+
+    // Check if the user is already a moderator of the community
+    const isModerator = community.moderators.some(moderator => moderator._id.equals(user._id));
+    if (isModerator) {
+      return { err: { status: 400, message: "User is already a moderator of the community." } };
+    }
+
+    // Add the user as a moderator to the community
+    community.moderators.push({
+      _id: user._id,
+      moderator_since: new Date() // Set the moderator_since date to current date
+    });
+
+    // Save the updated community
+    await community.save();
+
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getModerators = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return {
+        err: { status: 500, message: "Community not found." },
+      };
+    }
+    const moderators = [];
+    // Iterate over the moderators array
+    for (const moderator of community.moderators) {
+      // Retrieve the moderator user from the User schema
+      const user = await User.findById(moderator._id);
+      if (user) {
+        // Extract desired fields from the user object
+        const { profile_picture, username } = user;
+        const moderated_since = moderator.moderator_since;
+        // Add moderator data to the moderators array
+        moderators.push({ profile_picture, username, moderated_since });
+      }
+    }
+    return { moderators };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+//delete moderator
+const deleteModerator = async (requestBody) => {
+  try {
+    const { community_name, username } = requestBody;
+
+    // Find the community by name
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 404, message: "Community not found." } };
+    }
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return { err: { status: 404, message: "User not found." } };
+    }
+
+    // Check if the user is a moderator of the community
+    const moderatorIndex = community.moderators.findIndex(moderator => moderator._id.equals(user._id));
+    if (moderatorIndex === -1) {
+      return { err: { status: 400, message: "User is not a moderator of the community." } };
+    }
+
+    // Remove the user from the moderators array
+    community.moderators.splice(moderatorIndex, 1);
+
+    // Save the updated community
+    await community.save();
+
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+
+
+
 
 export {
   addNewCommunity,
@@ -730,5 +831,8 @@ export {
   getMutedUsers,
   muteUser,
   banUser,
-  getBannedUsers
+  getBannedUsers,
+  addModerator,
+  getModerators,
+  deleteModerator
 };

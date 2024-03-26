@@ -109,12 +109,16 @@ const communitySchema = new mongoose.Schema({
     min: 0,
     default: 0,
   },
-  moderators: [
-    {
+  moderators: [{
+    _id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-  ],
+    moderator_since: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   invited_moderators: [
     {
       type: mongoose.Schema.Types.ObjectId,

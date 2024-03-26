@@ -33,6 +33,11 @@ import {
     addComment,
     getMutedUsers,
     muteUser,
+    banUser,
+    getBannedUsers,
+    addModerator,
+    getModerators,
+    deleteModerator
 } from "../services/communities.js";
 
 const communityRouter = express.Router();
@@ -419,7 +424,7 @@ communityRouter.post("/communities/mute-user", async (req, res, next) => {
     }
 })
 //get all muted users
-communityRouter.get("/communities/get-all-muted-users/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name)
         const { err, users } = await getMutedUsers(req.params.community_name)
@@ -432,4 +437,57 @@ communityRouter.get("/communities/get-all-muted-users/:community_name", async (r
         next(error)
     }
 })
+////////////////////////////////////////////////////BAN USERS///////////////////////////////////////////////
+communityRouter.post("/communities/ban-user", async (req, res, next) => {
+    try {
+        const { err, success } = await banUser(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//get all banned users
+communityRouter.get("/communities/about/banned/:community_name", async (req, res, next) => {
+    try {
+        const { err, users } = await getBannedUsers(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).send(users)
+    } catch (error) {
+        next(error)
+    }
+})
+//add moderaator
+communityRouter.post("/communities/add-moderator", async (req, res, next) => {
+    try {
+        const { err, success } = await addModerator(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//get all moderators
+communityRouter.get("/communities/about/moderators/:community_name", async (req, res, next) => {
+
+    try {
+        const { err, moderators } = await getModerators(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).send(moderators)
+    } catch (error) {
+        next(error)
+    }
+})
+//remove moderator
+communityRouter.post("/communities/remove-moderator", async (req, res, next) => {
+    try {
+
+        const { err, success } = await deleteModerator(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+
 export { communityRouter }
