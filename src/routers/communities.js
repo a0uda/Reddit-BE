@@ -2,16 +2,26 @@ import express from "express";
 
 import {
     addNewCommunity,
+
     getCommunityGenerlSettings,
     getCommunityContentControls,
     getCommunityPostsCommentsSettings,
+
     changeCommunityGeneralSettings,
     changeCommunityContentControls,
     changeCommunityPostsCommentsSettings,
-    addPostToCommunity,
-    getPostsByCommunityCategory,
+
+    addDiscussionItemToCommunity,
+    getDiscussionItemsByCommunityCategory,
+    getDiscussionItemsByRandomCategory,
+
     getCommunityMembersCount,
-  
+
+    getRemovedDiscussionItems,
+    getEditedDiscussionItems,   
+    getUnmoderatedDiscussionItems,
+
+
     addNewRuleToCommunity,
     editCommunityRule,
     deleteCommunityRule,
@@ -28,18 +38,27 @@ import {
     deleteCommunityProfilePicture,
 
     addCommunityBannerPicture,
-    deleteCommunityBannerPicture
-  }from "../services/communities.js";
+    deleteCommunityBannerPicture,
+    getComments,
+    addComment,
+    getMutedUsers,
+    muteUser,
+    banUser,
+    getBannedUsers,
+    addModerator,
+    getModerators,
+    deleteModerator
+} from "../services/communities.js";
 
 const communityRouter = express.Router();
 
 communityRouter.post("/communities/add-community", async (req, res, next) => {
     try {
-        const { err, community } = await addNewCommunity(req.body)
+        const { err, community_name } = await addNewCommunity(req.body)
 
         if (err) { return next(err) }
 
-        return res.status(201).send(community)
+        return res.status(201).send({ community_name })
 
     } catch (error) {
         next(error)
@@ -141,31 +160,47 @@ communityRouter.post("/communities/change-posts-and-comments/:community_name", a
     }
 })
 
-//////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/add-post/:community_name", async (req, res, next) => {
+//////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
+communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
     try {
         const community_name = req.params.community_name
 
-        const { err, post } = await addPostToCommunity(community_name, req.body)
+        const { err, item } = await addDiscussionItemToCommunity(community_name, req.body)
 
         if (err) { return next(err) }
 
-        return res.status(201).send(post)
+        return res.status(201).send(item)
 
     } catch (error) {
         next(error)
     }
 })
 
-communityRouter.get("/communities/get-posts-by-category/:category", async (req, res, next) => {
+communityRouter.get("/communities/get-items-by-category/:category/:item_type", async (req, res, next) => {
     try {
         const category = req.params.category
+        const discussion_item_type = req.params.item_type
 
-        const { err, posts } = await getPostsByCommunityCategory(category)
+        const { err, items } = await getDiscussionItemsByCommunityCategory(category, discussion_item_type)
 
         if (err) { return next(err) }
 
-        return res.status(200).send(posts)
+        return res.status(200).send(items)
+
+    } catch (error) {
+        next(error)
+    }
+})
+
+communityRouter.get("/communities/get-items-by-random-category/:item_type", async (req, res, next) => {
+    try {
+        const discussion_item_type = req.params.item_type
+
+        const { err, items } = await getDiscussionItemsByRandomCategory(discussion_item_type)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(items)
 
     } catch (error) {
         next(error)
@@ -187,6 +222,53 @@ communityRouter.get("/communities/get-members-count/:community_name", async (req
         next(error)
     }
 })
+
+//////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
+communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
+    try {
+        const {community_name, time_filter, posts_or_comments} = req.body
+
+        const removedDiscussionItems = await getRemovedDiscussionItems(community_name, time_filter, posts_or_comments)
+
+        if (removedDiscussionItems.err) { return next(removedDiscussionItems.err) }
+
+        return res.status(200).send(removedDiscussionItems)
+    }
+    catch (error) {
+        next(error)
+    }
+});
+
+communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) => {
+    try {
+        const {community_name, time_filter, posts_or_comments} = req.body
+
+        const editedDiscussionItems = await getEditedDiscussionItems(community_name, time_filter, posts_or_comments)
+
+        if (editedDiscussionItems.err) { return next(editedDiscussionItems.err) }
+
+        return res.status(200).send(editedDiscussionItems)
+    }
+    catch (error) {
+        next(error)
+    }
+});
+
+
+communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, next) => {
+    try {
+        const {community_name, time_filter} = req.body
+
+        const unmoderatedDiscussionItems = await getUnmoderatedDiscussionItems(community_name, time_filter)
+
+        if (unmoderatedDiscussionItems.err) { return next(unmoderatedDiscussionItems.err) }
+
+        return res.status(200).send(unmoderatedDiscussionItems)
+    }
+    catch (error) {
+        next(error)
+    }
+});
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.
@@ -366,6 +448,116 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
 
         res.status(200).json({ message: 'OK' });
 
+    } catch (error) {
+        next(error)
+    }
+})
+
+
+////////////////////////////////COMMENTS////////////////////////////////////////////////////////////
+//this API should be completely changed , this was just a tool to test moderation it has nothing todo with comments
+communityRouter.post("/communities/add-comment", async (req, res, next) => {
+    try {
+        const { err, success } = await addComment(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+//GET COMMENT 
+communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
+    try {
+        const { err, comments } = await getComments()
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(comments)
+
+    } catch (error) {
+        next(error)
+    }
+})
+////////////////////////////////////////////////////MUTE USERS///////////////////////////////////////////////
+communityRouter.post("/communities/mute-user", async (req, res, next) => {
+    try {
+        const { err, success } = await muteUser(req.body)
+
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+
+        next(error)
+    }
+})
+//get all muted users
+communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
+    try {
+        console.log(req.params.community_name)
+        const { err, users } = await getMutedUsers(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(users)
+
+    } catch (error) {
+        next(error)
+    }
+})
+////////////////////////////////////////////////////BAN USERS///////////////////////////////////////////////
+communityRouter.post("/communities/ban-user", async (req, res, next) => {
+    try {
+        const { err, success } = await banUser(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//get all banned users
+communityRouter.get("/communities/about/banned/:community_name", async (req, res, next) => {
+    try {
+        const { err, users } = await getBannedUsers(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).send(users)
+    } catch (error) {
+        next(error)
+    }
+})
+//add moderaator
+communityRouter.post("/communities/add-moderator", async (req, res, next) => {
+    try {
+        const { err, success } = await addModerator(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//get all moderators
+communityRouter.get("/communities/about/moderators/:community_name", async (req, res, next) => {
+
+    try {
+        const { err, moderators } = await getModerators(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).send(moderators)
+    } catch (error) {
+        next(error)
+    }
+})
+//remove moderator
+communityRouter.post("/communities/remove-moderator", async (req, res, next) => {
+    try {
+
+        const { err, success } = await deleteModerator(req.body)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
     } catch (error) {
         next(error)
     }

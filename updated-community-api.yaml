@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  version: '1.0'
-  title: Code Anatomy API - Community 
+  version: "1.0"
+  title: Code Anatomy API - Community
   description: >-
     This API is designed for our software engineering project, which aims to
     create a simplified version of Reddit. We are adopting an API-first or
@@ -13,13 +13,11 @@ info:
     the project evolves, updates to this documentation will be made to reflect
     any changes.
 
-
 ##################################################################################### Servers #####################################################################################
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/FatemaKotb/Community-Fatema-Individual/1.0
-
 
   - url: "{protocol}://api.reddit.com/v1"
     description: Production server (uses live data)
@@ -125,7 +123,7 @@ components:
           type: string
         full_description:
           type: string
-    
+
     ################################################## Community - General Settings Schema ###############################
     community_general_settings_schema:
       type: object
@@ -221,7 +219,12 @@ components:
               minimum: 0
         allow_posts_to_have_body_text:
           type: string
-          enum: ["Text body is optional for all post types", "Text body is required for text-only posts", "Text body is not allowed"]
+          enum:
+            [
+              "Text body is optional for all post types",
+              "Text body is required for text-only posts",
+              "Text body is not allowed",
+            ]
         restrict_post_title_length:
           type: object
           properties:
@@ -297,7 +300,17 @@ components:
           properties:
             suggested_sort:
               type: string
-              enum: ["None (Recommended)", "Best", "Old", "Top", "Q&A", "Live (Beta)", "Controversial", "New"]
+              enum:
+                [
+                  "None (Recommended)",
+                  "Best",
+                  "Old",
+                  "Top",
+                  "Q&A",
+                  "Live (Beta)",
+                  "Controversial",
+                  "New",
+                ]
             collapse_deleted_and_removed_comments:
               type: boolean
               default: true
@@ -483,7 +496,14 @@ components:
                 type: string
               repeat_options:
                 type: string
-                enum: ["does_not_repeat", "hourly", "daily", "weekly_on_day", "monthly_on_date"]
+                enum:
+                  [
+                    "does_not_repeat",
+                    "hourly",
+                    "daily",
+                    "weekly_on_day",
+                    "monthly_on_date",
+                  ]
               repeat_every:
                 type: object
                 properties:
@@ -497,10 +517,24 @@ components:
                 properties:
                   default_comment_order:
                     type: string
-                    enum: ["Default comment order", "Best", "Top", "New", "Controversial", "Old", "Q&A"]
+                    enum:
+                      [
+                        "Default comment order",
+                        "Best",
+                        "Top",
+                        "New",
+                        "Controversial",
+                        "Old",
+                        "Q&A",
+                      ]
                   not_a_sticky_post:
                     type: string
-                    enum: ["not_a_sticky_post", "submit_as_first_sticky_post", "submit_as_second_sticky_post"]
+                    enum:
+                      [
+                        "not_a_sticky_post",
+                        "submit_as_first_sticky_post",
+                        "submit_as_second_sticky_post",
+                      ]
               contest_mode_flag:
                 type: boolean
                 default: false
@@ -534,7 +568,6 @@ components:
         description:
           type: string
           description: The body content of the post
-
 
 paths:
   /communities/get-rules/{community_name}: #done
@@ -924,7 +957,7 @@ paths:
                       message:
                         type: string
                         example: Internal Server Error
-  
+
   /communities/add-community:
     post:
       tags:
@@ -936,16 +969,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/community_schema'
+              $ref: "#/components/schemas/community_schema"
         required: true
       responses:
-        '201':
+        "201":
           description: Community was successfully created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_schema'
-        '400':
+                $ref: "#/components/schemas/community_schema"
+        "400":
           description: Community name is already taken
           content:
             application/json:
@@ -956,7 +989,7 @@ paths:
                     type: integer
                   message:
                     type: string
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -983,13 +1016,13 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: General settings of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_general_settings_schema'
-        '500':
+                $ref: "#/components/schemas/community_general_settings_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1014,13 +1047,13 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Content controls of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_content_controls_schema'
-        '500':
+                $ref: "#/components/schemas/community_content_controls_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1045,13 +1078,13 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Posts and comments settings of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_posts_and_comments_schema'
-        '500':
+                $ref: "#/components/schemas/community_posts_and_comments_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1082,16 +1115,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/community_general_settings_schema'
+              $ref: "#/components/schemas/community_general_settings_schema"
         required: true
       responses:
-        '200':
+        "200":
           description: Updated general settings of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_general_settings_schema'
-        '500':
+                $ref: "#/components/schemas/community_general_settings_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1120,16 +1153,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/community_content_controls_schema'
+              $ref: "#/components/schemas/community_content_controls_schema"
         required: true
       responses:
-        '200':
+        "200":
           description: Updated content controls of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_content_controls_schema'
-        '500':
+                $ref: "#/components/schemas/community_content_controls_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1158,16 +1191,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/community_posts_and_comments_schema'
+              $ref: "#/components/schemas/community_posts_and_comments_schema"
         required: true
       responses:
-        '200':
+        "200":
           description: Updated posts and comments settings of the community
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/community_posts_and_comments_schema'
-        '500':
+                $ref: "#/components/schemas/community_posts_and_comments_schema"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1206,13 +1239,13 @@ paths:
                   type: string
         required: true
       responses:
-        '201':
+        "201":
           description: Post successfully added
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Post'
-        '500':
+                $ref: "#/components/schemas/Post"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1237,15 +1270,15 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Posts successfully retrieved
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Post'
-        '500':
+                  $ref: "#/components/schemas/Post"
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -1272,7 +1305,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Member count successfully retrieved
           content:
             application/json:
@@ -1281,7 +1314,7 @@ paths:
                 properties:
                   members_count:
                     type: integer
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
