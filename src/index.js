@@ -5,7 +5,7 @@ import { communityRouter } from "./routers/communities.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
 
-//const connect_to_db = require("./db/mongoose")
+// const connect_to_db = require("./db/mongoose")
 
 const app = express();
 
@@ -32,5 +32,5 @@ app.use([usersRouter, communityRouter]);
 // Error handling middleware
 app.use((err, req, res, next) => {
   res.status(err.status || 500);
-  res.send(err.message);
+  res.send({err});
 });

@@ -21,29 +21,29 @@ const communitySchema = new mongoose.Schema({
   category: {
     type: String,
     enum: [
-      "Technology",
-      "Science",
+      // "Technology",
+      // "Science",
       "Music",
-      "Sports",
-      "Gaming",
-      "News",
-      "Movies",
-      "Books",
-      "Fashion",
-      "Food",
-      "Travel",
-      "Health",
+      // "Sports",
+      // "Gaming",
+      // "News",
+      // "Movies",
+      // "Books",
+      // "Fashion",
+      // "Food",
+      // "Travel",
+      // "Health",
       "Art",
-      "Photography",
-      "Education",
-      "Business",
-      "Finance",
-      "Politics",
-      "Religion",
-      "DIY",
-      "Pets",
-      "Environment",
-      "Humor",
+      // "Photography",
+      // "Education",
+      // "Business",
+      // "Finance",
+      // "Politics",
+      // "Religion",
+      // "DIY",
+      // "Pets",
+      // "Environment",
+      // "Humor",
       "Personal",
     ],
     default: "Personal",
@@ -61,7 +61,16 @@ const communitySchema = new mongoose.Schema({
     type: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
+        ref: "DiscussionItemMinimal",
+      },
+    ],
+    default: [],
+  },
+  comments: {
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DiscussionItemMinimal",
       },
     ],
     default: [],
@@ -109,12 +118,16 @@ const communitySchema = new mongoose.Schema({
     min: 0,
     default: 0,
   },
-  moderators: [
-    {
+  moderators: [{
+    _id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-  ],
+    moderator_since: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   invited_moderators: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -308,6 +321,7 @@ const communitySchema = new mongoose.Schema({
       ref: "Rule",
     },
   ],
+
 });
 
 export const Community = mongoose.model("Community", communitySchema);

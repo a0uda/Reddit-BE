@@ -1,11 +1,16 @@
-import { Post } from "../db/models/Post.js";
+import mongoose from "mongoose";
+
 import { Community } from "../db/models/Community.js";
 import { CommunityContentControls } from "../db/models/communityContentControls.js";
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
 import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
+import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
 
 import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
+import { TempComment } from "../db/models/temp-files/TempComment.js";
+import { Post } from "../db/models/temp-files/Post.js";
+
 import {
   isUserAlreadyApproved,
   communityNameExists,
@@ -15,7 +20,12 @@ import {
   deleteRule,
   getApprovedUserView,
 } from "../utils/communities.js";
-
+/* where are these attributes ?1
+ "community_name": "community_44",
+  "description": "description_1",
+  "content_visibility": "public",
+  "mature_content": true
+*/
 const addNewCommunity = async (requestBody) => {
   const { name, type, nsfw_flag, category } = requestBody;
 
@@ -48,7 +58,7 @@ const addNewCommunity = async (requestBody) => {
 
     const savedCommunity = await community.save();
 
-    return { community: savedCommunity };
+    return { community_name: savedCommunity.name};
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -155,67 +165,230 @@ const changeCommunityPostsCommentsSettings = async (
   }
 };
 
-//////////////////////////////////////////////////////////////////////// Posts Retrieval //////////////////////////////////////////////////////////////
-const addPostToCommunity = async (community_name, requestBody) => {
-  const { title, description } = requestBody;
-
+//////////////////////////////////////////////////////////////////////// Discussion Item //////////////////////////////////////////////////////////////
+const addDiscussionItemToCommunity = async (community_name, requestBody) => {
+  const { title, description, discussion_item_type } = requestBody;
   try {
     const community = await Community.findOne({ name: community_name });
 
-    const post = new Post({
+    const discussionItemMinimal = new DiscussionItemMinimal({
       title,
       description,
+      discussion_item_type: discussion_item_type,
+      written_in_community: community._id,
+      marked_as_spam_by_a_moderator: false,
     });
 
-    await post.save();
+    await discussionItemMinimal.save();
 
-    community.posts.push(post._id);
+    if (discussion_item_type === 'post') {
+      community.posts.push(discussionItemMinimal._id);
+    } else if (discussion_item_type === 'comment') {
+      community.comments.push(discussionItemMinimal._id);
+    }
 
     await community.save();
 
-    return { post: post };
+    return { item: discussionItemMinimal };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
 
-const getPostsByCommunityCategory = async (category) => {
+const getDiscussionItemsByCommunityCategory = async (category, discussion_item_type) => {
   try {
-    const posts = await Community.aggregate([
+    const items = await Community.aggregate([
       {
         $match: { category: category },
       },
       {
         $lookup: {
-          from: "posts",
-          localField: "posts",
+          from: "discussionitemminimals",
+          localField: discussion_item_type === 'post' ? 'posts' : 'comments',
           foreignField: "_id",
-          as: "mergedPosts",
+          as: "mergedItems",
         },
       },
       {
-        $unwind: "$mergedPosts",
+        $unwind: "$mergedItems",
       },
       {
-        $replaceRoot: { newRoot: "$mergedPosts" },
+        $replaceRoot: { newRoot: "$mergedItems" },
+      },
+      {
+        $match: { discussion_item_type: { $in: ['post', 'comment'] } },
       },
     ]);
 
-    return { posts: posts };
+    return { items };
   } catch (error) {
-    console.error(error);
+
     return { err: { status: 500, message: error.message } };
   }
 };
 
+const getDiscussionItemsByRandomCategory = async (discussion_item_type) => {
+  try {
+
+    const categories = mongoose.model("Community").schema.path("category").enumValues;
+
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    
+    const items = await Community.aggregate([
+      {
+        $match: { category: category },
+      },
+      {
+        $lookup: {
+          from: "discussionitemminimals",
+          localField: discussion_item_type === 'post' ? 'posts' : 'comments',
+          foreignField: "_id",
+          as: "mergedItems",
+        },
+      },
+      {
+        $unwind: "$mergedItems",
+      },
+      {
+        $replaceRoot: { newRoot: "$mergedItems" },
+      },
+      {
+        $match: { discussion_item_type: { $in: ['post', 'comment'] } },
+      },
+    ]);
+
+    return { items };
+  } catch (error) {
+
+    return { err: { status: 500, message: error.message } };
+  }
+};
 //////////////////////////////////////////////////////////////////////// Statistics //////////////////////////////////////////////////////////////
 const getCommunityMembersCount = async (community_name) => {
   try {
     const community = await Community.findOne({ name: community_name });
 
-    console.log(community.members_count);
-
     return { members_count: community.members_count };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Mod Queue /////////////////////////////////////////////////////////////////////////
+const getRemovedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
+  try {
+    // Determine the sort order based on the time_filter
+    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+
+    // Determine the discussion item type based on posts_or_comments
+    let itemType;
+    if (posts_or_comments.toLowerCase() === 'posts and comments') {
+        itemType = ['post', 'comment'];
+    } else {
+        itemType = posts_or_comments.toLowerCase();
+    }
+
+    // Initialize the query object
+    let query = {
+      marked_as_spam_by_a_moderator: true,
+      discussion_item_type: { $in: itemType }
+    };
+
+    // If a specific community is specified, add it to the query
+    if (community_name !== 'All Subreddits' && community_name != null) {
+      const community = await Community.findOne({ name: community_name });
+      query.written_in_community = community._id;
+    }
+
+    // Fetch the removed discussion items
+    const removedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
+    
+    return removedDiscussionItems;
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getEditedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
+  try {
+    // Determine the sort order based on the time_filter
+    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+
+    // Determine the discussion item type based on posts_or_comments
+    let itemType;
+    if (posts_or_comments.toLowerCase() === 'posts and comments') {
+        itemType = ['post', 'comment'];
+    } else {
+        itemType = posts_or_comments.toLowerCase();
+    }
+
+    // Initialize the query object
+    let query = {
+      edited_flag: true,
+      discussion_item_type: { $in: itemType }
+    };
+
+    // If a specific community is specified, add it to the query
+    if (community_name !== 'All Subreddits' && community_name != null) {
+      const community = await Community.findOne({ name: community_name });
+      query.written_in_community = community._id;
+    }
+
+    // Fetch the edited discussion items
+    const editedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
+    
+    return editedDiscussionItems;
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getUnmoderatedDiscussionItems = async (community_name, time_filter) =>{
+  try {
+    // Determine the sort order based on the time_filter
+    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+
+    // Initialize the query object
+    let query = {
+      unmoderated_flag: true,
+    };
+
+    // If a specific community is specified, add it to the query
+    if (community_name !== 'All Subreddits' && community_name != null) {
+      const community = await Community.findOne({ name: community_name });
+      query.written_in_community = community._id;
+    }
+
+    // Fetch the unmoderated discussion items
+    const unmoderatedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
+    
+    return unmoderatedDiscussionItems;
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+//////////////////////////////////////////////////////////////////////// Comments Retrieval //////////////////////////////////////////////////////////////
+//to be extended -> I needed this to test moderation
+//should we store ids of posts owners or the username itself?
+const addComment = async (requestBody) => {
+  const { description } = requestBody;
+  try {
+
+    const comment = new TempComment({
+      description,
+    });
+    await comment.save();
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+//to be extended -> I needed this to test moderation
+const getComments = async () => {
+  try {
+    const comments = await TempComment.find();
+    return { comments: comments };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -233,6 +406,8 @@ const addNewRuleToCommunity = async (requestBody) => {
 
   try {
     const community = await communityNameExists(community_name);
+    console.log(community);
+
     if (!community) {
       return {
         err: { status: 500, message: "community name does not exist " },
@@ -252,12 +427,11 @@ const addNewRuleToCommunity = async (requestBody) => {
     if (!community.rules_ids) {
       community.rules_ids = [];
     }
+    console.log("*******************")
+    console.log(community.rules_ids)
     community.rules_ids.push(new_rule._id);
     await new_rule.save();
     await community.save();
-    console.log("inside add");
-    console.log(new_rule);
-    console.log(community);
     return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -376,6 +550,104 @@ const approveUser = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+////////////////////////////////////////////////Mute Unmute Users///////////////////////////////////////////
+const muteUser = async (requestBody) => {
+  try {
+    const { username, community_name, action } = requestBody;
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
+
+    if (action == "mute") {
+      if (!community.muted_users) {
+        community.muted_users = [];
+      }
+      community.muted_users.push(user._id);
+      await community.save();
+
+    }
+    else if (action == "unmute") {
+      console.log("before filter")
+      console.log(community.muted_users);
+      //delete from muted users id where username is equal to the username in the request body
+      community.muted_users = community.muted_users.filter((id) => id.toString() !== user._id.toString());
+      await community.save();
+      console.log("after filter")
+      console.log(community.muted_users);
+    }
+    return { success: true };
+  }
+  catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+// TODO: I cant find this feature in reddit , i dont know what is the exact attributes we need to return here
+const getMutedUsers = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    console.log(community)
+    const muted_users_ids = community.muted_users;
+    const muted_users = await getUsersByIds(muted_users_ids);
+    console.log(muted_users);
+    return { users: muted_users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+//////////////////////////////////////////////Ban Users///////////////////////////////////////////
+const banUser = async (requestBody) => {
+  try {
+    const { username, community_name, action } = requestBody;
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return { err: { status: 400, message: "Username not found." } };
+    }
+    if (action == "ban") {
+      if (!community.banned_users) {
+        community.banned_users = [];
+      }
+      community.banned_users.push(user._id);
+      await community.save();
+    }
+    else if (action == "unban") {
+      console.log(user._id.toString())
+      console.log(community.banned_users[0]._id.toString())
+      community.banned_users = community.banned_users.filter((id) => id.toString() !== user._id.toString());
+      await community.save();
+    }
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+const getBannedUsers = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return { err: { status: 400, message: "Community not found." } };
+    }
+    const banned_users_ids = community.banned_users;
+    const banned_users = await getUsersByIds(banned_users_ids);
+    return { users: banned_users };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+
 
 //Profile picture is not showing
 const getApprovedUsers = async (community_name) => {
@@ -547,17 +819,152 @@ const deleteCommunityBannerPicture = async (requestBody) => {
   }
 };
 
+const approveDiscussionItem = async (requestBody) => {
+  const { isPost, id } = requestBody;
+  try {
+    if (isPost) {
+      const post = await TempPost.findById(id);
+      if (!post) {
+        return { err: { status: 500, message: "post does not exist " } };
+      }
+      post.approved = true;
+      await post.save();
+    } else {
+      const comment = await TempComment.findById(id);
+      if (!comment) {
+        return { err: { status: 500, message: "comment does not exist " } };
+      }
+      comment.approved = true;
+      await comment.save();
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+const addModerator = async (requestBody) => {
+  try {
+    const { community_name, username } = requestBody;
+
+    // Find the community by name
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 404, message: "Community not found." } };
+    }
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return { err: { status: 404, message: "User not found." } };
+    }
+
+    // Check if the user is already a moderator of the community
+    const isModerator = community.moderators.some(moderator => moderator._id.equals(user._id));
+    if (isModerator) {
+      return { err: { status: 400, message: "User is already a moderator of the community." } };
+    }
+
+    // Add the user as a moderator to the community
+    community.moderators.push({
+      _id: user._id,
+      moderator_since: new Date() // Set the moderator_since date to current date
+    });
+
+    // Save the updated community
+    await community.save();
+
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+const getModerators = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return {
+        err: { status: 500, message: "Community not found." },
+      };
+    }
+    const moderators = [];
+    // Iterate over the moderators array
+    for (const moderator of community.moderators) {
+      // Retrieve the moderator user from the User schema
+      const user = await User.findById(moderator._id);
+      if (user) {
+        // Extract desired fields from the user object
+        const { profile_picture, username } = user;
+        const moderated_since = moderator.moderator_since;
+        // Add moderator data to the moderators array
+        moderators.push({ profile_picture, username, moderated_since });
+      }
+    }
+    return { moderators };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+//delete moderator
+const deleteModerator = async (requestBody) => {
+  try {
+    const { community_name, username } = requestBody;
+
+    // Find the community by name
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 404, message: "Community not found." } };
+    }
+
+    // Find the user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return { err: { status: 404, message: "User not found." } };
+    }
+
+    // Check if the user is a moderator of the community
+    const moderatorIndex = community.moderators.findIndex(moderator => moderator._id.equals(user._id));
+    if (moderatorIndex === -1) {
+      return { err: { status: 400, message: "User is not a moderator of the community." } };
+    }
+
+    // Remove the user from the moderators array
+    community.moderators.splice(moderatorIndex, 1);
+
+    // Save the updated community
+    await community.save();
+
+    return { success: true };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
+
+
+
+
+
 export {
   addNewCommunity,
+
   getCommunityGenerlSettings,
   getCommunityContentControls,
   getCommunityPostsCommentsSettings,
+
   changeCommunityGeneralSettings,
   changeCommunityContentControls,
   changeCommunityPostsCommentsSettings,
-  addPostToCommunity,
-  getPostsByCommunityCategory,
+
+  addDiscussionItemToCommunity,
+  getDiscussionItemsByCommunityCategory,
+  getDiscussionItemsByRandomCategory,
+
   getCommunityMembersCount,
+
+  getRemovedDiscussionItems,
+  getEditedDiscussionItems,
+  getUnmoderatedDiscussionItems,
+
+
   addNewRuleToCommunity,
   editCommunityRule,
   deleteCommunityRule,
@@ -571,4 +978,13 @@ export {
   deleteCommunityProfilePicture,
   addCommunityBannerPicture,
   deleteCommunityBannerPicture,
+  getComments,
+  addComment,
+  getMutedUsers,
+  muteUser,
+  banUser,
+  getBannedUsers,
+  addModerator,
+  getModerators,
+  deleteModerator
 };
