@@ -9,4 +9,6 @@ RUN npm install
 
 COPY . .
 
-CMD npm start & nodemon src/index.js & npm run devTest
+EXPOSE 3001
+
+CMD ["npm","run","devTest"]
