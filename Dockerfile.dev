@@ -1,12 +1,18 @@
-FROM node:alpine
+FROM node:alpine as base
 
 
 WORKDIR /app
+EXPOSE 3001
 
 COPY package*.json .
 
-RUN npm install
-RUN npm install concurrently --save-dev
-COPY . .
+# RUN npm install
+# RUN npm install concurrently --save-dev
 
-CMD ["npx", "concurrently", "npm:dev", "npm:devTest"]
+
+FROM base as test
+ENV NODE_ENV=test
+COPY package*.json ./
+RUN npm install --only=development
+COPY . .
+CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; kill $!"]
