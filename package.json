@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -L src/index.js",
+    "dev": "nodemon src/index.js",
     "test": "jest --testEnvironment=node --runInBand ./tests",
     "devTest": "jest --watch --testEnvironment=node --runInBand ./tests --watchALL=false & pkill -f nodemon"
   },
