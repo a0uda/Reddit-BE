@@ -5,14 +5,9 @@ WORKDIR /app
 EXPOSE 3001
 
 COPY package*.json .
-
+RUN npm install --only=development
 # RUN npm install
 # RUN npm install concurrently --save-dev
 
-
-FROM base as test
-ENV NODE_ENV=test
-COPY package*.json ./
-RUN npm install --only=development
 COPY . .
 CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; kill $!"]
