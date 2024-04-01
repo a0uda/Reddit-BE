@@ -1,13 +1,11 @@
 FROM node:alpine as base
 
-
 WORKDIR /app
 EXPOSE 3001
 
 COPY package*.json .
 RUN npm install --only=development
-# RUN npm install
-# RUN npm install concurrently --save-dev
+RUN npm install nodemon jest --save-dev
 
 COPY . .
 CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; kill $!"]
