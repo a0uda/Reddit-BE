@@ -4,7 +4,7 @@ WORKDIR /app
 EXPOSE 3001
 
 COPY package*.json .
-RUN npm install --only=development
+RUN npm install
 RUN npm install -g nodemon jest
 
 COPY . .
