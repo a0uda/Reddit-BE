@@ -3,6 +3,9 @@
 name: CI BE
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
