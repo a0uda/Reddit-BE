@@ -11,4 +11,4 @@ RUN npm install -g jest
 
 COPY . .
 
-CMD ["npm", "run","test"]
+CMD ["npm", "run","devTest"]
