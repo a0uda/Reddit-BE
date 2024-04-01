@@ -8,4 +8,5 @@ RUN npm install --only=development
 RUN npm install -g nodemon jest
 
 COPY . .
+
 CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; kill $!"]
