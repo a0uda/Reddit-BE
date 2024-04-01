@@ -9,4 +9,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["npm","run","devTest"]
+CMD ["npx", "concurrently", "npm:dev", "npm:devTest"]
