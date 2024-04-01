@@ -11,15 +11,22 @@ on:
       - main
 
 jobs:
-  build_dev_test:
-    name: Build Backend For Dev files
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+    name: Build and Test dev 
+    strategy:
+      matrix:
+        node-version: [20.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-      - name: Build Backend For Dev files
-        run: |
-          docker build -t dev-backend -f Dockerfile.dev .
-      - name: Run Backend For Testing Dev files
-        run: |
-          docker run --rm dev-backend
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm install
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
