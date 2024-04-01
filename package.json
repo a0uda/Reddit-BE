@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon -L src/index.js",
     "test": "jest --testEnvironment=node --runInBand ./tests"
   },
   "type": "module",
