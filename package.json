@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "jest --testEnvironment=node --runInBand ./tests",
-    "devTest": "jest --testEnvironment=node --runInBand ./tests --watchAll=false"
+    "test": "jest --testEnvironment=node --runInBand ./tests"
   },
   "type": "module",
   "author": "",
