@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon -L src/index.js",
     "test": "jest --testEnvironment=node --runInBand ./tests",
-    "devTest": "jest --watch --testEnvironment=node --runInBand ./tests --watchALL=false & kill -f nodemon"
+    "devTest": "jest --watch --testEnvironment=node --runInBand ./tests --watchALL=false & pkill -f nodemon"
   },
   "type": "module",
   "author": "",
