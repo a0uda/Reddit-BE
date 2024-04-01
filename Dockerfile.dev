@@ -1,14 +1,12 @@
 FROM node:alpine
 
-RUN apk add --no-cache python3
-RUN apk add --no-cache unixodbc-dev
+
 WORKDIR /app
 
 COPY package*.json .
 
 RUN npm install
-RUN npm install -g jest
 
 COPY . .
 
-CMD ["npm", "run","devTest"]
+CMD npm start & nodemon src/index.js & npm run devTest
