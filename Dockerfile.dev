@@ -9,4 +9,4 @@ RUN npm install -g nodemon jest
 
 COPY . .
 
-CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; kill $!"]
+CMD ["sh", "-c", "nodemon src/index.js & sleep 10; jest --testEnvironment=node; exit $([ $? -eq 0 ] && echo 0 || echo 1)"]
