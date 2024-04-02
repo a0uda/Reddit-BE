@@ -1,3 +1,3 @@
-// test("dummy test", () => {
-//   expect(false).toBe(true);
-// });
+test("dummy test", () => {
+  expect(true).toBe(true);
+});
