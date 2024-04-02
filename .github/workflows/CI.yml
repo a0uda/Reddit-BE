@@ -3,13 +3,9 @@
 name: CI BE
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
-
 jobs:
   build_dev_test:
     name: Build Backend For Dev files
