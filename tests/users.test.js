@@ -15,7 +15,7 @@ describe("User Login Endpoint", () => {
     };
     await userAuth.loginUser(userData);
 
-    const response = await request("http://localhost:3000")
+    const response = await request("http://localhost:3001")
       .post("/users/login")
       .send(userData)
       .expect(200);
@@ -26,7 +26,7 @@ describe("User Login Endpoint", () => {
   });
 
   it("should return 400 with incorrect credentials", async () => {
-    const response = await request("http://localhost:3000")
+    const response = await request("http://localhost:3001")
       .post("/users/login")
       .send({ username: "invaliduser", password: "invalidpassword" })
       .expect(400);
