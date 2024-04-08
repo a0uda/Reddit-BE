@@ -1,0 +1,12 @@
+FROM node:16 as base
+
+WORKDIR /app
+EXPOSE 3001
+
+COPY package*.json .
+RUN npm install
+RUN npm install -g nodemon jest
+
+COPY . .
+
+CMD ["sh", "-c", "nodemon src/index.js & sleep 3; jest --testEnvironment=node; exit $([ $? -eq 0 ] && echo 0 || echo 1)"]
