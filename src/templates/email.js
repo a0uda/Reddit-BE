@@ -1,5 +1,5 @@
 // Template for verifying user's email
-export function verifyEmailEmail(link, userEmail) {
+export function verifyEmailFormatEmail(link, userEmail) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
@@ -10,7 +10,7 @@ export function verifyEmailEmail(link, userEmail) {
 }
 
 // Template for forget password email sent to user
-export function forgetPasswordEmail(link, userEmail) {
+export function forgetPasswordFormatEmail(link, userEmail) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
@@ -21,7 +21,7 @@ export function forgetPasswordEmail(link, userEmail) {
 }
 
 // Template for forget username email sent to user
-export function forgetUsernameEmail(link, userEmail, username) {
+export function forgetUsernameFormatEmail(link, userEmail, username) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
@@ -31,7 +31,7 @@ export function forgetUsernameEmail(link, userEmail, username) {
 }
 
 // Template for change email
-export function changeOldEmail(userOldEmail, username) {
+export function changeOldEmailFormat(userOldEmail, username) {
   return {
     from: process.env.EMAIL, // sender address
     to: userOldEmail, // list of receivers
@@ -41,7 +41,7 @@ export function changeOldEmail(userOldEmail, username) {
 }
 
 // Template for change password
-export function changePasswordEmail(userEmail, username) {
+export function changePasswordFormatEmail(userEmail, username) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
@@ -51,7 +51,7 @@ export function changePasswordEmail(userEmail, username) {
 }
 
 // Template for new follower request
-export function newFollowerEmail(userEmail,followerUsername) {
+export function newFollowerFormatEmail(userEmail, followerUsername) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
@@ -61,7 +61,7 @@ export function newFollowerEmail(userEmail,followerUsername) {
 }
 
 // Template for new chat request
-export function newChatRequestEmail(userEmail,followerUsername) {
+export function newChatRequestFormatEmail(userEmail, followerUsername) {
   return {
     from: process.env.EMAIL, // sender address
     to: userEmail, // list of receivers
