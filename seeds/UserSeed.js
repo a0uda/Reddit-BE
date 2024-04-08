@@ -123,8 +123,7 @@ async function generateRandomUsers() {
         chat_request_email: true,
         unsubscribe_from_all_emails: false,
       },
-      posts_ids: [],
-      comments_ids: [],
+
       followed_posts_ids: [],
       saved_posts_ids: [],
       hidden_and_reported_posts_ids: [],
@@ -149,13 +148,6 @@ async function generateRandomUsers() {
 
     const salt = await bcrypt.genSalt(10);
     fakeUser.password = await bcrypt.hash(fakeUser.password, salt);
-
-    fakeUser.token = jwt.sign({ _id: i + 1 }, JWT_SECRET, {
-      expiresIn: "1d",
-    });
-    fakeUser.refreshToken = jwt.sign({ _id: i + 1 }, JWT_SECRET, {
-      expiresIn: "8d",
-    });
 
     users.push(fakeUser);
   }

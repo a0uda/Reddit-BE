@@ -6,6 +6,8 @@ import {
   getPostsHelper,
   getCommunitiesHelper,
   getModeratedCommunitiesHelper,
+  getUserPostsHelper,
+  getUserCommentsHelper,
 } from "../services/users.js";
 
 export async function getFollowers(request) {
@@ -79,34 +81,19 @@ export async function getFollowingCount(request) {
   };
 }
 
-export async function getPosts(request, postType) {
+export async function getUserPosts(request, postType) {
   try {
-    let user = null;
-    if (postType !== "posts_ids") {
-      const {
-        success,
-        err,
-        status,
-        user: authenticatedUser,
-        msg,
-      } = await verifyAuthToken(request);
-      if (!authenticatedUser) {
-        return { success, err, status, user: authenticatedUser, msg };
-      }
-      user = authenticatedUser;
-    } else {
-      const { username } = request.params;
-      user = await User.findOne({ username });
-      if (!user) {
-        return {
-          success: false,
-          err: "No user found with username",
-          status: 404,
-          msg: "User not found",
-        };
-      }
+    const { username } = request.params;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return {
+        success: false,
+        err: "No user found with username",
+        status: 404,
+        msg: "User not found",
+      };
     }
-    const posts = await getPostsHelper(user, postType);
+    const posts = await getUserPostsHelper(user, postType);
     return {
       success: true,
       status: 200,
@@ -124,39 +111,89 @@ export async function getPosts(request, postType) {
   }
 }
 
-export async function getComments(request, commentType) {
+export async function getPosts(request) {
+  let user = null;
   try {
-    let user = null;
-    if (commentType !== "comments_ids") {
-      const {
-        success,
-        err,
-        status,
-        user: authenticatedUser,
-        msg,
-      } = await verifyAuthToken(request);
-      if (!authenticatedUser) {
-        return { success, err, status, user: authenticatedUser, msg };
-      }
-      user = authenticatedUser;
-    } else {
-      const { username } = request.params;
-      user = await User.findOne({ username });
-      if (!user) {
-        return {
-          success: false,
-          err: "No user found with username",
-          status: 404,
-          msg: "User not found",
-        };
-      }
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
     }
-    const comments = await getCommentsHelper(user, commentType);
+    user = authenticatedUser;
+    const posts = await getPostsHelper(user);
+    return {
+      success: true,
+      status: 200,
+      posts,
+      msg: "Posts retrieved successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getUserComments(request) {
+  try {
+    const { username } = request.params;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return {
+        success: false,
+        err: "No user found with username",
+        status: 404,
+        msg: "User not found",
+      };
+    }
+
+    const comments = await getUserCommentsHelper(user);
     return {
       success: true,
       status: 200,
       comments,
       msg: "  Comments retrieved successfully.",
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getComments(request) {
+  let user = null;
+  try {
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    const comments = await getCommentsHelper(user);
+    return {
+      success: true,
+      status: 200,
+      comments,
+      msg: "Comments retrieved successfully.",
     };
   } catch (error) {
     console.error("Error:", error);
@@ -181,8 +218,8 @@ export async function getOverview(request) {
         msg: "User not found",
       };
     }
-    const posts = await getPostsHelper(user, "posts_ids");
-    const comments = await getCommentsHelper(user, "comments_ids");
+    const posts = await getUserPostsHelper(user);
+    const comments = await getUserCommentsHelper(user);
 
     return {
       success: true,
