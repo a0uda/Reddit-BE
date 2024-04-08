@@ -1,7 +1,7 @@
 import { Post } from "../db/models/Post.js";
 import { getSortCriteria } from "../utils/lisitng.js";
 
-export async function paginateFollowingPosts(followedUsers) {
+export async function paginateFollowingPosts(followedUsers, offset, pageSize) {
   const userPosts = await Post.find({ user_id: { $in: followedUsers } })
     .sort(sortCriteria)
     .skip(offset)
@@ -37,7 +37,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
       // Check if the user follows anyone
       if (followedUsers.length > 0) {
         // Fetch posts from followed users
-        posts = paginateFollowingPosts(followedUsers);
+        posts = paginateFollowingPosts(followedUsers, offset, pageSize);
       } else {
         // If user doesn't follow anyone, fetch random posts
         posts = await Post.aggregate([
