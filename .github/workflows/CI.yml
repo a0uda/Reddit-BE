@@ -1,0 +1,21 @@
+# CI Backend
+
+name: CI BE
+
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  build_dev_test:
+    name: Build Backend For Dev files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Backend For Dev files
+        run: |
+          docker build -t dev-backend -f Dockerfile.dev .
+      - name: Run Backend For Testing Dev files
+        run: |
+          docker run --rm dev-backend
