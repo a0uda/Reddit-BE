@@ -221,3 +221,143 @@ export async function postSave(request) {
     };
   }
 }
+
+export async function postApprove(request) {
+  try {
+    // Verify the auth token
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // If authentication fails, return the response
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const post = await Post.findOne({
+      _id: request.body.id,
+      user_id: user._id,
+    });
+
+    // If post not found or user not authorized, return an error response
+    if (!post) {
+      return {
+        success: false,
+        status: 400,
+        err: "Post Not Found or User Not Authorized",
+        msg: "Post not found or user is not authorized to modify it.",
+      };
+    }
+
+    post.moderator_details.removed_flag = false;
+    post.moderator_details.removed_by = null;
+    post.moderator_details.removed_date = null;
+    post.moderator_details.approved_flag = true;
+    post.moderator_details.approved_by = user._id;
+    post.moderator_details.approved_date = Date.now();
+    await post.save();
+    return {
+      success: true,
+      status: 200,
+      msg: "post approved successfully",
+    };
+  } catch (error) {
+    // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}
+
+export async function postRemove(request) {
+  try {
+    // Verify the auth token
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // If authentication fails, return the response
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const post = await Post.findOne({
+      _id: request.body.id,
+      user_id: user._id,
+    });
+
+    // If post not found or user not authorized, return an error response
+    if (!post) {
+      return {
+        success: false,
+        status: 400,
+        err: "Post Not Found or User Not Authorized",
+        msg: "Post not found or user is not authorized to modify it.",
+      };
+    }
+
+    post.moderator_details.approved_flag = false;
+    post.moderator_details.approved_by = null;
+    post.moderator_details.approved_date = null;
+    post.moderator_details.removed_flag = true;
+    post.moderator_details.removed_by = user._id;
+    post.moderator_details.removed_date = Date.now();
+    await post.save();
+    return {
+      success: true,
+      status: 200,
+      msg: "post removed successfully",
+    };
+  } catch (error) {
+    // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}
+
+export async function postReport(request) {
+  try {
+    // Verify the auth token
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // If authentication fails, return the response
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const post = await Post.findOne({
+      _id: request.body.id,
+    });
+
+    // If post not found or user not authorized, return an error response
+    if (!post || post.user_id == user._id) {
+      return {
+        success: false,
+        status: 400,
+        err: "Post Not Found or User Not Authorized",
+        msg: "Post not found or user is not authorized to report it.",
+      };
+    }
+    user.hidden_and_reported_posts_ids.push(post._id);
+    await user.save();
+    return {
+      success: true,
+      status: 200,
+      msg: "post is reported successfully",
+    };
+  } catch (error) {
+    // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}

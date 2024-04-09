@@ -10,12 +10,18 @@ import {
   editPostDescription,
   postVote,
   postSave,
+  postApprove,
+  postRemove,
+  postReport,
 } from "../controller/posts.js";
 import {
   commentToggler,
   editCommentDescription,
   commentVote,
   commentSave,
+  commentApprove,
+  commentRemove,
+  commentReport,
 } from "../controller/comments.js";
 
 export const postsOrCommentsRouter = express.Router();
@@ -218,6 +224,90 @@ postsOrCommentsRouter.post("/posts-or-comments/save", async (req, res) => {
       success: false,
       error: "Internal Server Error",
       message: "An error occurred.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/posts/approve", async (req, res) => {
+  try {
+    const result = await postApprove(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/posts/remove", async (req, res) => {
+  try {
+    const result = await postRemove(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/posts/report", async (req, res) => {
+  try {
+    const result = await postReport(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/comments/approve", async (req, res) => {
+  try {
+    const result = await commentApprove(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/comments/remove", async (req, res) => {
+  try {
+    const result = await commentRemove(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/comments/report", async (req, res) => {
+  try {
+    const result = await commentReport(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
     });
   }
 });
