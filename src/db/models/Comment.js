@@ -67,6 +67,7 @@ const commentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  spoiler_flag: { type: Boolean, default: false },
   show_comment_flag: {
     type: Boolean,
     default: true,

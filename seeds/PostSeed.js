@@ -84,6 +84,7 @@ async function generateRandomPosts(users) {
 }
 
 export async function seedPosts(users) {
+  await Post.deleteMany({});
   const posts = await generateRandomPosts(users);
   const options = { timeout: 30000 }; // 30 seconds timeout
   const postsInserted = await Post.insertMany(posts, options);
