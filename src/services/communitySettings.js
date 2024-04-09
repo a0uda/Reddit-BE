@@ -61,7 +61,7 @@ const getCommunityContentControls = async (community_name) => {
     }
 };
 
-const getCommunityPostsCommentsSettings = async (community_name) => {
+const getCommunityPostsAndComments = async (community_name) => {
     if (typeof community_name !== 'string') {
         return { err: { status: 400, message: 'Invalid arguments' } };
     }
@@ -154,11 +154,11 @@ const changeCommunityContentControls = async (
     }
 };
 
-const changeCommunityPostsCommentsSettings = async (
+const changeCommunityPostsAndComments = async (
     community_name,
     posts_and_comments
 ) => {
-    if (typeof community_name !== 'string' || typeof content_controls !== 'object') {
+    if (typeof community_name !== 'string' || typeof posts_and_comments !== 'object') {
         return { err: { status: 400, message: 'Invalid arguments' } };
     }
 
@@ -172,14 +172,14 @@ const changeCommunityPostsCommentsSettings = async (
         const communityPostsAndComments = await CommunityPostsAndComments.findById(community.posts_and_comments);
 
         if (!communityPostsAndComments) {
-            return { err: { status: 404, message: 'Posts and Comments Settings not found' } };
+            return { err: { status: 404, message: 'Posts and comments not found' } };
         }
 
-        Object.assign(communityPostsAndComments, content_controls);
+        Object.assign(communityPostsAndComments, posts_and_comments);
 
         await communityPostsAndComments.save();
 
-        return { updated_content_controls: communityPostsAndComments };
+        return { updated_posts_and_comments: communityPostsAndComments };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -188,9 +188,9 @@ const changeCommunityPostsCommentsSettings = async (
 export {
     getCommunityGeneralSettings,
     getCommunityContentControls,
-    getCommunityPostsCommentsSettings,
+    getCommunityPostsAndComments,
 
     changeCommunityGeneralSettings,
     changeCommunityContentControls,
-    changeCommunityPostsCommentsSettings
+    changeCommunityPostsAndComments
 };

@@ -45,11 +45,11 @@ import {
 import {
     getCommunityGeneralSettings,
     getCommunityContentControls,
-    getCommunityPostsCommentsSettings,
+    getCommunityPostsAndComments,
 
     changeCommunityGeneralSettings,
     changeCommunityContentControls,
-    changeCommunityPostsCommentsSettings,
+    changeCommunityPostsAndComments,
 } from "../services/communitySettings.js";
 
 const communityRouter = express.Router();
@@ -102,7 +102,7 @@ communityRouter.get("/communities/get-posts-and-comments/:community_name", async
     try {
         const community_name = req.params.community_name
 
-        const { err, posts_and_comments } = await getCommunityPostsCommentsSettings(community_name)
+        const { err, posts_and_comments } = await getCommunityPostsAndComments(community_name)
 
         if (err) { return next(err) }
 
@@ -151,7 +151,7 @@ communityRouter.post("/communities/change-posts-and-comments/:community_name", a
         const community_name = req.params.community_name
         const posts_and_comments = req.body
 
-        const { err, updated_posts_and_comments } = await changeCommunityPostsCommentsSettings(community_name, posts_and_comments)
+        const { err, updated_posts_and_comments } = await changeCommunityPostsAndComments(community_name, posts_and_comments)
 
         if (err) { return next(err) }
 
