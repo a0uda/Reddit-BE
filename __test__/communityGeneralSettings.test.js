@@ -1,8 +1,8 @@
-import { getCommunityGenerlSettings, changeCommunityGeneralSettings } from '../src/services/communities.js';
+import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../src/services/communitySettings.js';
 import { Community } from '../src/db/models/Community.js';
 import { CommunityGeneralSettings } from '../src/db/models/communityGeneralSettings.js';
 
-describe('getCommunityGenerlSettings', () => {
+describe('getCommunityGeneralSettings', () => {
     it('should return general settings for a valid community name', async () => {
         // Mock the Community model's findOne method
         const mockGeneralSettings = {
@@ -27,7 +27,7 @@ describe('getCommunityGenerlSettings', () => {
             // Mock the 'populate' method to return the mock query object, enabling method chaining
             populate: jest.fn().mockReturnThis(),
             // Mock the 'exec' method to return a Promise that resolves to the mock community object
-            // getCommunityGenerlSettings() is responsible for accessing the general_settings property of the community object returned from exec().
+            // getCommunityGeneralSettings() is responsible for accessing the general_settings property of the community object returned from exec().
             exec: jest.fn().mockResolvedValue(mockCommunity),
         };
 
@@ -37,7 +37,7 @@ describe('getCommunityGenerlSettings', () => {
 
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
-        const result = await getCommunityGenerlSettings(communityName);
+        const result = await getCommunityGeneralSettings(communityName);
 
         // Check if Community.findOne was called with the correct argument
         expect(Community.findOne).toHaveBeenCalledWith({ name: communityName });
@@ -58,12 +58,13 @@ describe('getCommunityGenerlSettings', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
+        
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
         // Use a try-catch block to catch the error returned by the function
         try {
-            const result = await getCommunityGenerlSettings(communityName);
+            const result = await getCommunityGeneralSettings(communityName);
         } catch (result) {
             // Check if the result contains an error object
             expect(result.err).toBeDefined();
@@ -89,12 +90,13 @@ describe('getCommunityGenerlSettings', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
+        
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
         // Use a try-catch block to catch the error returned by the function
         try {
-            const result = await getCommunityGenerlSettings(communityName);
+            const result = await getCommunityGeneralSettings(communityName);
         } catch (result) {
             // Check if the result contains an error object
             expect(result.err).toBeDefined();
@@ -107,6 +109,39 @@ describe('getCommunityGenerlSettings', () => {
 
         // Check if the 'populate' method was called
         expect(mockQuery.populate).toHaveBeenCalled();
+    });
+
+    it('should return an error object when community_name is not a string', async () => {
+        const communityName = 123;
+        const response = await getCommunityGeneralSettings(communityName);
+
+        expect(response).toEqual({ err: { status: 400, message: 'Invalid arguments' } });
+    });
+
+    it('should return an error object when the community does not exist', async () => {
+        const mockQuery = {
+            populate: jest.fn().mockReturnThis(),
+            exec: jest.fn().mockResolvedValue(null),
+        };
+        Community.findOne = jest.fn().mockReturnValue(mockQuery);
+
+        const communityName = 'nonexistent_community';
+        const response = await getCommunityGeneralSettings(communityName);
+
+        expect(response).toEqual({ err: { status: 404, message: 'Community not found' } });
+    });
+
+    it('should return an error object when the community has an invalid general_settings ID', async () => {
+        const mockQuery = {
+            populate: jest.fn().mockReturnThis(),
+            exec: jest.fn().mockResolvedValue({ general_settings: 'invalid_id' }),
+        };
+        Community.findOne = jest.fn().mockReturnValue(mockQuery);
+
+        const communityName = 'SampleCommunity';
+        const response = await getCommunityGeneralSettings(communityName);
+
+        expect(response).toEqual({ err: { status: 500, message: 'Invalid general_settings ID' } });
     });
 });
 
@@ -170,7 +205,7 @@ describe('changeCommunityGeneralSettings', () => {
 
         const communityName = 'SampleCommunity';
         const generalSettings = {};
-
+ 
         try {
             const result = await changeCommunityGeneralSettings(communityName, generalSettings);
         } catch (result) {
@@ -210,5 +245,54 @@ describe('changeCommunityGeneralSettings', () => {
 
         expect(Community.findOne).toHaveBeenCalledWith({ name: communityName });
         expect(CommunityGeneralSettings.findById).toHaveBeenCalledWith(mockCommunity.general_settings);
+    });
+
+    it('should return an error object when community_name is not a string', async () => {
+        const communityName = 123;
+        const generalSettings = {};
+
+        const result = await changeCommunityGeneralSettings(communityName, generalSettings);
+
+        expect(result).toEqual({ err: { status: 400, message: 'Invalid arguments' } });
+    });
+
+    it('should return an error object when general_settings is not an object', async () => {
+        const communityName = 'SampleCommunity';
+        const generalSettings = 'not an object';
+
+        const result = await changeCommunityGeneralSettings(communityName, generalSettings);
+
+        expect(result).toEqual({ err: { status: 400, message: 'Invalid arguments' } });
+    });
+
+    it('should return an error object when the community does not exist', async () => {
+        Community.findOne = jest.fn().mockResolvedValue(null);
+
+        const communityName = 'nonexistent_community';
+        const generalSettings = {};
+
+        const result = await changeCommunityGeneralSettings(communityName, generalSettings);
+
+
+        expect(result).toEqual({ err: { status: 404, message: 'Community not found' } });
+        expect(Community.findOne).toHaveBeenCalledWith({ name: 'nonexistent_community' });
+    });
+
+    it('should return an error object when the community has an invalid general_settings ID', async () => {
+        const mockCommunity = {
+            name: 'SampleCommunity',
+            general_settings: 'invalid ID',
+        };
+
+        Community.findOne = jest.fn().mockResolvedValue(mockCommunity);
+        CommunityGeneralSettings.findById = jest.fn().mockResolvedValue(null);
+
+        const communityName = 'SampleCommunity';
+        const generalSettings = {};
+        const result = await changeCommunityGeneralSettings(communityName, generalSettings);
+
+        expect(result).toEqual({ err: { status: 404, message: 'General settings not found' } });
+        expect(Community.findOne).toHaveBeenCalledWith({ name: 'SampleCommunity' });
+        expect(CommunityGeneralSettings.findById).toHaveBeenCalledWith('invalid ID');
     });
 });

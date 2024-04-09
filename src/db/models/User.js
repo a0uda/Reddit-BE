@@ -325,7 +325,8 @@ const userSchema = new mongoose.Schema({
       ref: "Post",
     },
   },
-  hidden_and_reported_comments_ids: {
+  //mafesh hide comments heya reported bas
+  reported_comments_ids: {
     type: Array,
     items: {
       type: mongoose.Schema.Types.ObjectId,

@@ -131,7 +131,7 @@ async function generateRandomUsers() {
       history_posts_ids: [],
       upvotes_posts_ids: [],
       downvotes_posts_ids: [],
-      hidden_and_reported_comments_ids: [],
+      reported_comments_ids: [],
       saved_comments_ids: [],
       saved_categories_ids: [],
       country: faker.location.country(),
