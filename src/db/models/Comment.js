@@ -45,6 +45,13 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  community_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Community",
+  },
+  community_name: {
+    type: String,
+  },
   upvotes_count: {
     type: Number,
     default: 0,
