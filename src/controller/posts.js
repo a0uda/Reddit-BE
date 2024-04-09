@@ -1,5 +1,8 @@
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
+import { User } from "../db/models/User.js";
+import { Comment } from "../db/models/Comment.js";
+import { toggler } from "../utils/toggler.js";
 import { getPostCommentsHelper } from "../services/posts.js";
 
 export async function getPost(request, verifyUser) {
@@ -162,12 +165,6 @@ export async function setSuggestedSort(request) {
     };
   }
 }
-
-import { Post } from "../db/models/Post.js";
-import { verifyAuthToken } from "./userAuth.js";
-import { User } from "../db/models/User.js";
-import { Comment } from "../db/models/Comment.js";
-import { toggler } from "../utils/toggler.js";
 
 export async function postToggler(request, toToggle) {
   try {
