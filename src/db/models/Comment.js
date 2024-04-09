@@ -50,11 +50,8 @@ const commentSchema = new mongoose.Schema({
     type: String,
   },
   //there is nothing as upvotes and downvotes count, it is votes count only
-  votes_count: {
-    type: Number,
-    default: 0,
-    // min: 0, can be negative if downvotes only
-  },
+  upvotes_count: { type: Number, default: 0 },
+  downvotes_count: { type: Number, default: 0 },
   spam_flag: {
     type: Boolean,
     default: false,

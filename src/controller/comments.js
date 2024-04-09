@@ -316,7 +316,7 @@ export async function commentReport(request) {
         msg: "Comment not found or user is not authorized to report it.",
       };
     }
-    user.hidden_and_reported_comments_ids.push(comment._id);
+    user.reported_comments_ids.push(comment._id);
     await user.save();
     return {
       success: true,
