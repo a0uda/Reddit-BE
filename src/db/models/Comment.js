@@ -45,24 +45,24 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  upvotes_count: {
+  community_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Community",
+  },
+  community_name: {
+    type: String,
+  },
+  //there is nothing as upvotes and downvotes count, it is votes count only
+  votes_count: {
     type: Number,
     default: 0,
-    min: 0,
-  },
-  downvotes_count: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
-  allowreplies_flag: {
-    type: Boolean,
-    default: true,
+    // min: 0, can be negative if downvotes only
   },
   spam_flag: {
     type: Boolean,
     default: false,
   },
+  //no allow replies in comment only lock
   locked_flag: {
     type: Boolean,
     default: false,
