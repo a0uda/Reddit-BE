@@ -59,6 +59,9 @@ export const postSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Community",
   },
+  community_name: {
+    type: String,
+  },
   comments_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments_count: { type: Number, default: 0 },
