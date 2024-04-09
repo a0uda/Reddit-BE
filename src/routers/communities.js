@@ -3,14 +3,6 @@ import express from "express";
 import {
     addNewCommunity,
 
-    getCommunityGenerlSettings,
-    getCommunityContentControls,
-    getCommunityPostsCommentsSettings,
-
-    changeCommunityGeneralSettings,
-    changeCommunityContentControls,
-    changeCommunityPostsCommentsSettings,
-
     addDiscussionItemToCommunity,
     getDiscussionItemsByCommunityCategory,
     getDiscussionItemsByRandomCategory,
@@ -50,6 +42,16 @@ import {
     deleteModerator
 } from "../services/communities.js";
 
+import {
+    getCommunityGeneralSettings,
+    getCommunityContentControls,
+    getCommunityPostsCommentsSettings,
+
+    changeCommunityGeneralSettings,
+    changeCommunityContentControls,
+    changeCommunityPostsCommentsSettings,
+} from "../services/communitySettings.js";
+
 const communityRouter = express.Router();
 
 communityRouter.post("/communities/add-community", async (req, res, next) => {
@@ -70,7 +72,7 @@ communityRouter.get("/communities/get-general-settings/:community_name", async (
     try {
         const community_name = req.params.community_name
 
-        const { err, general_settings } = await getCommunityGenerlSettings(community_name)
+        const { err, general_settings } = await getCommunityGeneralSettings(community_name)
 
         if (err) { return next(err) }
 

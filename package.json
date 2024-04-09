@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "jest --testEnvironment=node --runInBand ./__test__/communityPostsAndComments.test.js",
+    "test": "jest --testEnvironment=node --runInBand ./__test__/communityGeneralSettings.test.js",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
     "seed": "node ./seeds/seed.js"
   },

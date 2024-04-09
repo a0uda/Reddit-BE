@@ -58,108 +58,7 @@ const addNewCommunity = async (requestBody) => {
 
     const savedCommunity = await community.save();
 
-    return { community_name: savedCommunity.name};
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-//////////////////////////////////////////////////////////////////////// Get Settings //////////////////////////////////////////////////////////////
-const getCommunityGenerlSettings = async (community_name) => {
-  try {
-    const community = await Community.findOne({ name: community_name })
-      .populate("general_settings")
-      .exec();
-
-    return { general_settings: community.general_settings };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getCommunityContentControls = async (community_name) => {
-  try {
-    let community = await Community.findOne({ name: community_name })
-      .populate("content_controls")
-      .exec();
-
-    return { content_controls: community.content_controls };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getCommunityPostsCommentsSettings = async (community_name) => {
-  try {
-    let community = await Community.findOne({ name: community_name })
-      .populate("posts_and_comments")
-      .exec();
-
-    return { posts_and_comments: community.posts_and_comments };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-//////////////////////////////////////////////////////////////////////// Change Settings //////////////////////////////////////////////////////////////
-const changeCommunityGeneralSettings = async (
-  community_name,
-  general_settings
-) => {
-  try {
-    const community = await Community.findOne({ name: community_name });
-
-    const communityGeneralSettings = await CommunityGeneralSettings.findById(
-      community.general_settings
-    );
-
-    Object.assign(communityGeneralSettings, general_settings);
-
-    await communityGeneralSettings.save();
-
-    return { updated_general_settings: communityGeneralSettings };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const changeCommunityContentControls = async (
-  community_name,
-  content_controls
-) => {
-  try {
-    const community = await Community.findOne({ name: community_name });
-
-    const communityContentControls = await CommunityContentControls.findById(
-      community.content_controls
-    );
-
-    Object.assign(communityContentControls, content_controls);
-
-    await communityContentControls.save();
-
-    return { updated_content_controls: communityContentControls };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const changeCommunityPostsCommentsSettings = async (
-  community_name,
-  posts_and_comments
-) => {
-  try {
-    const community = await Community.findOne({ name: community_name });
-
-    const communityPostsAndComments = await CommunityPostsAndComments.findById(
-      community.posts_and_comments
-    );
-
-    Object.assign(communityPostsAndComments, posts_and_comments);
-
-    await communityPostsAndComments.save();
-
-    return { updated_posts_and_comments: communityPostsAndComments };
+    return { community_name: savedCommunity.name };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -233,7 +132,7 @@ const getDiscussionItemsByRandomCategory = async (discussion_item_type) => {
     const categories = mongoose.model("Community").schema.path("category").enumValues;
 
     const category = categories[Math.floor(Math.random() * categories.length)];
-    
+
     const items = await Community.aggregate([
       {
         $match: { category: category },
@@ -283,9 +182,9 @@ const getRemovedDiscussionItems = async (community_name, time_filter, posts_or_c
     // Determine the discussion item type based on posts_or_comments
     let itemType;
     if (posts_or_comments.toLowerCase() === 'posts and comments') {
-        itemType = ['post', 'comment'];
+      itemType = ['post', 'comment'];
     } else {
-        itemType = posts_or_comments.toLowerCase();
+      itemType = posts_or_comments.toLowerCase();
     }
 
     // Initialize the query object
@@ -302,7 +201,7 @@ const getRemovedDiscussionItems = async (community_name, time_filter, posts_or_c
 
     // Fetch the removed discussion items
     const removedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-    
+
     return removedDiscussionItems;
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -317,9 +216,9 @@ const getEditedDiscussionItems = async (community_name, time_filter, posts_or_co
     // Determine the discussion item type based on posts_or_comments
     let itemType;
     if (posts_or_comments.toLowerCase() === 'posts and comments') {
-        itemType = ['post', 'comment'];
+      itemType = ['post', 'comment'];
     } else {
-        itemType = posts_or_comments.toLowerCase();
+      itemType = posts_or_comments.toLowerCase();
     }
 
     // Initialize the query object
@@ -336,14 +235,14 @@ const getEditedDiscussionItems = async (community_name, time_filter, posts_or_co
 
     // Fetch the edited discussion items
     const editedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-    
+
     return editedDiscussionItems;
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
 
-const getUnmoderatedDiscussionItems = async (community_name, time_filter) =>{
+const getUnmoderatedDiscussionItems = async (community_name, time_filter) => {
   try {
     // Determine the sort order based on the time_filter
     const sortOrder = time_filter === 'Newest First' ? -1 : 1;
@@ -361,7 +260,7 @@ const getUnmoderatedDiscussionItems = async (community_name, time_filter) =>{
 
     // Fetch the unmoderated discussion items
     const unmoderatedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-    
+
     return unmoderatedDiscussionItems;
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -945,15 +844,7 @@ const deleteModerator = async (requestBody) => {
 
 export {
   addNewCommunity,
-
-  getCommunityGenerlSettings,
-  getCommunityContentControls,
-  getCommunityPostsCommentsSettings,
-
-  changeCommunityGeneralSettings,
-  changeCommunityContentControls,
-  changeCommunityPostsCommentsSettings,
-
+  
   addDiscussionItemToCommunity,
   getDiscussionItemsByCommunityCategory,
   getDiscussionItemsByRandomCategory,
