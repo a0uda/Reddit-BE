@@ -1,12 +1,15 @@
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
+import { getPostCommentsHelper } from "../services/posts.js";
 
-export async function getPost(request) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
-  if (!user) {
-    return { success, error: { status, message: err } };
+export async function getPost(request, verifyUser) {
+  if (verifyUser) {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return { success, error: { status, message: err } };
+    }
   }
-  const postId = request?.body?.id;
+  const postId = request?.body?.id || request?.query?.id;
   if (postId == undefined || postId == null) {
     return {
       success: false,
@@ -27,9 +30,54 @@ export async function getPost(request) {
   };
 }
 
+export async function getPostComments(request) {
+  const postId = request?.query?.id;
+  
+  if (postId == undefined || postId == null) {
+    return {
+      success: false,
+      error: { status: 400, message: "Post id is required" },
+    };
+  }
+  const post = await Post.findById(postId);
+  if (!post) {
+    return {
+      success: false,
+      error: { status: 404, message: "Post Not found" },
+    };
+  }
+  
+  const comments = await getPostCommentsHelper(postId);
+  return {
+    success: true,
+    comments,
+    message: "Comments Retrieved sucessfully",
+  };
+}
+
+export async function getViewsCount(request) {
+  try {
+    const { success, error, post, message } = await getPost(request, false);
+    if (!success) {
+      return { success, error };
+    }
+    return {
+      success: true,
+      error: {},
+      message: "Post views_count retrived sucessfully ",
+      views_count: post.views_count,
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
+    };
+  }
+}
+
 export async function marknsfw(request) {
   try {
-    const { success, error, post, message } = await getPost(request);
+    const { success, error, post, message } = await getPost(request, true);
     if (!success) {
       return { success, error };
     }
@@ -50,7 +98,7 @@ export async function marknsfw(request) {
 
 export async function allowReplies(request) {
   try {
-    const { success, error, post, message } = await getPost(request);
+    const { success, error, post, message } = await getPost(request, true);
     if (!success) {
       return { success, error };
     }
@@ -73,7 +121,7 @@ export async function allowReplies(request) {
 
 export async function setSuggestedSort(request) {
   try {
-    const { success, error, post, message } = await getPost(request);
+    const { success, error, post, message } = await getPost(request, true);
     if (!success) {
       return { success, error };
     }

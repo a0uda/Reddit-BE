@@ -48,7 +48,6 @@ export async function getPostsHelper(user, postsType) {
 //Posts written by certain user
 export async function getUserPostsHelper(user) {
   const posts = await Post.find({ user_id: user._id }).exec();
-
   return posts;
 }
 
