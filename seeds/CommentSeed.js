@@ -53,6 +53,7 @@ async function generateRandomComments(posts, users) {
 }
 
 export async function seedComments(posts, users) {
+  await Comment.deleteMany({});
   const comments = await generateRandomComments(posts, users);
   const options = { timeout: 30000 }; // 30 seconds timeout
   const commentsInserted = await Comment.insertMany(comments, options);
