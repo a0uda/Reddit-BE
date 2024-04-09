@@ -166,6 +166,48 @@ export async function setSuggestedSort(request) {
   }
 }
 
+export async function hideUnhidePost(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  if (!user) {
+    return { success, error: { status, message: err } };
+  }
+
+  const postId = request?.body?.id;
+  if (postId == undefined || postId == null) {
+    return {
+      success: false,
+      error: { status: 400, message: "Post id is required" },
+    };
+  }
+  const post = await Post.findById(postId);
+  if (!post) {
+    return {
+      success: false,
+      error: { status: 404, message: "Post Not found" },
+    };
+  }
+  if (!user.hidden_and_reported_posts_ids.includes(post.id)) {
+    user.hidden_and_reported_posts_ids.push(post.id);
+    await user.save();
+    return {
+      success: true,
+      error: {},
+      message: "Post hidden sucessfully",
+    };
+  } else {
+    const indexToRemove = user.hidden_and_reported_posts_ids.indexOf(
+      post._id.toString()
+    );
+    user.hidden_and_reported_posts_ids.splice(indexToRemove, 1);
+    await user.save();
+    return {
+      success: true,
+      post,
+      message: "Post unhidden sucessfully",
+    };
+  }
+}
+
 export async function postToggler(request, toToggle) {
   try {
     // Verify the auth token
