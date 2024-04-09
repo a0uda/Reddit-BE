@@ -44,7 +44,7 @@ const getCommunityContentControls = async (community_name) => {
 
     try {
         const community = await Community.findOne({ name: community_name })
-            .populate("general_settings")
+            .populate("content_controls")
             .exec();
 
         if (!community) {
@@ -68,7 +68,7 @@ const getCommunityPostsCommentsSettings = async (community_name) => {
 
     try {
         const community = await Community.findOne({ name: community_name })
-            .populate("general_settings")
+            .populate("posts_and_comments")
             .exec();
 
         if (!community) {
@@ -141,7 +141,7 @@ const changeCommunityContentControls = async (
         const communityContentControls = await CommunityContentControls.findById(community.content_controls);
 
         if (!communityContentControls) {
-            return { err: { status: 404, message: 'Content Controls not found' } };
+            return { err: { status: 404, message: 'Content controls not found' } };
         }
 
         Object.assign(communityContentControls, content_controls);
