@@ -57,24 +57,6 @@ const communitySchema = new mongoose.Schema({
     min: 0,
     default: 0,
   },
-  posts: {
-    type: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "DiscussionItemMinimal",
-      },
-    ],
-    default: [],
-  },
-  comments: {
-    type: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "DiscussionItemMinimal",
-      },
-    ],
-    default: [],
-  },
   // TODO: There are constraints related to the number of characters and the number of words in some of the fields in the following subdocuments. Am I supposed to do them or will the frontend handle them?
   // TODO: Eng Loay said that we aren't expected to cover the advanced settings in any of these subdocuments.
   general_settings: {
@@ -89,51 +71,7 @@ const communitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CommunityPostsAndComments",
   },
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  profile_picture: {
-    type: String,
-    default: "",
-  },
-  banner_picture: {
-    type: String,
-    default: "",
-  },
-  members_nickname: {
-    type: String,
-    default: "Members",
-  },
-  currently_viewing_nickname: {
-    type: String,
-    default: "Online",
-  },
-  traffic: String,
-  topics: String,
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  views_count: {
-    type: Number,
-    min: 0,
-    default: 0,
-  },
-  moderators: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    moderator_since: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  invited_moderators: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
   approved_users: [
     {
       id: {
@@ -188,121 +126,51 @@ const communitySchema = new mongoose.Schema({
       },
     },
   ],
-  removed_posts_ids: [
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  profile_picture: {
+    type: String,
+    default: "",
+  },
+  banner_picture: {
+    type: String,
+    default: "",
+  },
+  members_nickname: {
+    type: String,
+    default: "Members",
+  },
+  currently_viewing_nickname: {
+    type: String,
+    default: "Online",
+  },
+  traffic: String,
+  topics: String,
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  views_count: {
+    type: Number,
+    min: 0,
+    default: 0,
+  },
+  moderators: [{
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    moderator_since: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  invited_moderators: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
+      ref: "User",
     },
   ],
-  removed_comments_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
-  edited_posts_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
-  ],
-  edited_comments_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
-  unmoderated_posts_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
-  ],
-  unmoderated_comments_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
-  reported_posts_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
-  ],
-  reported_comments_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
-  scheduled_posts: [
-    {
-      post_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
-      },
-      submit_date: Date,
-      submitted_flag: {
-        type: Boolean,
-        default: false,
-      },
-      submit_time: {
-        type: Date,
-      },
-      time_zone: {
-        type: Date,
-      },
-      title: String,
-      repeat_options: {
-        type: String,
-        enum: [
-          "does_not_repeat",
-          "hourly",
-          "daily",
-          "weekly_on_day",
-          "monthly_on_date",
-        ],
-      },
-      repeat_every: {
-        number: Number,
-        duration: {
-          type: String,
-          enum: ["hours", "days", "weeks", "months"],
-        },
-      },
-      advanced_options: {
-        default_comment_order: {
-          type: String,
-          enum: [
-            "Default comment order",
-            "Best",
-            "Top",
-            "New",
-            "Controversial",
-            "Old",
-            "Q&A",
-          ],
-        },
-        not_a_sticky_post: {
-          type: String,
-          enum: [
-            "not_a_sticky_post",
-            "submit_as_first_sticky_post",
-            "submit_as_second_sticky_post",
-          ],
-        },
-      },
-      contest_mode_flag: {
-        type: Boolean,
-        default: false,
-      },
-      post_as_auto_moderator_flag: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
+
   allow_image_posts: {
     type: Boolean,
     default: true,
@@ -325,3 +193,7 @@ const communitySchema = new mongoose.Schema({
 });
 
 export const Community = mongoose.model("Community", communitySchema);
+
+// The posts or comments themselves will store a reference for the community they were written in.
+// The same applies to scheduled posts.
+// A flag indicating that the post or comment is removed, edited, unmoderated, or reported will be stored in the post or comment itself.

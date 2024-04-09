@@ -10,36 +10,14 @@ import {
     getCommunityMembersCount,
 
     getRemovedDiscussionItems,
-    getEditedDiscussionItems,   
+    getEditedDiscussionItems,
     getUnmoderatedDiscussionItems,
-
-
-    addNewRuleToCommunity,
-    editCommunityRule,
-    deleteCommunityRule,
-    getCommunityRules,
-
-    approveUser,
-    getApprovedUsers,
-    getAllUsers,
 
     getDetailsWidget,
     editDetailsWidget,
 
-    addCommunityProfilePicture,
-    deleteCommunityProfilePicture,
-
-    addCommunityBannerPicture,
-    deleteCommunityBannerPicture,
     getComments,
-    addComment,
-    getMutedUsers,
-    muteUser,
-    banUser,
-    getBannedUsers,
-    addModerator,
-    getModerators,
-    deleteModerator
+    addComment
 } from "../services/communities.js";
 
 import {
@@ -51,6 +29,38 @@ import {
     changeCommunityContentControls,
     changeCommunityPostsAndComments,
 } from "../services/communitySettings.js";
+
+import {
+    banUser,
+    getBannedUsers,
+
+    muteUser,
+    getMutedUsers,
+
+    approveUser,
+    getApprovedUsers,
+
+    addModerator,
+    getModerators,
+    deleteModerator,
+
+    getAllUsers,
+} from "../services/communityUserManagement.js";
+
+import {
+    addNewRuleToCommunity,
+    editCommunityRule,
+    deleteCommunityRule,
+    getCommunityRules,
+} from "../services/communityRulesAndRemovalReasons.js";
+
+import {
+    addCommunityProfilePicture,
+    deleteCommunityProfilePicture,
+
+    addCommunityBannerPicture,
+    deleteCommunityBannerPicture,
+} from "../services/communityProfileAndBannerPictures.js";
 
 const communityRouter = express.Router();
 
@@ -228,7 +238,7 @@ communityRouter.get("/communities/get-members-count/:community_name", async (req
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
 communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
     try {
-        const {community_name, time_filter, posts_or_comments} = req.body
+        const { community_name, time_filter, posts_or_comments } = req.body
 
         const removedDiscussionItems = await getRemovedDiscussionItems(community_name, time_filter, posts_or_comments)
 
@@ -243,7 +253,7 @@ communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
 
 communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) => {
     try {
-        const {community_name, time_filter, posts_or_comments} = req.body
+        const { community_name, time_filter, posts_or_comments } = req.body
 
         const editedDiscussionItems = await getEditedDiscussionItems(community_name, time_filter, posts_or_comments)
 
@@ -259,7 +269,7 @@ communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) =>
 
 communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, next) => {
     try {
-        const {community_name, time_filter} = req.body
+        const { community_name, time_filter } = req.body
 
         const unmoderatedDiscussionItems = await getUnmoderatedDiscussionItems(community_name, time_filter)
 
