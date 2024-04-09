@@ -6,15 +6,31 @@ describe('getCommunityContentControls', () => {
     it('should return content controls for a valid community name', async () => {
         // Mock the Community model's findOne method
         const mockContentControls = {
-            description: 'Sample description',
-            welcome_message: {
-                send_welcome_message_flag: true,
-                message: 'Welcome to our community!',
+            providing_members_with_posting_guidlines: {
+                flag: true,
+                guidline_text: 'Sample guideline text',
             },
-            language: 'English',
-            region: 'US',
-            visibility: 'Public',
-            nsfw_flag: false,
+            require_words_in_post_title: {
+                flag: false,
+                add_required_words: ['Sample', 'Required'],
+            },
+            ban_words_from_post_title: {
+                flag: true,
+                add_banned_words: ['Banned', 'Words'],
+            },
+            ban_words_from_post_body: {
+                flag: true,
+                add_banned_words: 'Banned words from post body',
+            },
+            require_or_ban_links_from_specific_domains: {
+                flag: true,
+                restriction_type: 'Required domains',
+                require_or_block_link_posts_with_these_domains: 'Required domain',
+            },
+            restrict_how_often_the_same_link_can_be_posted: {
+                flag: true,
+                number_of_days: 7,
+            },
         };
 
         const mockCommunity = {
@@ -148,28 +164,59 @@ describe('getCommunityContentControls', () => {
 describe('changeCommunityContentControls', () => {
     it('should update and return the content controls for a valid community name', async () => {
         const mockContentControls = {
-            _id: '123',
-            description: 'Sample description',
-            welcome_message: {
-                send_welcome_message_flag: true,
-                message: 'Welcome to our community!',
+            providing_members_with_posting_guidlines: {
+                flag: true,
+                guidline_text: 'Sample guideline text',
             },
-            language: 'English',
-            region: 'US',
-            visibility: 'Public',
-            nsfw_flag: false,
+            require_words_in_post_title: {
+                flag: false,
+                add_required_words: ['Sample', 'Required'],
+            },
+            ban_words_from_post_title: {
+                flag: true,
+                add_banned_words: ['Banned', 'Words'],
+            },
+            ban_words_from_post_body: {
+                flag: true,
+                add_banned_words: 'Banned words from post body',
+            },
+            require_or_ban_links_from_specific_domains: {
+                flag: true,
+                restriction_type: 'Required domains',
+                require_or_block_link_posts_with_these_domains: 'Required domain',
+            },
+            restrict_how_often_the_same_link_can_be_posted: {
+                flag: true,
+                number_of_days: 7,
+            },
         };
 
         const updatedContentControls = {
-            description: 'Updated description',
-            welcome_message: {
-                send_welcome_message_flag: false,
-                message: 'Welcome!',
+            providing_members_with_posting_guidlines: {
+                flag: false,
+                guidline_text: 'Updated guideline text',
             },
-            language: 'Spanish',
-            region: 'ES',
-            visibility: 'Private',
-            nsfw_flag: true,
+            require_words_in_post_title: {
+                flag: true,
+                add_required_words: ['Updated', 'Required'],
+            },
+            ban_words_from_post_title: {
+                flag: false,
+                add_banned_words: ['UpdatedBanned', 'Words'],
+            },
+            ban_words_from_post_body: {
+                flag: false,
+                add_banned_words: 'Updated banned words from post body',
+            },
+            require_or_ban_links_from_specific_domains: {
+                flag: false,
+                restriction_type: 'Blocked domains',
+                require_or_block_link_posts_with_these_domains: 'Updated blocked domain',
+            },
+            restrict_how_often_the_same_link_can_be_posted: {
+                flag: false,
+                number_of_days: 14,
+            },
         };
 
         const mockCommunity = {
