@@ -4,6 +4,7 @@ import { usersRouter } from "./routers/users.js";
 import { communityRouter } from "./routers/communities.js";
 import { listingPostsRouter } from "./routers/lisitng.js";
 import { postsRouter } from "./routers/posts.js";
+import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
 
@@ -30,6 +31,12 @@ app.listen(port, () => {
 });
 
 app.use([usersRouter, communityRouter, listingPostsRouter, postsRouter]);
+app.use([
+  usersRouter,
+  communityRouter,
+  listingPostsRouter,
+  postsOrCommentsRouter,
+]);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

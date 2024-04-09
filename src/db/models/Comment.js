@@ -33,10 +33,7 @@ const commentSchema = new mongoose.Schema({
   },
   edited_at: Date,
   deleted_at: Date,
-  approved: {
-    type: Boolean,
-    default: false,
-  },
+
   deleted: {
     type: Boolean,
     default: false,
@@ -53,11 +50,8 @@ const commentSchema = new mongoose.Schema({
     type: String,
   },
   //there is nothing as upvotes and downvotes count, it is votes count only
-  votes_count: {
-    type: Number,
-    default: 0,
-    // min: 0, can be negative if downvotes only
-  },
+  upvotes_count: { type: Number, default: 0 },
+  downvotes_count: { type: Number, default: 0 },
   spam_flag: {
     type: Boolean,
     default: false,
@@ -67,11 +61,14 @@ const commentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  spoiler_flag: { type: Boolean, default: false },
   show_comment_flag: {
     type: Boolean,
     default: true,
   },
+
   moderator_details: {
+    //if in my own profile then Im the moderator
     approved_by: String,
     approved_date: Date,
     removed_by: String,
@@ -79,6 +76,10 @@ const commentSchema = new mongoose.Schema({
     spammed_by: String,
     spammed_type: String,
     removed_flag: {
+      type: Boolean,
+      default: false,
+    },
+    approved_flag: {
       type: Boolean,
       default: false,
     },
