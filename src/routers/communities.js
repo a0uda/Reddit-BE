@@ -457,7 +457,7 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
         const { err, success } = await addCommunityBannerPicture(req.body)
 
         if (err) { return next(err) }
-
+        console.log(success);
         res.status(200).json({ message: 'OK' });
 
     } catch (error) {
