@@ -38,6 +38,8 @@ import {
   getAbout,
   getComments,
   getCommunities,
+  getUserPosts,
+  getUserComments,
 } from "../controller/userInfo.js";
 
 import {
@@ -468,7 +470,7 @@ usersRouter.get("/users/:username/about", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/:username/overview", async (req, res) => {
+usersRouter.get("/users/overview/:username", async (req, res) => {
   try {
     const { success, err, status, overview, msg } = await getOverview(req);
     if (!success) {
@@ -827,9 +829,9 @@ usersRouter.post("/users/leave-community", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/:username/posts", async (req, res) => {
+usersRouter.get("/users/posts/:username", async (req, res) => {
   try {
-    const result = await getPosts(req, "posts_ids");
+    const result = await getUserPosts(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -897,9 +899,9 @@ usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/:username/comments", async (req, res) => {
+usersRouter.get("/users/comments/:username", async (req, res) => {
   try {
-    const result = await getComments(req, "comments_ids");
+    const result = await getUserComments(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -913,12 +915,11 @@ usersRouter.get("/users/:username/comments", async (req, res) => {
 
 usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
   try {
-    const result = await getOverview(
-      req,
-      "saved_posts_ids",
-      "saved_comments_ids"
-    );
-    res.status(result.status).json(result);
+    const rposts = await getPosts(req, "saved_posts_ids");
+    const rcomments = await getComments(req, "saved_comments_ids");
+    const result = { posts: rposts.posts, comments: rcomments.comments };
+
+    res.status(rposts.status).json(result);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({

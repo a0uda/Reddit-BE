@@ -37,11 +37,19 @@ export async function followUserHelper(user1, user2, follow = true) {
   }
 }
 
+//Posts saved in user arrays
 export async function getPostsHelper(user, postsType) {
   const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
 
   const filteredPosts = posts.filter((post) => post != null);
   return filteredPosts;
+}
+
+//Posts written by certain user
+export async function getUserPostsHelper(user) {
+  const posts = await Post.find({ user_id: user._id }).exec();
+
+  return posts;
 }
 
 export async function getCommentsHelper(user, commentsType) {
@@ -51,6 +59,12 @@ export async function getCommentsHelper(user, commentsType) {
 
   const filteredComments = comments.filter((comment) => comment != null);
   return filteredComments;
+}
+
+export async function getUserCommentsHelper(user) {
+  const comments = await Comment.find({ user_id: user._id }).exec();
+
+  return comments;
 }
 
 export async function getCommunitiesHelper(user) {
