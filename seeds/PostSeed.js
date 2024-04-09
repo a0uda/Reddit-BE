@@ -36,7 +36,6 @@ async function generateRandomPosts(users) {
       videos: [{ path: faker.internet.url(), caption: "", link: "" }],
       poll: [{ options: faker.lorem.words(), votes: 7 }],
       community_id: null,
-      comments_ids: [],
       followers_ids: [],
       comments_count: 0,
       views_count: getRandomNumber(0, 10),

@@ -62,13 +62,12 @@ export const postSchema = new mongoose.Schema({
   community_name: {
     type: String,
   },
-  comments_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  comments_count: { type: Number, default: 0 },
-  views_count: { type: Number, default: 0 },
-  shares_count: { type: Number, default: 0 },
-  upvotes_count: { type: Number, default: 0 },
-  downvotes_count: { type: Number, default: 0 },
+  comments_count: { type: Number, default: 0, min: 0 },
+  views_count: { type: Number, default: 0, min: 0 },
+  shares_count: { type: Number, default: 0, min: 0 },
+  //there is nothing as upvotes and downvotes count, it is votes count only
+  votes_count: { type: Number, default: 0 },
   oc_flag: { type: Boolean, default: false },
   spoiler_flag: { type: Boolean, default: false },
   nsfw_flag: { type: Boolean, default: false },
@@ -99,9 +98,9 @@ export const postSchema = new mongoose.Schema({
     spammed_flag: { type: Boolean, default: false },
   },
   user_details: {
-    total_views: { type: Number, default: 0 },
-    upvote_rate: { type: Number, default: 0 },
-    total_shares: { type: Number, default: 0 },
+    total_views: { type: Number, default: 0, min: 0 },
+    upvote_rate: { type: Number, default: 0, min: 0 },
+    total_shares: { type: Number, default: 0, min: 0 },
   },
   reposted: [
     {

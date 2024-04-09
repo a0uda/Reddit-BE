@@ -14,7 +14,6 @@ export const postSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    comments_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "comment" }],
     followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments_count: { type: Number, default: 0 },
     views_count: { type: Number, default: 0 },

@@ -1,5 +1,5 @@
 import express from "express";
-import { User } from "../db/models/User.js"; //if error put .js
+import { User } from "../db/models/User.js"; 
 import dotenv from "dotenv";
 import axios from "axios";
 import jwt from "jsonwebtoken";
