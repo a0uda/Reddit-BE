@@ -388,12 +388,19 @@ communityRouter.post("/communities/approve-user", async (req, res, next) => {
 communityRouter.post("/communities/edit-details-widget", async (req, res, next) => {
     try {
         const { err, success } = await editDetailsWidget(req.body)
+        console.log("the response is :")
+        console.log(err, success)
 
-        if (err) { return next(err) }
+
+        if (err) {
+
+            return next(err)
+        }
 
         res.status(200).json({ message: 'OK' });
 
     } catch (error) {
+
         next(error)
     }
 })
@@ -403,13 +410,12 @@ communityRouter.get("/communities/get-details-widget/:community_name", async (re
 
         if (err) { return next(err) }
 
-        return res.status(200).send(widget)
+        res.status(200).send(widget);
 
     } catch (error) {
         next(error)
     }
 })
-
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-profile-picture", async (req, res, next) => {
     try {
@@ -457,7 +463,7 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
         const { err, success } = await addCommunityBannerPicture(req.body)
 
         if (err) { return next(err) }
-
+        console.log(success);
         res.status(200).json({ message: 'OK' });
 
     } catch (error) {

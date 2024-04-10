@@ -282,20 +282,7 @@ const userSchema = new mongoose.Schema({
       default: false,
     },
   },
-  posts_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    },
-  },
-  comments_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  },
+
   followed_posts_ids: {
     type: Array,
     items: {
@@ -338,7 +325,8 @@ const userSchema = new mongoose.Schema({
       ref: "Post",
     },
   },
-  hidden_and_reported_comments_ids: {
+  //mafesh hide comments heya reported bas
+  reported_comments_ids: {
     type: Array,
     items: {
       type: mongoose.Schema.Types.ObjectId,

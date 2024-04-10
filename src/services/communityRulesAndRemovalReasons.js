@@ -9,7 +9,7 @@ import {
     getRuleById,
     deleteRule,
 } from "../utils/communities.js";
- 
+
 //////////////////////////////////////////////////////////////////////// Rules ////////////////////////////////////////////////////////////////////
 const addNewRuleToCommunity = async (requestBody) => {
     let {
@@ -75,7 +75,10 @@ const editCommunityRule = async (requestBody) => {
             const new_title = await getRuleByTitle(community_name, rule_title);
             if (new_title && new_title._id.toString() !== rule._id.toString()) {
                 return {
-                    err: "The updated title already exists, enter a different title.",
+                    err: {
+                        status: 500,
+                        message: `The updated title already exists, enter a different title.`
+                    }
                 };
             }
         }
@@ -99,6 +102,14 @@ const deleteCommunityRule = async (requestBody) => {
             return {
                 err: { status: 500, message: "community name does not exist " },
             };
+        }
+        //check if rule exists
+
+        const rule = await getRuleById(rule_id);
+        console.log(rule);
+        if (!rule) {
+            console.log("rule does not exist");
+            return { err: { status: 500, message: "rule id does not exist" } };
         }
 
         community.rules_ids = community.rules_ids.filter(

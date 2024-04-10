@@ -646,7 +646,7 @@ paths:
         "200":
           description: Success
         "500":
-          description: Internal Server error
+          description: rule title exists
   /communities/delete-rule/: #done
     post:
       tags:
@@ -669,7 +669,7 @@ paths:
         "200":
           description: Rule deleted successfully
         "500":
-          description: Error response
+          description: rule id doesn't exist
           content:
             application/json:
               schema:

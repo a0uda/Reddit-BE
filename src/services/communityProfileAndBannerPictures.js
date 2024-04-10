@@ -37,7 +37,7 @@ const deleteCommunityProfilePicture = async (requestBody) => {
         const savedCommunity = await community.save();
 
         console.log(savedCommunity);
-        return { sucess: true };
+        return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -53,12 +53,8 @@ const addCommunityBannerPicture = async (requestBody) => {
                 err: { status: 500, message: "community name does not exist " },
             };
         }
-
         community.banner_picture = banner_picture;
-        const savedCommunity = await community.save();
-        console.log(savedCommunity);
-        console.log(savedCommunity.banner_picture);
-
+        await community.save();
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };

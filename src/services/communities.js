@@ -299,6 +299,7 @@ const getDetailsWidget = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
+      console.log("inside the if ");
       return {
         err: { status: 500, message: "community name does not exist " },
       };
@@ -336,10 +337,7 @@ const editDetailsWidget = async (requestBody) => {
       community.description = description || community.description;
       await community.save();
     }
-
-    return {
-      widget: { members_nickname, currently_viewing_nickname, description },
-    };
+    return { success: true };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -372,7 +370,7 @@ const approveDiscussionItem = async (requestBody) => {
 
 export {
   addNewCommunity,
-  
+
   addDiscussionItemToCommunity,
   getDiscussionItemsByCommunityCategory,
   getDiscussionItemsByRandomCategory,
