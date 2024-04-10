@@ -1,5 +1,5 @@
 import express from "express";
-import { User } from "../db/models/User.js"; 
+import { User } from "../db/models/User.js";
 import dotenv from "dotenv";
 import axios from "axios";
 import jwt from "jsonwebtoken";
@@ -57,6 +57,8 @@ import {
   favoriteCommunity,
   clearHistory,
   deleteAccount,
+  hidePost,
+  followPost,
 } from "../controller/userActions.js";
 
 export const usersRouter = express.Router();
@@ -983,5 +985,31 @@ usersRouter.post("/users/delete-account", async (req, res) => {
       err: "Internal Server Error",
       msg: "An error occurred while processing the request.",
     });
+  }
+});
+
+usersRouter.post("/users/follow-unfollow-post", async (req, res) => {
+  try {
+    const { success, error, message } = await followPost(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+usersRouter.post("/users/hide-unhide-post", async (req, res) => {
+  try {
+    const { success, error, message } = await hidePost(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
   }
 });

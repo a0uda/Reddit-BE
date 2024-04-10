@@ -5,6 +5,8 @@ import { getSafetySettingsFormat } from "../utils/userSettings.js";
 import { encodeXText } from "nodemailer/lib/shared/index.js";
 import { followUserHelper } from "../services/users.js";
 import bcrypt from "bcryptjs";
+import { Post } from "../db/models/Post.js";
+import { getPost } from "./posts.js";
 
 export async function blockUser(request) {
   try {
@@ -477,6 +479,69 @@ export async function deleteAccount(request) {
       status: 500,
       err: "Internal Server Error",
       msg: "An error occurred while clearing history.",
+    };
+  }
+}
+
+export async function followPost(request) {
+  try {
+    const { success, error, post, user, message } = await getPost(
+      request,
+      true
+    );
+    if (!success) {
+      return { success, error };
+    }
+
+    if (!user.followed_posts_ids.includes(post._id)) {
+      user.followed_posts_ids.push(post._id);
+      await user.save();
+      return {
+        success: true,
+        error: {},
+        message: "User has followed post sucessfully",
+      };
+    } else {
+      const indexToRemove = user.followed_posts_ids.indexOf(post._id);
+      console.log(indexToRemove);
+      user.followed_posts_ids.splice(indexToRemove, 1);
+      await user.save();
+      return {
+        success: true,
+        post,
+        message: "User has unfollowed post sucessfully",
+      };
+    }
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
+    };
+  }
+}
+
+export async function hidePost(request) {
+  const { success, error, post, user, message } = await getPost(request, true);
+  if (!success) {
+    return { success, error };
+  }
+
+  if (!user.hidden_and_reported_posts_ids.includes(post._id)) {
+    user.hidden_and_reported_posts_ids.push(post._id);
+    await user.save();
+    return {
+      success: true,
+      error: {},
+      message: "Post hidden sucessfully",
+    };
+  } else {
+    const indexToRemove = user.hidden_and_reported_posts_ids.indexOf(post._id);
+    user.hidden_and_reported_posts_ids.splice(indexToRemove, 1);
+    await user.save();
+    return {
+      success: true,
+      post,
+      message: "Post unhidden sucessfully",
     };
   }
 }

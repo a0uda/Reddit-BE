@@ -28,10 +28,7 @@ export const postSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  approved: {
-    type: Boolean,
-    default: false,
-  },
+
   type: {
     type: String,
     enum: ["image_and_videos", "polls", "url", "text", "hybrid"],
@@ -62,7 +59,7 @@ export const postSchema = new mongoose.Schema({
   community_name: {
     type: String,
   },
-  followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  //removed followers users id as already each user has his followed posts
   comments_count: { type: Number, default: 0, min: 0 },
   views_count: { type: Number, default: 0, min: 0 },
   shares_count: { type: Number, default: 0, min: 0 },
@@ -88,6 +85,7 @@ export const postSchema = new mongoose.Schema({
   },
   scheduled_flag: { type: Boolean, default: false },
   moderator_details: {
+    //if in my own profile then Im the moderator
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -96,6 +94,10 @@ export const postSchema = new mongoose.Schema({
     spammed_type: { type: String },
     removed_flag: { type: Boolean, default: false },
     spammed_flag: { type: Boolean, default: false },
+    approved_flag: {
+      type: Boolean,
+      default: false,
+    },
   },
   user_details: {
     total_views: { type: Number, default: 0, min: 0 },

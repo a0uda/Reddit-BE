@@ -90,3 +90,4 @@ postsRouter.patch("/posts/set-suggested-sort", async (req, res) => {
     res.status(500).send({ error: e });
   }
 });
+
