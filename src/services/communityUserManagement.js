@@ -61,15 +61,12 @@ const getBannedUsers = async (community_name) => {
 const muteUser = async (request) => {
     try {
         // Verify auth token and get mutingUser
-        console.log(request.headers.authorization)
         const { success, err, status, user: mutingUser, msg } = await verifyAuthToken(request);
-        console.log(mutingUser)
-
         if (!mutingUser) {
             return { success, err, status, mutingUser, msg };
         }
         // Extract request parameters
-        const { username, community_name, action, reason } = request.requestBody;
+        const { community_name, action, reason, username } = request.body;
         // Check if the action is mute or unmute
         if (action === "mute" || action === "unmute") {
             // Find the community
@@ -84,21 +81,26 @@ const muteUser = async (request) => {
             }
             // Perform mute or unmute action
             if (action === "mute") {
+                if (!community.muted_users) {
+                    community.muted_users = [];
+                }
                 // Push muting user's ID, mute date, and reason to muted_users array
                 community.muted_users.push({
-                    id: user._id,
-                    muted_by_id: mutingUser._id,
+                    username: user.username,
+                    muted_by_username: mutingUser.username,
                     mute_date: new Date(),
-                    mute_reason: reason
+                    mute_reason: reason,
+                    profile_picture: user.profile_picture || "none"
                 });
+
             } else if (action === "unmute") {
                 // Filter out the user ID from muted_users array
-                community.muted_users = community.muted_users.filter(mutedUser => mutedUser.id.toString() !== user._id.toString());
+                community.muted_users = community.muted_users.filter(mutedUser => mutedUser.username != user.username);
             }
 
             // Save the updated community
             await community.save();
-
+            // console.log(community.muted_users)
             return { success: true };
         } else {
             return { err: { status: 400, message: "Invalid action." } };
@@ -116,10 +118,10 @@ const getMutedUsers = async (community_name) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        console.log(community)
-        const muted_users_ids = community.muted_users;
-        const muted_users = await getUsersByIds(muted_users_ids);
-        console.log(muted_users);
+        console.log("this is muted users:")
+        console.log(community.muted_users)
+        const muted_users = community.muted_users;
+
         return { users: muted_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
