@@ -62,6 +62,12 @@ import {
     deleteCommunityBannerPicture,
 } from "../services/communityProfileAndBannerPictures.js";
 
+import {
+    getAppearanceOptions,
+    getAppearanceOption,
+    updateAppearanceOption
+} from "../services/communityAppearance.js";
+
 const communityRouter = express.Router();
 
 communityRouter.post("/communities/add-community", async (req, res, next) => {
@@ -281,6 +287,56 @@ communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, nex
         next(error)
     }
 });
+
+//////////////////////////////////////////////////////////////////////// Appearance //////////////////////////////////////////////////////////////
+communityRouter.get("/communities/get-appearance-options/:community_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+
+        const { err, appearance_options } = await getAppearanceOptions(community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(appearance_options)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
+communityRouter.get("/communities/get-appearance-option/:community_name/:option_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+        const option_name = req.params.option_name
+
+        const { err, appearance_option } = await getAppearanceOption(community_name, option_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(appearance_option)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
+communityRouter.post("/communities/update-appearance-option/:community_name/:option_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+        const option_name = req.params.option_name
+        const new_value = req.body
+
+        const { err, updated_appearance_option } = await updateAppearanceOption(community_name, option_name, new_value)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(updated_appearance_option)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.

@@ -7,11 +7,40 @@ import {
   getViewsCount,
   getPost,
   getPostComments,
+  getUserPostDetails,
+  createPost,
+  sharePost,
 } from "../controller/posts.js";
 
 dotenv.config();
 
 export const postsRouter = express.Router();
+
+postsRouter.post("/posts/new-post", async (req, res) => {
+  try {
+    const { success, error, message } = await createPost(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+postsRouter.post("/posts/share-post", async (req, res) => {
+  try {
+    const { success, error, message } = await sharePost(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
 
 postsRouter.get("/posts/get-post", async (req, res) => {
   try {
@@ -21,6 +50,21 @@ postsRouter.get("/posts/get-post", async (req, res) => {
       return;
     }
     res.status(200).send({ message, post });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+postsRouter.get("/posts/get-user-details", async (req, res) => {
+  try {
+    const { success, error, message, user_details } = await getUserPostDetails(
+      req
+    );
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message, user_details });
   } catch (e) {
     res.status(500).send({ error: e });
   }

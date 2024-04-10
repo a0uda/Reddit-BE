@@ -12,7 +12,7 @@ export const postSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    // required: true,
   },
   created_at: {
     type: Date,
@@ -25,10 +25,6 @@ export const postSchema = new mongoose.Schema({
     type: Date,
   },
   deleted: {
-    type: Boolean,
-    default: false,
-  },
-  approved: {
     type: Boolean,
     default: false,
   },
@@ -54,7 +50,17 @@ export const postSchema = new mongoose.Schema({
       link: { type: String },
     },
   ],
-  poll: [{ options: { type: String }, votes: { type: Number, default: 0 } }],
+  //changed name from poll to polls
+  polls: [{ options: { type: String }, votes: { type: Number, default: 0 } }],
+  //voting length in days if the type is polls
+  polls_voting_length: { type: Number, default: 3 },
+  polls_voting_is_expired_flag: { type: Boolean, default: false },
+  //flag used to indicate if post is in community if not then it is in user profile
+  //and community id and name can be null or don't care
+  post_in_community_flag: {
+    type: Boolean,
+    default: false,
+  },
   community_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Community",
@@ -62,12 +68,13 @@ export const postSchema = new mongoose.Schema({
   community_name: {
     type: String,
   },
-  followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  //removed followers users id as already each user has his followed posts
   comments_count: { type: Number, default: 0, min: 0 },
   views_count: { type: Number, default: 0, min: 0 },
   shares_count: { type: Number, default: 0, min: 0 },
   //there is nothing as upvotes and downvotes count, it is votes count only
-  votes_count: { type: Number, default: 0 },
+  upvotes_count: { type: Number, default: 0 },
+  downvotes_count: { type: Number, default: 0 },
   oc_flag: { type: Boolean, default: false },
   spoiler_flag: { type: Boolean, default: false },
   nsfw_flag: { type: Boolean, default: false },
@@ -88,6 +95,7 @@ export const postSchema = new mongoose.Schema({
   },
   scheduled_flag: { type: Boolean, default: false },
   moderator_details: {
+    //if in my own profile then Im the moderator
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -96,6 +104,10 @@ export const postSchema = new mongoose.Schema({
     spammed_type: { type: String },
     removed_flag: { type: Boolean, default: false },
     spammed_flag: { type: Boolean, default: false },
+    approved_flag: {
+      type: Boolean,
+      default: false,
+    },
   },
   user_details: {
     total_views: { type: Number, default: 0, min: 0 },
@@ -105,7 +117,7 @@ export const postSchema = new mongoose.Schema({
   reposted: [
     {
       shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      title: { type: String },
+      caption: { type: String ,default: null},
     },
   ],
 });

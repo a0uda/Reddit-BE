@@ -34,7 +34,7 @@ async function generateRandomPosts(users) {
       link_url: faker.internet.url(),
       images: [{ path: faker.image.url(), caption: "", link: "" }],
       videos: [{ path: faker.internet.url(), caption: "", link: "" }],
-      poll: [{ options: faker.lorem.words(), votes: 7 }],
+      polls: [{ options: faker.lorem.words(), votes: 7 }],
       community_id: null,
       followers_ids: [],
       comments_count: 0,
@@ -83,6 +83,7 @@ async function generateRandomPosts(users) {
 }
 
 export async function seedPosts(users) {
+  await Post.deleteMany({});
   const posts = await generateRandomPosts(users);
   const options = { timeout: 30000 }; // 30 seconds timeout
   const postsInserted = await Post.insertMany(posts, options);

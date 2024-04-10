@@ -4,8 +4,10 @@ import { usersRouter } from "./routers/users.js";
 import { communityRouter } from "./routers/communities.js";
 import { listingPostsRouter } from "./routers/lisitng.js";
 import { postsRouter } from "./routers/posts.js";
+import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
+import { commentsRouter } from "./routers/comments.js";
 
 // const connect_to_db = require("./db/mongoose")
 
@@ -29,7 +31,14 @@ app.listen(port, () => {
   console.log("Server is Up");
 });
 
-app.use([usersRouter, communityRouter, listingPostsRouter, postsRouter]);
+app.use([
+  usersRouter,
+  communityRouter,
+  listingPostsRouter,
+  postsOrCommentsRouter,
+  postsRouter,
+  commentsRouter,
+]);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
