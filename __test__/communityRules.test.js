@@ -1,9 +1,7 @@
 
 import { getCommunityRules, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule } from "../src/services/communityRulesAndRemovalReasons";
-
 import * as communityUtils from "../src/utils/communities"; // Import the entire module
 import { Rule } from "../src/db/models/Rule";
-
 // Mock the entire module
 jest.mock("../src/utils/communities");
 jest.mock("../src/db/models/Rule");
@@ -77,9 +75,6 @@ describe('getCommunityRules', () => {
   }
   );
 });
-
-
-
 describe('addNewRuleToCommunity', () => {
   beforeEach(() => {
     // Reset the mock implementation before each test
@@ -279,29 +274,6 @@ describe('editCommunityRule', () => {
 });
 
 
-
-
-// const deleteCommunityRule = async (requestBody) => {
-//   let { community_name, rule_id } = requestBody;
-//   try {
-//     const community = await communityNameExists(community_name);
-//     if (!community) {
-//       return {
-//         err: { status: 500, message: "community name does not exist " },
-//       };
-//     }
-
-//     community.rules_ids = community.rules_ids.filter(
-//       (rule) => rule !== rule_id
-//     );
-
-//     await community.save();
-//     await deleteRule(rule_id);
-//     return { success: true };
-//   } catch (error) {
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
 describe('deleteRule', () => {
   it('should delete a rule successfully', async () => {
     // Mock the deleted rule object

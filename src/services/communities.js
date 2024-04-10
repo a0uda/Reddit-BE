@@ -5,11 +5,7 @@ import { CommunityContentControls } from "../db/models/communityContentControls.
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
 import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
 import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
-
-import { User } from "../db/models/User.js"; //delete this line
-import { Rule } from "../db/models/Rule.js";
 import { TempComment } from "../db/models/temp-files/TempComment.js";
-import { Post } from "../db/models/temp-files/Post.js";
 
 import {
   isUserAlreadyApproved,
@@ -20,12 +16,31 @@ import {
   deleteRule,
   getApprovedUserView,
 } from "../utils/communities.js";
-/* where are these attributes ?1
- "community_name": "community_44",
-  "description": "description_1",
-  "content_visibility": "public",
-  "mature_content": true
-*/
+/**
+ * 
+ * @param {object} requestBody 
+ * @param {string} requestBody.name - The name of the new community.
+ * @param {string} requestBody.type - The type of the new community.
+ * @param {boolean} requestBody.nsfw_flag - The nsfw flag of the new community.
+ * @param {string} requestBody.category - The category of the new community.
+ * 
+ * @returns
+ * @property {string} community_name - The name of the new community.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * const requestBody = {
+ * name: "new_community",
+ * type: "public",
+ * nsfw_flag: false,
+ * category: "example_category",
+ * }
+ * @example
+ * Output:
+ * {
+ * community_name: "new_community"
+ * }
+ */
 const addNewCommunity = async (requestBody) => {
   const { name, type, nsfw_flag, category } = requestBody;
 
@@ -294,7 +309,35 @@ const getComments = async () => {
 };
 
 //////////////////////////////////////////////////////////////////////// Details Widget //////////////////////////////////////////////////////////////
-//new
+/**
+ * 
+ * @param {String} community_name 
+ * @returns {Object}  
+ * {
+ * widget: {
+ * members_nickname: String,
+ * currently_viewing_nickname: String,
+ * description: String
+ * }
+ * }
+ * or
+ * {
+ * err: {
+ * status: 500,
+ * message: String
+ * }
+ * }
+ * 
+ * @example
+ * input: "community_name"
+ * output: {
+ * widget: {
+ * members_nickname: "members_nickname",
+ * currently_viewing_nickname: "currently_viewing_nickname",
+ * description: "description"
+ * }
+ * }
+ */
 const getDetailsWidget = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
@@ -315,6 +358,36 @@ const getDetailsWidget = async (community_name) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+/**
+ * 
+ * @param {object} requestBody 
+ * @property {String} community_name
+ * @property {String} members_nickname
+ * @property {String} currently_viewing_nickname
+ * @property {String} description
+ * 
+ * @returns
+ * {
+ * success: true
+ * }
+ * or
+ * {
+ * err: {
+ * status: 500,
+ * message: String
+ * }
+ * }
+ * @example
+ * input: {
+ * community_name: "community_name",
+ * members_nickname: "members_nickname",
+ * currently_viewing_nickname: "currently_viewing_nickname",
+ * description: "description"
+ * }
+ * output: {
+ * success: true
+ * }
+ */
 const editDetailsWidget = async (requestBody) => {
   const {
     community_name,

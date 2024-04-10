@@ -4,10 +4,10 @@ import { Community } from "../db/models/Community.js";
 import { User } from "../db/models/User.js"; //delete this line
 
 import {
-  isUserAlreadyApproved,
-  communityNameExists,
-  getUsersByIds,
-  getApprovedUserView,
+    isUserAlreadyApproved,
+    communityNameExists,
+    getUsersByIds,
+    getApprovedUserView,
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Banned /////////////////////////////////////////////////////////////////////////
@@ -111,6 +111,27 @@ const getMutedUsers = async (community_name) => {
 
 //////////////////////////////////////////////////////////////////////// Approved /////////////////////////////////////////////////////////////////////////
 // TODO: Validation - User already approved.
+/**
+ * 
+ * @param {Object} requestBody
+ * @property {String} username
+ * @property {String} community_name
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Username not found."}}
+ * or 
+ * {err: {status: 400, message: "Community not found."}}
+ * @example 
+ * input:
+ * const requestBody = {
+ * username: "user1",
+ * community_name: "community1"
+ * }
+ * @example
+ * Output:
+ * {success: true}
+ */
 const approveUser = async (requestBody) => {
     try {
         const { username, community_name } = requestBody;
@@ -125,7 +146,6 @@ const approveUser = async (requestBody) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        console.log(community);
         // Check if user ID already exists in the approved_users array of the community
         const isAlreadyApproved = isUserAlreadyApproved(community, user._id);
         if (isAlreadyApproved) {
@@ -146,13 +166,29 @@ const approveUser = async (requestBody) => {
     }
 };
 
-//Profile picture is not showing
+/**
+ * 
+ * @param {String} community_name 
+ * @returns {Object} 
+ * @property {Array} users
+ * @example
+ * input:
+ * const community_name = "community1"
+ * @example
+ * Output:
+ * {
+ * users: [
+ * {username: "user1", approved_at: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", approved_at: "2021-09-01T00:00:00.000Z"},
+ * ]
+ * }
+ */
 const getApprovedUsers = async (community_name) => {
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
             return {
-                err: { status: 500, message: "community name does not exist " },
+                err: { status: 500, message: "Community not found." },
             };
         }
 
@@ -166,9 +202,6 @@ const getApprovedUsers = async (community_name) => {
                 return userView;
             })
         );
-
-        console.log(users);
-
         return { users }; // Return the users array
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -176,6 +209,7 @@ const getApprovedUsers = async (community_name) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Moderators //////////////////////////////////////////////////////////////
+
 const addModerator = async (requestBody) => {
     try {
         const { community_name, username } = requestBody;

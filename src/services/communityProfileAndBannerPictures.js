@@ -5,6 +5,29 @@ import {
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
+/**
+ * 
+ * @param {object} requestBody 
+ * @property {string} requestBody.community_name - The name of the community to add the rule to.
+ * @property {string} requestBody.profile_picture - The profile picture of the community.
+ * 
+ * @returns
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * profile_picture: 'example_profile_picture',
+ * }
+ * 
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const addCommunityProfilePicture = async (requestBody) => {
     const { community_name, profile_picture } = requestBody;
     try {
@@ -24,6 +47,27 @@ const addCommunityProfilePicture = async (requestBody) => {
     }
 };
 
+/**
+ * @param {object} requestBody
+ * @property {string} requestBody.community_name - The name of the community to delete the profile picture from.
+ * @property {string} requestBody.profile_picture - The profile picture of the community.
+ * 
+ * @returns
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * }
+ * 
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const deleteCommunityProfilePicture = async (requestBody) => {
     const { community_name } = requestBody;
     try {
@@ -44,6 +88,28 @@ const deleteCommunityProfilePicture = async (requestBody) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Banner Picture //////////////////////////////////////////////////////////////
+/**
+ * @param {object} requestBody
+ * @property {string} requestBody.community_name - The name of the community to add the rule to.
+ * @property {string} requestBody.banner_picture - The banner picture of the community.
+ * 
+ * @returns
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * banner_picture: 'example_banner_picture',
+ * }
+ * 
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const addCommunityBannerPicture = async (requestBody) => {
     const { community_name, banner_picture } = requestBody;
     try {
@@ -60,7 +126,27 @@ const addCommunityBannerPicture = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
-
+/**
+ * @param {object} requestBody
+ * @property {string} requestBody.community_name - The name of the community to delete the banner picture from.
+ * @property {string} requestBody.banner_picture - The banner picture of the community.
+ * 
+ * @returns
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * }
+ * 
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const deleteCommunityBannerPicture = async (requestBody) => {
     const { community_name } = requestBody;
     try {
