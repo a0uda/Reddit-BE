@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { CommunityGeneralSettings } from "../src/db/models/communityGeneralSettings.js";
-import { getRandomBool, getRandomElement } from "./seedHelpers.js";
+import { getRandomElement } from "./seedHelpers.js";
 
 const GENERAL_SETTINGS_COUNT = 20;
 
@@ -12,13 +12,13 @@ async function generateRandomSettings() {
     const fakeSetting = {
       description: faker.lorem.sentences(),
       welcome_message: {
-        send_welcome_message_flag: getRandomBool(),
+        send_welcome_message_flag: faker.datatype.boolean(),
         message: faker.lorem.sentences(),
       },
       language: getRandomElement(["English", "Frensh", "Spanish", "German", "Italian", "Russian", "Chinese", "Japanese", "Korean", "Arabic"]),
       region: faker.location.country(),
       visibility: getRandomElement(["Public", "Private", "Restricted"]),
-      nsfw_flag: getRandomBool(),
+      nsfw_flag: faker.datatype.boolean(),
     };
 
     generalSettings.push(fakeSetting);
