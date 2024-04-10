@@ -1,7 +1,6 @@
 import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../src/services/communitySettings.js';
 import { Community } from '../src/db/models/Community.js';
 import { CommunityGeneralSettings } from '../src/db/models/communityGeneralSettings.js';
-
 describe('getCommunityGeneralSettings', () => {
     it('should return general settings for a valid community name', async () => {
         // Mock the Community model's findOne method
@@ -16,12 +15,10 @@ describe('getCommunityGeneralSettings', () => {
             visibility: 'Public',
             nsfw_flag: false,
         };
-
         const mockCommunity = {
             name: 'SampleCommunity',
             general_settings: mockGeneralSettings,
         };
-
         // Create a mock query object that simulates the Mongoose Query object
         const mockQuery = {
             // Mock the 'populate' method to return the mock query object, enabling method chaining
@@ -30,21 +27,16 @@ describe('getCommunityGeneralSettings', () => {
             // getCommunityGeneralSettings() is responsible for accessing the general_settings property of the community object returned from exec().
             exec: jest.fn().mockResolvedValue(mockCommunity),
         };
-
         // Replace the 'findOne' method on the Community model with a mock function
         // This mock function returns the mock query object when called
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
-
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
         const result = await getCommunityGeneralSettings(communityName);
-
         // Check if Community.findOne was called with the correct argument
         expect(Community.findOne).toHaveBeenCalledWith({ name: communityName });
-
         // Check if the result contains the expected general settings
         expect(result).toEqual({ general_settings: mockGeneralSettings });
-
         // Check if the 'populate' method was called with the correct argument
         expect(mockQuery.populate).toHaveBeenCalledWith('general_settings');
     });
@@ -58,7 +50,7 @@ describe('getCommunityGeneralSettings', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
-        
+
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
@@ -90,7 +82,7 @@ describe('getCommunityGeneralSettings', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
-        
+
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
@@ -205,7 +197,7 @@ describe('changeCommunityGeneralSettings', () => {
 
         const communityName = 'SampleCommunity';
         const generalSettings = {};
- 
+
         try {
             const result = await changeCommunityGeneralSettings(communityName, generalSettings);
         } catch (result) {

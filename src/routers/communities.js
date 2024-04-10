@@ -10,36 +10,14 @@ import {
     getCommunityMembersCount,
 
     getRemovedDiscussionItems,
-    getEditedDiscussionItems,   
+    getEditedDiscussionItems,
     getUnmoderatedDiscussionItems,
-
-
-    addNewRuleToCommunity,
-    editCommunityRule,
-    deleteCommunityRule,
-    getCommunityRules,
-
-    approveUser,
-    getApprovedUsers,
-    getAllUsers,
 
     getDetailsWidget,
     editDetailsWidget,
 
-    addCommunityProfilePicture,
-    deleteCommunityProfilePicture,
-
-    addCommunityBannerPicture,
-    deleteCommunityBannerPicture,
     getComments,
-    addComment,
-    getMutedUsers,
-    muteUser,
-    banUser,
-    getBannedUsers,
-    addModerator,
-    getModerators,
-    deleteModerator
+    addComment
 } from "../services/communities.js";
 
 import {
@@ -51,6 +29,44 @@ import {
     changeCommunityContentControls,
     changeCommunityPostsAndComments,
 } from "../services/communitySettings.js";
+
+import {
+    banUser,
+    getBannedUsers,
+
+    muteUser,
+    getMutedUsers,
+
+    approveUser,
+    getApprovedUsers,
+
+    addModerator,
+    getModerators,
+    deleteModerator,
+
+    getAllUsers,
+} from "../services/communityUserManagement.js";
+
+import {
+    addNewRuleToCommunity,
+    editCommunityRule,
+    deleteCommunityRule,
+    getCommunityRules,
+} from "../services/communityRulesAndRemovalReasons.js";
+
+import {
+    addCommunityProfilePicture,
+    deleteCommunityProfilePicture,
+
+    addCommunityBannerPicture,
+    deleteCommunityBannerPicture,
+} from "../services/communityProfileAndBannerPictures.js";
+
+import {
+    getAppearanceOptions,
+    getAppearanceOption,
+    updateAppearanceOption
+} from "../services/communityAppearance.js";
 
 const communityRouter = express.Router();
 
@@ -228,7 +244,7 @@ communityRouter.get("/communities/get-members-count/:community_name", async (req
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
 communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
     try {
-        const {community_name, time_filter, posts_or_comments} = req.body
+        const { community_name, time_filter, posts_or_comments } = req.body
 
         const removedDiscussionItems = await getRemovedDiscussionItems(community_name, time_filter, posts_or_comments)
 
@@ -243,7 +259,7 @@ communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
 
 communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) => {
     try {
-        const {community_name, time_filter, posts_or_comments} = req.body
+        const { community_name, time_filter, posts_or_comments } = req.body
 
         const editedDiscussionItems = await getEditedDiscussionItems(community_name, time_filter, posts_or_comments)
 
@@ -259,7 +275,7 @@ communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) =>
 
 communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, next) => {
     try {
-        const {community_name, time_filter} = req.body
+        const { community_name, time_filter } = req.body
 
         const unmoderatedDiscussionItems = await getUnmoderatedDiscussionItems(community_name, time_filter)
 
@@ -271,6 +287,56 @@ communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, nex
         next(error)
     }
 });
+
+//////////////////////////////////////////////////////////////////////// Appearance //////////////////////////////////////////////////////////////
+communityRouter.get("/communities/get-appearance-options/:community_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+
+        const { err, appearance_options } = await getAppearanceOptions(community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(appearance_options)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
+communityRouter.get("/communities/get-appearance-option/:community_name/:option_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+        const option_name = req.params.option_name
+
+        const { err, appearance_option } = await getAppearanceOption(community_name, option_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(appearance_option)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
+communityRouter.post("/communities/update-appearance-option/:community_name/:option_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+        const option_name = req.params.option_name
+        const new_value = req.body
+
+        const { err, updated_appearance_option } = await updateAppearanceOption(community_name, option_name, new_value)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(updated_appearance_option)
+
+    } catch (error) {
+        next(error)
+    }
+});
+
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.
@@ -378,12 +444,19 @@ communityRouter.post("/communities/approve-user", async (req, res, next) => {
 communityRouter.post("/communities/edit-details-widget", async (req, res, next) => {
     try {
         const { err, success } = await editDetailsWidget(req.body)
+        console.log("the response is :")
+        console.log(err, success)
 
-        if (err) { return next(err) }
+
+        if (err) {
+
+            return next(err)
+        }
 
         res.status(200).json({ message: 'OK' });
 
     } catch (error) {
+
         next(error)
     }
 })
@@ -393,13 +466,12 @@ communityRouter.get("/communities/get-details-widget/:community_name", async (re
 
         if (err) { return next(err) }
 
-        return res.status(200).send(widget)
+        res.status(200).send(widget);
 
     } catch (error) {
         next(error)
     }
 })
-
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-profile-picture", async (req, res, next) => {
     try {
@@ -447,7 +519,7 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
         const { err, success } = await addCommunityBannerPicture(req.body)
 
         if (err) { return next(err) }
-
+        console.log(success);
         res.status(200).json({ message: 'OK' });
 
     } catch (error) {
@@ -486,7 +558,7 @@ communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
 ////////////////////////////////////////////////////MUTE USERS///////////////////////////////////////////////
 communityRouter.post("/communities/mute-user", async (req, res, next) => {
     try {
-        const { err, success } = await muteUser(req.body)
+        const { err, success } = await muteUser(req)
 
 
         if (err) { return next(err) }
