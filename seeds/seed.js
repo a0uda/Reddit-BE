@@ -7,6 +7,7 @@ import { seedGeneralSettings } from "./communityGeneralSettingsSeed.js";
 import { seedContentControls } from "./communityContentControlsSeed.js";
 import { seedPostsAndComments } from "./communityPostsAndCommentsSeed.js";
 import { seedAppearances } from "./communityAppearanceSeed.js";
+import { seedCommunities } from "./communitySeed.js";
 
 import { connect_to_db } from "../src/db/mongoose.js";
 
@@ -26,7 +27,9 @@ import { connect_to_db } from "../src/db/mongoose.js";
   // const communityGeneralSettings = await seedGeneralSettings();
   // const communityContentControls = await seedContentControls();
   // const communityPostsAndComments = await seedPostsAndComments();
-  const communityAppearance = await seedAppearances();
+  // const communityAppearance = await seedAppearances();
+  const communities = await seedCommunities();
+
 
   console.log("✅ Seeds executed successfully");
   mongoose.connection.close();

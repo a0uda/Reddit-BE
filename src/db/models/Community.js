@@ -130,7 +130,14 @@ const communitySchema = new mongoose.Schema({
       },
     },
   ],
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  rules_ids: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Rule",
+    },
+  ],
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   profile_picture: {
     type: String,
     default: "",
@@ -139,6 +146,7 @@ const communitySchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   members_nickname: {
     type: String,
     default: "Members",
@@ -174,26 +182,15 @@ const communitySchema = new mongoose.Schema({
       ref: "User",
     },
   ],
-
-  allow_image_posts: {
-    type: Boolean,
-    default: true,
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //TODO: These do not appear in the databse we are seeding.
+  // I will work on adding then once I understand what they are used for.
+  traffic: String,
+  topics: String,
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
-  allow_url_posts: {
-    type: Boolean,
-    default: true,
-  },
-  allow_polls_posts: {
-    type: Boolean,
-    default: true,
-  },
-  rules_ids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Rule",
-    },
-  ],
-
 });
 
 export const Community = mongoose.model("Community", communitySchema);
