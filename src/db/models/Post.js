@@ -59,7 +59,7 @@ export const postSchema = new mongoose.Schema({
   community_name: {
     type: String,
   },
-  followers_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  //removed followers users id as already each user has his followed posts
   comments_count: { type: Number, default: 0, min: 0 },
   views_count: { type: Number, default: 0, min: 0 },
   shares_count: { type: Number, default: 0, min: 0 },

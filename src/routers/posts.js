@@ -7,7 +7,6 @@ import {
   getViewsCount,
   getPost,
   getPostComments,
-  hideUnhidePost,
 } from "../controller/posts.js";
 
 dotenv.config();
@@ -92,15 +91,3 @@ postsRouter.patch("/posts/set-suggested-sort", async (req, res) => {
   }
 });
 
-postsRouter.patch("/posts/hide-unhide", async (req, res) => {
-  try {
-    const { success, error, message } = await hideUnhidePost(req);
-    if (!success) {
-      res.status(error.status).send({ error });
-      return;
-    }
-    res.status(200).send({ message });
-  } catch (e) {
-    res.status(500).send({ error: e });
-  }
-});
