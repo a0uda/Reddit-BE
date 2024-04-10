@@ -42,6 +42,13 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  //flag used to indicate if comment is in community if not then it is in user profile
+  //must be the same as its own post
+  //and community id and name can be null or don't care
+  comment_in_community_flag: {
+    type: Boolean,
+    default: false,
+  },
   community_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Community",
