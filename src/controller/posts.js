@@ -1,9 +1,180 @@
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
-import { User } from "../db/models/User.js";
-import { Comment } from "../db/models/Comment.js";
+import { communityNameExists } from "../utils/communities.js";
+import { getCommunityPostsAndComments } from "../services/communitySettings.js";
 import { toggler } from "../utils/toggler.js";
-import { getPostCommentsHelper } from "../services/posts.js";
+import { checkNewPostInput, getPostCommentsHelper } from "../services/posts.js";
+
+//complete not finished yet
+export async function createPost(request) {
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  if (!user) {
+    return { success, error: { status, message: err } };
+  }
+  const { result, message } = await checkNewPostInput(request.body);
+  if (!result) {
+    return {
+      success: result,
+      error: {
+        status: 400,
+        message,
+      },
+    };
+  }
+
+  const {
+    title,
+    description,
+    post_in_community_flag,
+    type,
+    images,
+    videos,
+    link_url,
+    polls,
+    polls_voting_length,
+    community_name,
+    oc_flag,
+    spoiler_flag,
+    nsfw_flag,
+  } = request.body;
+  //if type text then no imgs or videos even if they are present in req bosy and so on
+  const post = new Post({
+    title,
+    description,
+    post_in_community_flag,
+    type,
+    images,
+    videos,
+    link_url,
+    polls,
+    polls_voting_length,
+    community_name,
+    oc_flag,
+    spoiler_flag,
+    nsfw_flag,
+  });
+  console.log(post);
+  //if post in community
+  //1.community must exist
+  //2. if community is restricted or private only approved users can post
+  //3. check if user is muted or banned he can't post
+  //4. if nsfw flag in grnrral settings community is true ->flag post is true
+  //5.check allowed type post url,poll,image in community
+  //6. community content controls:
+  //require_words_in_post_title
+  //ban_words_from_post_title
+  //ban_words_from_post_body
+  //7. community post settings
+  //allow_multiple_images_per_post
+  if (post_in_community_flag) {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return {
+        success: false,
+        error: {
+          status: 400,
+          message: "Community name not found",
+        },
+      };
+    }
+    post.community_id = community._id;
+  }
+  //if post in user profile
+  //check nsfw flag
+  else {
+    console.log(post);
+    if (user.profile_settings.nsfw_flag) post.nsfw_flag = true;
+  }
+
+  //if all good and i am going to post
+  //set all necessary attributes (flags oc and nsf and spoiler if found)
+  //upvote++
+  //add it is user upvote posts
+  post.user_id = user._id;
+  post.created_at = Date.now();
+  post.upvotes_count++;
+  user.upvotes_posts_ids.push(post._id);
+  await post.save();
+  await user.save();
+  return {
+    success: true,
+    error: {},
+    message: "Post created sucessfully ",
+  };
+}
+
+//TODO still needs modifications beacuse we must add community name that we
+//shared the post to +flags -> maybe make it a new schema
+//aw akhly fe flag m3a post y2ol howa repsted wla la + caption w lma agy a3ml share a3ml new post
+export async function sharePost(request) {
+  try {
+    const { success, error, post, user, message } = await getPost(
+      request,
+      true
+    );
+    if (!success) {
+      return { success, error };
+    }
+    const {
+      post_in_community_flag,
+      community_name,
+      caption: optionalCaption,
+      oc_flag,
+      spoiler_flag,
+      nsfw_flag,
+    } = request.body;
+    if (post_in_community_flag === undefined) {
+      return {
+        success: false,
+        error: {
+          status: 400,
+          message: "post_in_community_flag is missing",
+        },
+      };
+    }
+
+    if (post_in_community_flag) {
+      const community = await communityNameExists(community_name);
+      if (!community) {
+        return {
+          success: false,
+          error: {
+            status: 400,
+            message: "Community name not found",
+          },
+        };
+      }
+      const { err, posts_and_comments } = await getCommunityPostsAndComments(
+        community_name
+      );
+      if (!posts_and_comments.posts.allow_crossposting_of_posts) {
+        return {
+          success: false,
+          error: {
+            status: 400,
+            message: "Can't repost to this community",
+          },
+        };
+      }
+    }
+    var caption;
+    if (!optionalCaption) caption = null;
+    post.reposted.push({ shared_by: user._id, caption });
+    post.shares_count++;
+    post.user_details.total_shares++;
+    await post.save();
+    return {
+      success: true,
+      error: {},
+      message: "Shared post sucessfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
+    };
+  }
+}
 
 export async function getPost(request, verifyUser) {
   let user;
@@ -520,4 +691,30 @@ export async function postReport(request) {
       msg: "An error occurred.",
     };
   }
+}
+
+export async function getUserPostDetails(request) {
+  const { success, error, post, user, message } = await getPost(request, true);
+  if (!success) {
+    return { success, error };
+  }
+  //check if the user is the author of this post
+  if (post.user_id.toString() != user._id.toString()) {
+    return {
+      success: false,
+      error: {
+        status: 400,
+        message:
+          "The user can't view post statistics ad he is no the owner of this post",
+      },
+    };
+  }
+  return {
+    success: true,
+    user_details: {
+      ...post.user_details,
+      comments_count: post.comments_count,
+    },
+    message: "Post user details retrieved sucessfully",
+  };
 }
