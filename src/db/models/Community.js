@@ -71,6 +71,10 @@ const communitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CommunityPostsAndComments",
   },
+  appearance: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CommunityAppearance",
+  },
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   approved_users: [
     {
