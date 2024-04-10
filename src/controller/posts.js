@@ -6,11 +6,19 @@ import { toggler } from "../utils/toggler.js";
 import { getPostCommentsHelper } from "../services/posts.js";
 
 export async function getPost(request, verifyUser) {
+  let user;
   if (verifyUser) {
-    const { success, err, status, user, msg } = await verifyAuthToken(request);
-    if (!user) {
+    const {
+      success,
+      err,
+      status,
+      user: verifiedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!verifiedUser) {
       return { success, error: { status, message: err } };
     }
+    user = verifiedUser;
   }
   const postId = request?.body?.id || request?.query?.id;
   if (postId == undefined || postId == null) {
@@ -29,28 +37,18 @@ export async function getPost(request, verifyUser) {
   return {
     success: true,
     post,
+    user,
     message: "Post Retrieved sucessfully",
   };
 }
 
 export async function getPostComments(request) {
-  const postId = request?.query?.id;
-
-  if (postId == undefined || postId == null) {
-    return {
-      success: false,
-      error: { status: 400, message: "Post id is required" },
-    };
-  }
-  const post = await Post.findById(postId);
-  if (!post) {
-    return {
-      success: false,
-      error: { status: 404, message: "Post Not found" },
-    };
+  const { success, error, post, message } = await getPost(request, false);
+  if (!success) {
+    return { success, error };
   }
 
-  const comments = await getPostCommentsHelper(postId);
+  const comments = await getPostCommentsHelper(post._id);
   return {
     success: true,
     comments,
@@ -162,48 +160,6 @@ export async function setSuggestedSort(request) {
     return {
       success: false,
       error: { status: 500, message: e },
-    };
-  }
-}
-
-export async function hideUnhidePost(request) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
-  if (!user) {
-    return { success, error: { status, message: err } };
-  }
-
-  const postId = request?.body?.id;
-  if (postId == undefined || postId == null) {
-    return {
-      success: false,
-      error: { status: 400, message: "Post id is required" },
-    };
-  }
-  const post = await Post.findById(postId);
-  if (!post) {
-    return {
-      success: false,
-      error: { status: 404, message: "Post Not found" },
-    };
-  }
-  if (!user.hidden_and_reported_posts_ids.includes(post.id)) {
-    user.hidden_and_reported_posts_ids.push(post.id);
-    await user.save();
-    return {
-      success: true,
-      error: {},
-      message: "Post hidden sucessfully",
-    };
-  } else {
-    const indexToRemove = user.hidden_and_reported_posts_ids.indexOf(
-      post._id.toString()
-    );
-    user.hidden_and_reported_posts_ids.splice(indexToRemove, 1);
-    await user.save();
-    return {
-      success: true,
-      post,
-      message: "Post unhidden sucessfully",
     };
   }
 }
