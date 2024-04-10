@@ -502,7 +502,7 @@ communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
 ////////////////////////////////////////////////////MUTE USERS///////////////////////////////////////////////
 communityRouter.post("/communities/mute-user", async (req, res, next) => {
     try {
-        const { err, success } = await muteUser(req.body)
+        const { err, success } = await muteUser(req)
 
 
         if (err) { return next(err) }
