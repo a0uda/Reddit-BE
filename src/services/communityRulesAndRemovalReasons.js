@@ -11,6 +11,34 @@ import {
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Rules ////////////////////////////////////////////////////////////////////
+/**
+ * addNewRuleToCommunity - Adds a new rule to a community.
+ * @param {Object} requestBody - The request body containing the details of the new rule.
+ * @param {string} requestBody.community_name - The name of the community to add the rule to.
+ * @param {string} requestBody.rule_title - The title of the new rule.
+ * @param {string} requestBody.applies_to - The type of content the rule applies to.
+ * @param {string} requestBody.report_reason - The reason for reporting content that violates the rule.
+ * @param {string} requestBody.full_description - The full description of the rule.
+ 
+ * @returns {Object} An object containing the success status or error message.
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * rule_title: 'No Hate Speech',
+ * applies_to: 'Posts and comments',
+ * report_reason: 'Hate Speech',
+ * full_description: 'Hate speech is not allowed in this community.',
+ * }
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const addNewRuleToCommunity = async (requestBody) => {
     let {
         community_name,
@@ -54,6 +82,38 @@ const addNewRuleToCommunity = async (requestBody) => {
     }
 };
 
+/**
+ * editCommunityRule - Edits an existing rule in a community.
+ * @param {Object} requestBody - The request body containing the details of the rule to edit.
+ * @param {string} requestBody.community_name - The name of the community to edit the rule in.
+ * @param {string} requestBody.rule_id - The id of the rule to edit.
+ * @param {string} requestBody.rule_title - The new title of the rule.
+ * @param {string} requestBody.applies_to - The new type of content the rule applies to.
+ * @param {string} requestBody.report_reason - The new reason for reporting content that violates the rule.
+ * @param {string} requestBody.full_description - The new full description of the rule.
+ * @param {number} requestBody.rule_order - The new order of the rule.
+ * 
+ * @returns {Object} An object containing the success status or error message.
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * rule_id: '60f7b3b3b3b3b3b3b3b3b3b3',
+ * rule_title: 'No Hate Speech',
+ * applies_to: 'Posts and comments',
+ * report_reason: 'Hate Speech',
+ * full_description: 'Hate speech is not allowed in this community.',
+ * rule_order: 1
+ * }
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const editCommunityRule = async (requestBody) => {
     try {
         let {
@@ -94,6 +154,29 @@ const editCommunityRule = async (requestBody) => {
     }
 };
 
+/**
+ *  deleteCommunityRule - Deletes a rule from a community.
+ * @param {Object} requestBody - The request body containing the details of the rule to delete.
+ * @param {string} requestBody.community_name - The name of the community to delete the rule from.
+ * @param {string} requestBody.rule_id - The id of the rule to delete.
+ * 
+ * @returns {Object} An object containing the success status or error message.
+ * @property {boolean} success - The success status of the operation.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * {
+ * community_name: 'example_community',
+ * rule_id: '60f7b3b3b3b3b3b3b3b3b3b3',
+ * }
+ * 
+ * @example
+ * Output:
+ * {
+ * success: true
+ * }
+ */
 const deleteCommunityRule = async (requestBody) => {
     let { community_name, rule_id } = requestBody;
     try {
@@ -124,6 +207,41 @@ const deleteCommunityRule = async (requestBody) => {
     }
 };
 
+/**
+ * getCommunityRules - Gets all the rules in a community.
+ * @param {string} community_name - The name of the community to get the rules from.
+ * 
+ * @returns {Object} An object containing the rules or error message.
+ * @property {Array} rules - The rules in the community.
+ * @property {Object} err - The error message and status code.
+ * 
+ * @example
+ * Input:
+ * 'example_community'
+ * 
+ * @example
+ * Output:
+ * {
+ * rules: [
+ * {
+ * _id: '60f7b3b3b3b3b3b3b3b3b3b3',
+ * rule_title: 'No Hate Speech',
+ * applies_to: 'Posts and comments',
+ * report_reason: 'Hate Speech',
+ * full_description: 'Hate speech is not allowed in this community.',
+ * rule_order: 1
+ * },
+ * {
+ * _id: '60f7b3b3b3b3b3b3b3b3b3b4',
+ * rule_title: 'No Bullying',
+ * applies_to: 'Posts and comments',
+ * report_reason: 'Bullying',
+ * full_description: 'Bullying is not allowed in this community.',
+ * rule_order: 2
+ * }
+ * ]
+ * }
+ */
 const getCommunityRules = async (community_name) => {
     const community = await communityNameExists(community_name);
     if (!community) {

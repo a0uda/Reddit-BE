@@ -1,13 +1,14 @@
 // Mod Tools --> Overview --> User Management --> (Banned, Muted, Approved, Moderators) Users
 
+import { verifyAuthToken } from "../controller/userAuth.js";
 import { Community } from "../db/models/Community.js";
 import { User } from "../db/models/User.js"; //delete this line
 
 import {
-  isUserAlreadyApproved,
-  communityNameExists,
-  getUsersByIds,
-  getApprovedUserView,
+    isUserAlreadyApproved,
+    communityNameExists,
+    getUsersByIds,
+    getApprovedUserView,
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Banned /////////////////////////////////////////////////////////////////////////
@@ -56,41 +57,57 @@ const getBannedUsers = async (community_name) => {
 }
 
 //////////////////////////////////////////////////////////////////////// Muted /////////////////////////////////////////////////////////////////////////
-const muteUser = async (requestBody) => {
+
+const muteUser = async (request) => {
     try {
-        const { username, community_name, action } = requestBody;
-        const community = await communityNameExists(community_name);
-        if (!community) {
-            return { err: { status: 400, message: "Community not found." } };
-        }
-        const user = await User.findOne({ username: username });
-        if (!user) {
-            return { err: { status: 400, message: "Username not found." } };
-        }
+        // Verify auth token and get mutingUser
+        console.log(request.headers.authorization)
+        const { success, err, status, user: mutingUser, msg } = await verifyAuthToken(request);
+        console.log(mutingUser)
 
-        if (action == "mute") {
-            if (!community.muted_users) {
-                community.muted_users = [];
+        if (!mutingUser) {
+            return { success, err, status, mutingUser, msg };
+        }
+        // Extract request parameters
+        const { username, community_name, action, reason } = request.requestBody;
+        // Check if the action is mute or unmute
+        if (action === "mute" || action === "unmute") {
+            // Find the community
+            const community = await communityNameExists(community_name);
+            if (!community) {
+                return { err: { status: 400, message: "Community not found." } };
             }
-            community.muted_users.push(user._id);
+            // Find the user to mute/unmute
+            const user = await User.findOne({ username: username });
+            if (!user) {
+                return { err: { status: 400, message: "Username not found." } };
+            }
+            // Perform mute or unmute action
+            if (action === "mute") {
+                // Push muting user's ID, mute date, and reason to muted_users array
+                community.muted_users.push({
+                    id: user._id,
+                    muted_by_id: mutingUser._id,
+                    mute_date: new Date(),
+                    mute_reason: reason
+                });
+            } else if (action === "unmute") {
+                // Filter out the user ID from muted_users array
+                community.muted_users = community.muted_users.filter(mutedUser => mutedUser.id.toString() !== user._id.toString());
+            }
+
+            // Save the updated community
             await community.save();
 
+            return { success: true };
+        } else {
+            return { err: { status: 400, message: "Invalid action." } };
         }
-        else if (action == "unmute") {
-            console.log("before filter")
-            console.log(community.muted_users);
-            //delete from muted users id where username is equal to the username in the request body
-            community.muted_users = community.muted_users.filter((id) => id.toString() !== user._id.toString());
-            await community.save();
-            console.log("after filter")
-            console.log(community.muted_users);
-        }
-        return { success: true };
-    }
-    catch (error) {
+    } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 }
+
 
 // TODO: I cant find this feature in reddit , i dont know what is the exact attributes we need to return here
 const getMutedUsers = async (community_name) => {
@@ -111,6 +128,27 @@ const getMutedUsers = async (community_name) => {
 
 //////////////////////////////////////////////////////////////////////// Approved /////////////////////////////////////////////////////////////////////////
 // TODO: Validation - User already approved.
+/**
+ * 
+ * @param {Object} requestBody
+ * @property {String} username
+ * @property {String} community_name
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Username not found."}}
+ * or 
+ * {err: {status: 400, message: "Community not found."}}
+ * @example 
+ * input:
+ * const requestBody = {
+ * username: "user1",
+ * community_name: "community1"
+ * }
+ * @example
+ * Output:
+ * {success: true}
+ */
 const approveUser = async (requestBody) => {
     try {
         const { username, community_name } = requestBody;
@@ -125,7 +163,6 @@ const approveUser = async (requestBody) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        console.log(community);
         // Check if user ID already exists in the approved_users array of the community
         const isAlreadyApproved = isUserAlreadyApproved(community, user._id);
         if (isAlreadyApproved) {
@@ -146,13 +183,29 @@ const approveUser = async (requestBody) => {
     }
 };
 
-//Profile picture is not showing
+/**
+ * 
+ * @param {String} community_name 
+ * @returns {Object} 
+ * @property {Array} users
+ * @example
+ * input:
+ * const community_name = "community1"
+ * @example
+ * Output:
+ * {
+ * users: [
+ * {username: "user1", approved_at: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", approved_at: "2021-09-01T00:00:00.000Z"},
+ * ]
+ * }
+ */
 const getApprovedUsers = async (community_name) => {
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
             return {
-                err: { status: 500, message: "community name does not exist " },
+                err: { status: 500, message: "Community not found." },
             };
         }
 
@@ -166,9 +219,6 @@ const getApprovedUsers = async (community_name) => {
                 return userView;
             })
         );
-
-        console.log(users);
-
         return { users }; // Return the users array
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -176,6 +226,7 @@ const getApprovedUsers = async (community_name) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Moderators //////////////////////////////////////////////////////////////
+
 const addModerator = async (requestBody) => {
     try {
         const { community_name, username } = requestBody;
