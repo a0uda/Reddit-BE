@@ -114,10 +114,20 @@ export const postSchema = new mongoose.Schema({
     upvote_rate: { type: Number, default: 0, min: 0 },
     total_shares: { type: Number, default: 0, min: 0 },
   },
+  //flag to check if post is reposted or not
+  is_reposted_flag: {
+    type: Boolean,
+    default: false,
+  },
+  //if true fill in this object
   reposted: [
     {
       shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      caption: { type: String ,default: null},
+      caption: { type: String, default: null },
+      original_post_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
     },
   ],
 });

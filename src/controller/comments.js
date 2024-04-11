@@ -4,8 +4,11 @@ import { User } from "../db/models/User.js";
 import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
-import { communityNameExists } from "../utils/communities.js";
-import { getCommentRepliesHelper } from "../services/posts.js";
+import {
+  checkBannedUser,
+  getCommentRepliesHelper,
+  getCommunity,
+} from "../services/posts.js";
 
 export async function getComment(request, verifyUser) {
   let user;
@@ -81,29 +84,17 @@ export async function newComment(request) {
       error: { status: 400, message: "Post is locked can't comment" },
     };
   }
+
   //check if user posting a comment in community he is banned in he can't comment
   if (post.post_in_community_flag) {
-    const community = await communityNameExists(post.community_name);
-    if (!community) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "Community name not found",
-        },
-      };
+    const { success, community, error } = await getCommunity(post.community_name);
+    if (!success) {
+      return { success, error };
     }
-    const isBannedUser = community.banned_users.find(
-      (userBanned) => userBanned.id.toString() == user._id.toString()
-    );
-    if (isBannedUser) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "User can't comment he is banned",
-        },
-      };
+    // console.log(community.banned_users,user._id)
+    const result = await checkBannedUser(community, user._id);
+    if (!result.success) {
+      return result;
     }
   }
   const comment = new Comment({
@@ -111,8 +102,8 @@ export async function newComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
-    parent_username:null,//i am a comment not a reply
-    is_reply: false,//i am a comment not a reply
+    parent_username: null, //i am a comment not a reply
+    is_reply: false, //i am a comment not a reply
     created_at: Date.now(),
     description,
     comment_in_community_flag: post.post_in_community_flag, //same as post
@@ -157,15 +148,9 @@ export async function replyToComment(request) {
     };
   }
   if (comment.comment_in_community_flag) {
-    const community = await communityNameExists(comment.community_name);
-    if (!community) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "Community name not found",
-        },
-      };
+    const { success, community, error } = await getCommunity(comment.community_name);
+    if (!success) {
+      return { success, error };
     }
     const isBannedUser = community.banned_users.find(
       (userBanned) => userBanned.id.toString() == user._id.toString()
@@ -185,8 +170,8 @@ export async function replyToComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: comment._id, //i am  a reply so my parent is another comment
-    parent_username:comment.username,//reply so my parent is another comment
-    is_reply: true,//reply so true
+    parent_username: comment.username, //reply so my parent is another comment
+    is_reply: true, //reply so true
     created_at: Date.now(),
     description,
     comment_in_community_flag: comment.post_in_community_flag, //same as post
