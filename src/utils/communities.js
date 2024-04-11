@@ -17,6 +17,7 @@ async function getRuleByTitle(communityName, ruleTitle) {
 
 const getRuleById = async (id) => {
   try {
+    console.log(id);
     return await Rule.findById(id);
   } catch (error) {
     return {
@@ -24,7 +25,19 @@ const getRuleById = async (id) => {
     };
   }
 };
+const getRemovalReasonById = async (id) => {
 
+  try {
+    const community = await Community.findOne({ "removal_reasons._id": id });
+    console.log("this one buddered");
+    return community.removal_reasons;
+  }
+  catch (error) {
+    return {
+      err: { status: 500, message: error.message },
+    };
+  }
+}
 const getUsersByIds = async (userIds) => {
   try {
     const users = await User.find({ _id: { $in: userIds } });
@@ -80,4 +93,5 @@ export {
   getRuleById,
   deleteRule,
   getApprovedUserView,
+  getRemovalReasonById
 };

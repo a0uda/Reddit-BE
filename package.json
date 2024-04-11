@@ -38,6 +38,7 @@
     "@babel/core": "^7.24.3",
     "@babel/node": "^7.23.9",
     "@babel/preset-env": "^7.24.3",
-    "@faker-js/faker": "^8.4.1"
+    "@faker-js/faker": "^8.4.1",
+    "@types/faker": "^6.6.9"
   }
 }

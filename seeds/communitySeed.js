@@ -26,16 +26,16 @@ const COMMUNITY_COUNT = 20;
 
 async function generateRandomCommunities() {
     // Seed the subdocuments and get the IDs
-    await seedGeneralSettings();
-    await seedContentControls();
-    await seedPostsAndComments();
-    await seedAppearances();
+    // await seedGeneralSettings();
+    // await seedContentControls();
+    // await seedPostsAndComments();
+    // await seedAppearances();
     await seedRules();
 
-    const generalSettingsIds = (await CommunityGeneralSettings.find()).map(doc => doc._id);
-    const contentControlsIds = (await CommunityContentControls.find()).map(doc => doc._id);
-    const postsAndCommentsIds = (await CommunityPostsAndComments.find()).map(doc => doc._id);
-    const appearanceIds = (await CommunityAppearance.find()).map(doc => doc._id);
+    // const generalSettingsIds = (await CommunityGeneralSettings.find()).map(doc => doc._id);
+    // const contentControlsIds = (await CommunityContentControls.find()).map(doc => doc._id);
+    // const postsAndCommentsIds = (await CommunityPostsAndComments.find()).map(doc => doc._id);
+    // const appearanceIds = (await CommunityAppearance.find()).map(doc => doc._id);
     const rulesIds = (await Rule.find()).map(doc => doc._id);
 
 
@@ -64,10 +64,10 @@ async function generateRandomCommunities() {
             nsfw_flag: faker.datatype.boolean(),
             members_count: faker.number.int({ min: 0, max: 1000 }),
 
-            general_settings: getRandomElement(generalSettingsIds),
-            content_controls: getRandomElement(contentControlsIds),
-            posts_and_comments: getRandomElement(postsAndCommentsIds),
-            appearance: getRandomElement(appearanceIds),
+            // general_settings: getRandomElement(generalSettingsIds),
+            // content_controls: getRandomElement(contentControlsIds),
+            // posts_and_comments: getRandomElement(postsAndCommentsIds),
+            // appearance: getRandomElement(appearanceIds),
             rules_ids: selectedRules,
             muted_users: muted_users,
             banned_users: banned_users,
@@ -76,7 +76,18 @@ async function generateRandomCommunities() {
                 _id: user._id,
                 moderator_since: faker.date.recent()
             })),
-            invited_moderators: invitedModerators.map(user => user._id)
+            invited_moderators: invitedModerators.map(user => user._id),
+            removal_reasons: [
+                { removal_reason_title: "Spam", reason_message: "This post is spam" },
+            ],
+            profile_picture: faker.image.avatar(),
+            banner_picture: faker.image.avatar(),
+            members_nickname: faker.company.name(),
+            currently_viewing_nickname: faker.company.name(),
+            traffic: faker.company.name(),
+            topics: faker.company.name(),
+            owner: moderators[0]._id,
+            description: faker.company.catchPhrase(),
         };
         communities.push(fakeCommunity);
     }

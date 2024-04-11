@@ -130,6 +130,18 @@ const communitySchema = new mongoose.Schema({
       ref: "Rule",
     },
   ],
+  removal_reasons: [
+    {
+      removal_reason_title: {
+        type: String,
+        required: true,
+      },
+      reason_message: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   profile_picture: {
     type: String,
