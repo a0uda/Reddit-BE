@@ -13,7 +13,7 @@ function generateRandomColor() {
 
 function generateRandomImage() {
   return {
-    url: faker.image.url(),    
+    url: faker.image.url(),
     alt: faker.lorem.sentence(),
   };
 }
