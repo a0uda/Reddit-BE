@@ -11,13 +11,6 @@ const communitySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  title: {
-    type: String,
-  },
-  type: {
-    type: String,
-    enum: ["public", "private", "restricted"],
-  },
   category: {
     type: String,
     enum: [

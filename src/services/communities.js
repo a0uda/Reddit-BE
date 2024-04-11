@@ -46,6 +46,7 @@ import {
  * }
  */
 const addNewCommunity = async (requestBody) => {
+  // "title" and "visibility/type" have been removed from community to the general settings.
   const { name, type, nsfw_flag, category } = requestBody;
 
   const communityGeneralSettings = new CommunityGeneralSettings();

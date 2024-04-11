@@ -24,7 +24,7 @@ async function generateRandomContentControls() {
       },
       ban_words_from_post_body: {
         flag: faker.datatype.boolean(),
-        add_banned_words: faker.lorem.word(),
+        add_banned_words: Array.from({length: 5}, () => faker.lorem.word()),
       },
       require_or_ban_links_from_specific_domains: {
         flag: faker.datatype.boolean(),
