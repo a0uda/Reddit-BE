@@ -5,6 +5,7 @@ import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
 import { communityNameExists } from "../utils/communities.js";
+import { getCommentRepliesHelper } from "../services/posts.js";
 
 export async function getComment(request, verifyUser) {
   let user;
@@ -38,6 +39,24 @@ export async function getComment(request, verifyUser) {
   return {
     success: true,
     comment,
+    user,
+    message: "Comment Retrieved sucessfully",
+  };
+}
+
+export async function getCommentWithReplies(request, verifyUser) {
+  const { success, error, comment, user, message } = await getComment(
+    request,
+    false
+  );
+  console.log(comment);
+  if (!success) {
+    return { success, error };
+  }
+  const commentWithReplies = await getCommentRepliesHelper(comment);
+  return {
+    success: true,
+    comment: commentWithReplies,
     user,
     message: "Comment Retrieved sucessfully",
   };
@@ -92,6 +111,8 @@ export async function newComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
+    parent_username:null,//i am a comment not a reply
+    is_reply: false,//i am a comment not a reply
     created_at: Date.now(),
     description,
     comment_in_community_flag: post.post_in_community_flag, //same as post
@@ -111,12 +132,15 @@ export async function newComment(request) {
 }
 
 export async function replyToComment(request) {
-  const { success, error, comment, user, message } = await getComment(request, true);
-  console.log(comment)
+  const { success, error, comment, user, message } = await getComment(
+    request,
+    true
+  );
+  console.log(comment);
   if (!success) {
     return { success, error };
   }
-  
+
   const description = request?.body?.description;
   if (description == undefined || description == null) {
     return {
@@ -161,6 +185,8 @@ export async function replyToComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: comment._id, //i am  a reply so my parent is another comment
+    parent_username:comment.username,//reply so my parent is another comment
+    is_reply: true,//reply so true
     created_at: Date.now(),
     description,
     comment_in_community_flag: comment.post_in_community_flag, //same as post
