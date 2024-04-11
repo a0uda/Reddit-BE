@@ -27,7 +27,8 @@ const communityContentControlsSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
-    add_banned_words: String,
+    //this is array also of strings
+    add_banned_words: [String],
   },
   require_or_ban_links_from_specific_domains: {
     flag: {
