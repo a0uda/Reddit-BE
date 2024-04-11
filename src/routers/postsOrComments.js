@@ -13,6 +13,7 @@ import {
   postApprove,
   postRemove,
   postReport,
+  postDelete,
 } from "../controller/posts.js";
 import {
   commentToggler,
@@ -22,6 +23,7 @@ import {
   commentApprove,
   commentRemove,
   commentReport,
+  commentDelete,
 } from "../controller/comments.js";
 
 export const postsOrCommentsRouter = express.Router();
@@ -301,6 +303,34 @@ postsOrCommentsRouter.post("/comments/remove", async (req, res) => {
 postsOrCommentsRouter.post("/comments/report", async (req, res) => {
   try {
     const result = await commentReport(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/posts/delete", async (req, res) => {
+  try {
+    const result = await postDelete(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+postsOrCommentsRouter.post("/comments/delete", async (req, res) => {
+  try {
+    const result = await commentDelete(req);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

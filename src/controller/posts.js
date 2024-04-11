@@ -744,3 +744,48 @@ export async function getUserPostDetails(request) {
     message: "Post user details retrieved sucessfully",
   };
 }
+
+export async function postDelete(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const postId = request.body.id;
+
+    const post = await Post.findOne({
+      _id: postId,
+      user_id: user._id,
+    });
+
+    if (!post) {
+      return {
+        success: false,
+        status: 400,
+        err: "Post Not Found or User Not Authorized",
+        msg: "Post not found or user is not authorized to delete it.",
+      };
+    }
+
+    post.deleted_at = Date.now();
+    post.deleted = true;
+    await post.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Post deleted successfully",
+    };
+  } catch (error) {
+    // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}

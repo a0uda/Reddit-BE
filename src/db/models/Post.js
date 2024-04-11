@@ -131,4 +131,12 @@ export const postSchema = new mongoose.Schema({
     },
   ],
 });
+postSchema.pre("find", function (next) {
+  this.find({ deleted: true }, "deleted deleted_at title");
+  next();
+});
 export const Post = mongoose.model("Post", postSchema);
+
+// postSchema.pre("find", function () {
+//   this.where({ deleted: false });
+// });
