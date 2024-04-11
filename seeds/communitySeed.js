@@ -34,7 +34,7 @@ async function generateRandomCommunities() {
     for (let i = 0; i < COMMUNITY_COUNT; i++) {
         const fakeCommunity = {
             created_at: Date.now(),
-            name: faker.company.name(),
+            name: faker.company.name().replace(/[^a-zA-Z0-9]/g, '_'),
             category:getRandomElement([
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
             ]),
