@@ -42,6 +42,7 @@ async function generateRandomContentControls() {
     fakeContentControl.require_or_ban_links_from_specific_domains.require_or_block_link_posts_with_these_domains = fakeContentControl.require_or_ban_links_from_specific_domains.flag ? faker.internet.domainName() : '';
 
     fakeContentControl.restrict_how_often_the_same_link_can_be_posted.number_of_days = fakeContentControl.restrict_how_often_the_same_link_can_be_posted.flag ? faker.number.int({min: 0, max: 365}) : 0;
+    
     contentControls.push(fakeContentControl);
   }
 
