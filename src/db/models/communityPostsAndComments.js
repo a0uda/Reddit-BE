@@ -1,4 +1,4 @@
-import { de } from "faker/lib/locales";
+
 import mongoose from "mongoose";
 
 const communityPostsAndCommentsSchema = new mongoose.Schema({

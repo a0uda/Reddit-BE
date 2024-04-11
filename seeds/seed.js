@@ -6,7 +6,7 @@ import { seedComments } from "./CommentSeed.js";
 import { seedGeneralSettings } from "./communityGeneralSettingsSeed.js";
 import { seedContentControls } from "./communityContentControlsSeed.js";
 import { seedPostsAndComments } from "./communityPostsAndCommentsSeed.js";
-import { seedAppearances } from "./communityAppearanceSeed.js";
+
 import { seedCommunities } from "./communitySeed.js";
 
 import { connect_to_db } from "../src/db/mongoose.js";
