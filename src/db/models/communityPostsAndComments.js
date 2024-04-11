@@ -1,3 +1,4 @@
+import { de } from "faker/lib/locales";
 import mongoose from "mongoose";
 
 const communityPostsAndCommentsSchema = new mongoose.Schema({
@@ -69,6 +70,7 @@ const communityPostsAndCommentsSchema = new mongoose.Schema({
       // TODO: I don't understand the purpose of this setting. What does it mean to hide the comment scores?
       type: Number,
       min: 0,
+      default: 0,
     },
     media_in_comments: {
       gifs_from_giphy: {
