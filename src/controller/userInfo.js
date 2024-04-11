@@ -278,13 +278,15 @@ export async function getCommunities(request, communityType) {
       const moderatedCommunities = await getModeratedCommunitiesHelper(user);
       return {
         success: true,
+        status: 200,
         msg: "Your moderated communities are retrieved successfully",
-        moderatedCommunities: moderatedCommunities,
+        moderated_communities: moderatedCommunities,
       };
     } else {
       const communities = await getCommunitiesHelper(user);
       return {
         success: true,
+        status: 200,
         msg: "Your communities are retrieved successfully",
         communities: communities,
       };
