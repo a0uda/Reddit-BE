@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 
 const communityGeneralSettingsSchema = new mongoose.Schema({
-
+    title: {
+        type: String,
+    },
     description: {
         type: String,
     },
@@ -35,4 +37,4 @@ const communityGeneralSettingsSchema = new mongoose.Schema({
 export const CommunityGeneralSettings = mongoose.model(
     "CommunityGeneralSettings",
     communityGeneralSettingsSchema
-  );
+);

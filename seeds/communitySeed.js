@@ -35,8 +35,6 @@ async function generateRandomCommunities() {
         const fakeCommunity = {
             created_at: Date.now(),
             name: faker.company.name(),
-            title: faker.company.buzzPhrase(),
-            type: getRandomElement(['public', 'private', 'restricted']),
             category:getRandomElement([
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
             ]),
