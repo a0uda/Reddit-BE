@@ -12,9 +12,64 @@ import {
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Banned /////////////////////////////////////////////////////////////////////////
+/**
+ * 
+ * @param {Object} requestBody 
+ * @param {String} requestBody.username
+ * @param {String} requestBody.community_name
+ * @param {String} requestBody.action
+ * @param {String} requestBody.reason_for_ban
+ * @param {String} requestBody.mod_note
+ * @param {Boolean} requestBody.permanent_flag
+ * @param {String} requestBody.note_for_ban_message
+ * @param {Date} requestBody.banned_until
+ * 
+ * @returns
+ * {err: {status: 400, message: "Invalid action."}}
+ * {err: {status: 400, message: "Username , community name , action are required."}}
+ * {err: {status: 400, message: "Community not found."}}
+ * {err: {status: 400, message: "User not found."}}
+ * {success:true}
+ *@example
+ * Input:
+ * banUser({
+ *  username: "user1",
+ * community_name: "community1",
+ * action: "ban",
+ * reason_for_ban: "spam",
+ * })
+ * Output:
+ * {success:true}
+ */
 const banUser = async (requestBody) => {
     try {
+
+        var reason_for_ban = undefined, mod_note = undefined, permanent_flag = undefined, note_for_ban_message = undefined, banned_until = undefined;
         const { username, community_name, action } = requestBody;
+
+        if (requestBody.reason_for_ban) {
+            reason_for_ban = requestBody.reason_for_ban;
+        }
+        if (requestBody.mod_note) {
+            mod_note = requestBody.mod_note;
+        }
+        if (requestBody.permanent_flag) {
+            permanent_flag = requestBody.permanent_flag;
+        }
+        if (requestBody.note_for_ban_message) {
+            note_for_ban_message = requestBody.note_for_ban_message;
+        }
+        if (requestBody.banned_until) {
+            banned_until = requestBody.banned_until;
+        }
+        if (action != "ban" && action != "unban") {
+            return { err: { status: 400, message: "Invalid action." } };
+
+        }
+        if (!username || !community_name || !action) {
+            return { err: { status: 400, message: "Username , community name , action are required." } };
+        }
+        console.log("community name: ", community_name);
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
@@ -27,37 +82,89 @@ const banUser = async (requestBody) => {
             if (!community.banned_users) {
                 community.banned_users = [];
             }
-            community.banned_users.push(user._id);
+            community.banned_users.push(
+                {
+                    username: user.username,
+                    banned_date: new Date(),
+                    reason_for_ban: reason_for_ban,
+                    mod_note: mod_note,
+                    permanent_flag: permanent_flag,
+                    banned_until: banned_until,
+                    note_for_ban_message: note_for_ban_message,
+                    profile_picture: user.profile_picture
+                }
+            );
             await community.save();
+            console.log("community banned: ", community.banned_users);
         }
         else if (action == "unban") {
-            console.log(user._id.toString())
-            console.log(community.banned_users[0]._id.toString())
-            community.banned_users = community.banned_users.filter((id) => id.toString() !== user._id.toString());
+            community.banned_users = community.banned_users.filter((bannedUser) => bannedUser.username !== user.username);
             await community.save();
+            console.log("community banned: ", community.banned_users);
         }
+
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 }
-
+/**
+ * @param {String} community_name
+ * @returns
+ * {users: community.banned_users}
+ * {err: {status: 400, message: "Community not found."}}
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * Input:
+ * getBannedUsers("community1")
+ * Output:
+ * {users: community.banned_users}
+ */
 const getBannedUsers = async (community_name) => {
     try {
         const community = await communityNameExists(community_name);
+        console.log("community: ", community.banned_users);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        const banned_users_ids = community.banned_users;
-        const banned_users = await getUsersByIds(banned_users_ids);
-        return { users: banned_users };
+
+
+        return { users: community.banned_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 }
 
 //////////////////////////////////////////////////////////////////////// Muted /////////////////////////////////////////////////////////////////////////
-
+/**
+ * 
+ * @param {Object} request 
+ * @property {String} community_name
+ * @property {String} action
+ * @property {String} reason
+ * @property {String} username
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "Username not found."}}
+ * or
+ * {err: {status: 400, message: "Invalid action."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input: 
+ * const request = {
+ *    body: {
+ *       community_name: "community1",
+ *       action: "mute",
+ *       reason: "Spamming",
+ *       username: "user1"
+ * }
+ * }
+ 
+ */
 const muteUser = async (request) => {
     try {
         // Verify auth token and get mutingUser
@@ -111,7 +218,33 @@ const muteUser = async (request) => {
 }
 
 
-// TODO: I cant find this feature in reddit , i dont know what is the exact attributes we need to return here
+/**
+ * 
+ * @param {String} community_name 
+ * @returns
+ * {users: muted_users}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input: "community1"
+ * output:
+ * {
+ *   users: [
+ *    {
+ *     username: "user1",
+ *     muted_by_username: "user2",
+ *     mute_date: "2021-08-01T00:00:00.000Z",
+ *     mute_reason: "Spamming",
+ *     profile_picture: "none"
+ * }
+ * ]
+ * }
+ * 
+ * @returns 
+ */
+
 const getMutedUsers = async (community_name) => {
     try {
         const community = await communityNameExists(community_name);

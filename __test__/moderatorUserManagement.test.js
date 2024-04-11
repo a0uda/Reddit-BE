@@ -295,6 +295,74 @@ describe("Mute and unmute users", () => {
         expect(result).toEqual({ users: mockCommunity.muted_users });
 
     })
-
-
 })
+
+/*
+const banUser = async (requestBody) => {
+    try {
+
+        var reason_for_ban = undefined, mod_note = undefined, permanent_flag = undefined, note_for_ban_message = undefined, banned_until = undefined;
+        const { username, community_name, action } = requestBody;
+
+        if (requestBody.reason_for_ban) {
+            reason_for_ban = requestBody.reason_for_ban;
+        }
+        if (requestBody.mod_note) {
+            mod_note = requestBody.mod_note;
+        }
+        if (requestBody.permanent_flag) {
+            permanent_flag = requestBody.permanent_flag;
+        }
+        if (requestBody.note_for_ban_message) {
+            note_for_ban_message = requestBody.note_for_ban_message;
+        }
+        if (requestBody.banned_until) {
+            banned_until = requestBody.banned_until;
+        }
+        if (action != "ban" && action != "unban") {
+            return { err: { status: 400, message: "Invalid action." } };
+
+        }
+        if (!username || !community_name || !action) {
+            return { err: { status: 400, message: "Username , community name , action are required." } };
+        }
+        console.log("community name: ", community_name);
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+        const user = await User.findOne({ username: username });
+        if (!user) {
+            return { err: { status: 400, message: "Username not found." } };
+        }
+        if (action == "ban") {
+            if (!community.banned_users) {
+                community.banned_users = [];
+            }
+            community.banned_users.push(
+                {
+                    username: user.username,
+                    banned_date: new Date(),
+                    reason_for_ban: reason_for_ban,
+                    mod_note: mod_note,
+                    permanent_flag: permanent_flag,
+                    banned_until: banned_until,
+                    note_for_ban_message: note_for_ban_message,
+                    profile_picture: user.profile_picture
+                }
+            );
+            await community.save();
+            console.log("community banned: ", community.banned_users);
+        }
+        else if (action == "unban") {
+            community.banned_users = community.banned_users.filter((bannedUser) => bannedUser.username !== user.username);
+            await community.save();
+            console.log("community banned: ", community.banned_users);
+        }
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+ */
+

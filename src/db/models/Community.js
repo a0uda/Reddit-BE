@@ -105,10 +105,6 @@ const communitySchema = new mongoose.Schema({
   ],
   banned_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
       username: {
         type: mongoose.Schema.Types.String,
         ref: "User",
@@ -127,6 +123,9 @@ const communitySchema = new mongoose.Schema({
       },
       banned_until: Date,
       note_for_ban_message: {
+        type: String,
+      },
+      profile_picture: {
         type: String,
       },
     },
