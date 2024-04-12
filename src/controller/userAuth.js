@@ -89,7 +89,8 @@ export async function signupUser(requestBody) {
 export async function loginUser(requestBody) {
   const { username, password } = requestBody;
   const user = await User.findOne({ username });
-
+  console.log("username is ", username);
+  console.log("password is ", password);
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return { success: false, err: "Username or password are incorrect" };
   }
