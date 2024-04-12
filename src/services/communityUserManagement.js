@@ -351,7 +351,28 @@ const getApprovedUsers = async (community_name) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Moderators //////////////////////////////////////////////////////////////
-
+/**
+ * @param {Object} requestBody 
+ * @property {String} community_name
+ * @property {String} username
+ * @property {Object} has_access
+ * @property {Boolean} has_access.post
+ * @property {Boolean} has_access.everything
+ * @property {Boolean} has_access.manage_users
+ * @property {Boolean} has_access.manage_settings
+ * @property {Boolean} has_access.manage_posts_and_comments
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User not found."}}
+ * or
+ * {err: {status: 400, message: "User is already a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @returns 
+ */
 const addModerator = async (requestBody) => {
     //TODO: INVITATION EMAIL SHOULD BE SENT TO THE USER
     try {
@@ -394,7 +415,29 @@ const addModerator = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
-
+/**
+ * 
+ * @param {String} community_name 
+ * @returns
+ * {moderators: [
+ * {username: "user1", profile_picture: "profile_picture1", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * ]}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * or
+ * {err: {status: 500, message: "Community not found."}}
+ * @example
+ * input:
+ * const community_name = "community1"
+ * @example
+ * Output:
+ * {
+ * moderators: [
+ * {username: "user1", profile_picture: "profile_picture1", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * ]
+ */
 const getModerators = async (community_name) => {
 
     try {
@@ -417,7 +460,31 @@ const getModerators = async (community_name) => {
         return { err: { status: 500, message: error.message } };
     }
 };
-//delete moderator
+/**
+ * @param {Object} requestBody
+ * @property {String} community_name
+ * @property {String} username
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User not found."}}
+ * or
+ * {err: {status: 400, message: "User is not a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input:
+ * const requestBody = {
+ * community_name: "community1",
+ * username: "user1"
+ * }
+ * @example
+ * Output:
+ * {success: true}
+ * 
+*/
 const deleteModerator = async (requestBody) => {
     try {
         const { community_name, username } = requestBody;
@@ -451,6 +518,30 @@ const deleteModerator = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+/**
+ * @param {Object} request
+ * @property {Object} request.body
+ * @property {String} request.body.community_name
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User is not a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input:
+ * const request = {
+ * body: {
+ * community_name: "community1"
+ * }
+ * }
+ * @example
+ * Output:
+ * {success: true}
+
+ */
 const moderatorLeaveCommunity = async (request) => {
     //use verify token to get the username
     console.log(request)
