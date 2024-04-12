@@ -45,14 +45,14 @@ export async function sendEmail(message) {
     },
   });
 
-  transporter
-    .sendMail(message)
-    .then(() => {
-      console.log("email sent");
-    })
-    .catch((error) => {
-      console.log("ERROR", error);
-    });
+  await transporter.sendMail(message);
+  console.log("email sent");
+  // .then(() => {
+  //   console.log("email sent");
+  // })
+  // .catch((error) => {
+  //   console.log("ERROR", error);
+  // });
 }
 
 /**
