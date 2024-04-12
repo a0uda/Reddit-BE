@@ -423,7 +423,20 @@ const editDetailsWidget = async (requestBody) => {
     return { err: { status: 500, message: error.message } };
   }
 };
-
+const getMembersCount = async (community_name) => {
+  try {
+    const community = await communityNameExists(community_name);
+    if (!community) {
+      return {
+        err: { status: 500, message: "community name does not exist " },
+      };
+    }
+    console.log(community.members_count);
+    return { members_count: community.members_count };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+};
 
 
 const approveDiscussionItem = async (requestBody) => {
@@ -464,6 +477,7 @@ export {
 
   getDetailsWidget,
   editDetailsWidget,
+  getMembersCount,
 
   getComments,
   addComment,

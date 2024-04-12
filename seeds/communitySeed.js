@@ -87,7 +87,6 @@ async function generateRandomCommunities() {
 
 
             })),
-            invited_moderators: invitedModerators.map(user => user._id),
             profile_picture: faker.image.avatar(),
             banner_picture: faker.image.avatar(),
             members_nickname: faker.company.name(),

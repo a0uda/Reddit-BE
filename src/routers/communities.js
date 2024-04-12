@@ -15,6 +15,8 @@ import {
 
     getDetailsWidget,
     editDetailsWidget,
+    getMembersCount,
+
 
     getComments,
     addComment
@@ -44,6 +46,7 @@ import {
     getModerators,
     deleteModerator,
     moderatorLeaveCommunity,
+    getEditableModerators,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -486,7 +489,7 @@ communityRouter.get("/all-users", async (req, res, next) => {
 communityRouter.post("/communities/approve-user", async (req, res, next) => {
     try {
         console.log(req.body)
-        const { err, success } = await approveUser(req.body)
+        const { err, success } = await approveUser(req)
 
         if (err) { return next(err) }
 
@@ -644,7 +647,7 @@ communityRouter.get("/communities/about/muted/:community_name", async (req, res,
 ////////////////////////////////////////////////////BAN USERS///////////////////////////////////////////////
 communityRouter.post("/communities/ban-user", async (req, res, next) => {
     try {
-        const { err, success } = await banUser(req.body)
+        const { err, success } = await banUser(req)
         if (err) { return next(err) }
         res.status(200).json({ message: 'OK' });
     } catch (error) {
@@ -682,6 +685,17 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
         next(error)
     }
 })
+//get editable moderators
+communityRouter.get("/communities/about/editable-moderators/:community_name", async (req, res, next) => {
+    try {
+        const { err, editableModerators } = await getEditableModerators(req)
+        if (err) { return next(err) }
+        return res.status(200).send(editableModerators)
+    } catch (error) {
+        next(error)
+    }
+})
+
 //remove moderator
 communityRouter.post("/communities/remove-moderator", async (req, res, next) => {
     try {
@@ -702,5 +716,16 @@ communityRouter.post("/communities/moderator-leave", async (req, res, next) => {
     } catch (error) {
         next(error)
     }
+})
+//get members count
+communityRouter.get("/communities/members-count/:community_name", async (req, res, next) => {
+    try {
+        const { err, members_count } = await getMembersCount(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).json({ members_count })
+    } catch (error) {
+        next(error)
+    }
+
 })
 export { communityRouter }

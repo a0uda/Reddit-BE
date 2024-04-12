@@ -41,35 +41,24 @@ import {
  * Output:
  * {success:true}
  */
-const banUser = async (requestBody) => {
+const banUser = async (request) => {
     try {
+        const {
+            username,
+            community_name,
+            action,
+            reason_for_ban = undefined,
+            mod_note = undefined,
+            permanent_flag = undefined,
+            note_for_ban_message = undefined,
+            banned_until = undefined
+        } = request.body;
+        const { success, err, status, user: banningUser, msg } = await verifyAuthToken(request);
+        console.log("banninguser: ", banningUser);
 
-        var reason_for_ban = undefined, mod_note = undefined, permanent_flag = undefined, note_for_ban_message = undefined, banned_until = undefined;
-        const { username, community_name, action } = requestBody;
-
-        if (requestBody.reason_for_ban) {
-            reason_for_ban = requestBody.reason_for_ban;
+        if (!banningUser) {
+            return { success, err, status, banninguser, msg };
         }
-        if (requestBody.mod_note) {
-            mod_note = requestBody.mod_note;
-        }
-        if (requestBody.permanent_flag) {
-            permanent_flag = requestBody.permanent_flag;
-        }
-        if (requestBody.note_for_ban_message) {
-            note_for_ban_message = requestBody.note_for_ban_message;
-        }
-        if (requestBody.banned_until) {
-            banned_until = requestBody.banned_until;
-        }
-        if (action != "ban" && action != "unban") {
-            return { err: { status: 400, message: "Invalid action." } };
-
-        }
-        if (!username || !community_name || !action) {
-            return { err: { status: 400, message: "Username , community name , action are required." } };
-        }
-        console.log("community name: ", community_name);
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
@@ -77,6 +66,19 @@ const banUser = async (requestBody) => {
         const user = await User.findOne({ username: username });
         if (!user) {
             return { err: { status: 400, message: "Username not found." } };
+        }
+        const moderators = community.moderators;
+        console.log("moderators: ", moderators);
+        // search if  mutingUser username exists in moderators .username
+        const isModerator = moderators.some(moderator => moderator.username === banningUser.username);
+        if (!isModerator) {
+            return { err: { status: 400, message: "You are not a moderator in this community" } };
+        }
+        //get the community.moderator object of the muting user
+        const moderator = community.moderators.find(moderator => moderator.username === banningUser.username);
+        //check if moderator object is allowed to mute
+        if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+            return { err: { status: 400, message: "You are not allowed to ban/unban  users. permission denied" } };
         }
         if (action == "ban") {
             if (!community.banned_users) {
@@ -186,6 +188,20 @@ const muteUser = async (request) => {
             if (!user) {
                 return { err: { status: 400, message: "Username not found." } };
             }
+            const moderators = community.moderators;
+            console.log("moderators: ", moderators);
+            // search if  mutingUser username exists in moderators .username
+            const isModerator = moderators.some(moderator => moderator.username === mutingUser.username);
+            if (!isModerator) {
+                return { err: { status: 400, message: "You are not a moderator in this community" } };
+            }
+
+            //get the community.moderator object of the muting user
+            const moderator = community.moderators.find(moderator => moderator.username === mutingUser.username);
+            //check if moderator object is allowed to mute
+            if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+                return { err: { status: 400, message: "You are not allowed to mute/unmute  users. permission denied" } };
+            }
             // Perform mute or unmute action
             if (action === "mute") {
                 if (!community.muted_users) {
@@ -216,8 +232,6 @@ const muteUser = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
-
-
 /**
  * 
  * @param {String} community_name 
@@ -284,22 +298,42 @@ const getMutedUsers = async (community_name) => {
  * Output:
  * {success: true}
  */
-const approveUser = async (requestBody) => {
+const approveUser = async (request) => {
     try {
-        const { username, community_name } = requestBody;
-        console.log(username, community_name);
-
-        const user = await User.findOne({ username: username });
-        if (!user) {
-            return { err: { status: 400, message: "Username not found." } };
+        const { username, community_name } = request.body;
+        //use auth token to verify user
+        const { success, err, status, user: approvingUser, msg } = await verifyAuthToken(request);
+        if (!approvingUser) {
+            return { success, err, status, approvingUser, msg };
         }
 
+
+        const user_to_be_approved = await User.findOne({ username: username });
+        if (!user_to_be_approved) {
+            return { err: { status: 400, message: "Username not found." } };
+        }
+        console.log("community_name: ", community_name)
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
+        const moderators = community.moderators;
+        console.log("moderators: ", moderators);
+        // search if  approvingUser username exists in moderators .username
+        const isModerator = moderators.some(moderator => moderator.username === approvingUser.username);
+        if (!isModerator) {
+            return { err: { status: 400, message: "You are not a moderator in this community" } };
+        }
+
+        //get the community.moderator object of the muting user
+        const moderator = community.moderators.find(moderator => moderator.username === approvingUser.username);
+        console.log("moderator: ", moderator);
+        //check if moderator object is allowed to mute
+        if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+            return { err: { status: 400, message: "You are not allowed to approve users. permission denied" } };
+        }
         // Check if user username  already exists in the approved_users array of the community
-        const isAlreadyApproved = isUserAlreadyApproved(community, user.username);
+        const isAlreadyApproved = isUserAlreadyApproved(community, user_to_be_approved.username);
         if (isAlreadyApproved) {
             return {
                 err: {
@@ -308,8 +342,7 @@ const approveUser = async (requestBody) => {
                 },
             };
         }
-
-        community.approved_users.push({ username: user.username, approved_at: new Date(), profile_picture: user.profile_picture });
+        community.approved_users.push({ username: user_to_be_approved.username, approved_at: new Date(), profile_picture: user_to_be_approved.profile_picture });
         await community.save();
         console.log(community.approved_users);
         return { success: true };
@@ -438,6 +471,7 @@ const addModerator = async (requestBody) => {
  * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
  * ]
  */
+//all moderators
 const getModerators = async (community_name) => {
 
     try {
@@ -460,6 +494,46 @@ const getModerators = async (community_name) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+const getEditableModerators = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user) {
+            return { err: { status: status, message: msg } };
+        }
+        const community = await communityNameExists(request.params.community_name);
+        if (!community) {
+            return {
+                err: { status: 500, message: "Community not found." },
+            };
+        }
+        //get the moderator element from moderators array where username is the user's username
+        const moderator = community.moderators.find((moderator) => moderator.username === user.username);
+        if (!moderator) {
+            return {
+                err: { status: 400, message: "User is not a moderator of the community." },
+            };
+        }
+        console.log(moderator.moderator_since);
+        console.log(moderator.moderator_since < community.moderators[4].moderator_since);
+        const editableModerators = [];
+
+        for (let i = 0; i < community.moderators.length; i++) {
+            if (community.moderators[i].moderator_since > moderator.moderator_since) {
+                editableModerators.push({
+                    username: community.moderators[i].username,
+                    profile_picture: community.moderators[i].profile_picture,
+                    moderator_since: community.moderators[i].moderator_since,
+                });
+            };
+        }
+
+        //remove has_access from each moderator
+
+        return { editableModerators };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
 /**
  * @param {Object} requestBody
  * @property {String} community_name
@@ -599,6 +673,7 @@ export {
     getModerators,
     deleteModerator,
     moderatorLeaveCommunity,
+    getEditableModerators,
 
     getAllUsers,
 };
