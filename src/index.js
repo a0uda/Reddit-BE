@@ -7,6 +7,7 @@ import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
+import { commentsRouter } from "./routers/comments.js";
 
 // const connect_to_db = require("./db/mongoose")
 
@@ -26,16 +27,23 @@ try {
 
 const port = process.env.PORT;
 
+// Abdullah & Mido
+app.use((req, res, next) => {
+  res.header('Access-Control-Expose-Headers', 'Authorization');
+  next();
+});
+
 app.listen(port, () => {
   console.log("Server is Up");
 });
 
-app.use([usersRouter, communityRouter, listingPostsRouter, postsRouter]);
 app.use([
   usersRouter,
   communityRouter,
   listingPostsRouter,
   postsOrCommentsRouter,
+  postsRouter,
+  commentsRouter,
 ]);
 
 // Error handling middleware

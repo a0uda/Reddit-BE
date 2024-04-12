@@ -74,7 +74,7 @@ describe('getCommunityContentControls', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
-        
+
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
@@ -106,7 +106,7 @@ describe('getCommunityContentControls', () => {
 
         Community.findOne = jest.fn().mockReturnValue(mockQuery);
 
-        
+
         // Call the function with a valid community name
         const communityName = 'SampleCommunity';
 
@@ -252,7 +252,7 @@ describe('changeCommunityContentControls', () => {
 
         const communityName = 'SampleCommunity';
         const ContentControls = {};
- 
+
         try {
             const result = await changeCommunityContentControls(communityName, ContentControls);
         } catch (result) {
@@ -337,7 +337,6 @@ describe('changeCommunityContentControls', () => {
         const communityName = 'SampleCommunity';
         const ContentControls = {};
         const result = await changeCommunityContentControls(communityName, ContentControls);
-
         expect(result).toEqual({ err: { status: 404, message: 'Content controls not found' } });
         expect(Community.findOne).toHaveBeenCalledWith({ name: 'SampleCommunity' });
         expect(CommunityContentControls.findById).toHaveBeenCalledWith('invalid ID');

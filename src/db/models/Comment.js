@@ -16,9 +16,21 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  //bool is reply if the comment is reply
+  is_reply: {
+    type: Boolean,
+    default: false,
+  },
+  //id of parent comment if it is reply else null
   parent_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Comment",
+    default: null,
+  },
+  //the username of the person of the parent comment if it is a reply
+  parent_username: {
+    type: String,
+    default: null,
   },
   replies_comments_ids: [
     {
@@ -41,6 +53,13 @@ const commentSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+  },
+  //flag used to indicate if comment is in community if not then it is in user profile
+  //must be the same as its own post
+  //and community id and name can be null or don't care
+  comment_in_community_flag: {
+    type: Boolean,
+    default: false,
   },
   community_id: {
     type: mongoose.Schema.Types.ObjectId,
