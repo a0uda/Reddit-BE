@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import {
-  getComment,
+  getCommentWithReplies,
   newComment,
   replyToComment,
 } from "../controller/comments.js";
@@ -12,7 +12,9 @@ export const commentsRouter = express.Router();
 
 commentsRouter.get("/comments/get-comment", async (req, res) => {
   try {
-    const { success, error, message, comment } = await getComment(req, false);
+    const { success, error, message, comment } = await getCommentWithReplies(
+      req
+    );
     if (!success) {
       res.status(error.status).send({ error });
       return;

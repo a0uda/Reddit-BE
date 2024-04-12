@@ -459,7 +459,7 @@ usersRouter.get("/users/following-count", async (req, res) => {
   }
 });
 
-usersRouter.get("/users/:username/about", async (req, res) => {
+usersRouter.get("/users/about/:username", async (req, res) => {
   try {
     const { success, err, status, about, msg } = await getAbout(req);
     if (!success) {

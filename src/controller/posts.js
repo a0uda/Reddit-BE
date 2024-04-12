@@ -1,11 +1,21 @@
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
-import { communityNameExists } from "../utils/communities.js";
-import { getCommunityPostsAndComments } from "../services/communitySettings.js";
+import {
+  getCommunityGeneralSettings,
+  getCommunityPostsAndComments,
+  getCommunityContentControls,
+} from "../services/communitySettings.js";
 import { toggler } from "../utils/toggler.js";
-import { checkNewPostInput, getPostCommentsHelper } from "../services/posts.js";
+import {
+  checkApprovedUser,
+  checkBannedUser,
+  checkNewPostInput,
+  getPostCommentsHelper,
+  getCommunity,
+  checkPostSettings,
+  checkContentSettings,
+} from "../services/posts.js";
 
-//complete not finished yet
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -37,53 +47,72 @@ export async function createPost(request) {
     spoiler_flag,
     nsfw_flag,
   } = request.body;
-  //if type text then no imgs or videos even if they are present in req bosy and so on
+
   const post = new Post({
     title,
     description,
     post_in_community_flag,
     type,
-    images,
-    videos,
-    link_url,
-    polls,
-    polls_voting_length,
+    images: type != "image_and_videos" && type !== "hybrid" ? [] : images,
+    videos: type != "image_and_videos" && type !== "hybrid" ? [] : videos,
+    link_url: type != "url" && type != "hybrid" ? null : link_url,
+    polls: type != "polls" && type != "hybrid" ? [] : polls,
+    polls_voting_length:
+      type != "polls" && type != "hybrid" ? 3 : polls_voting_length,
     community_name,
     oc_flag,
     spoiler_flag,
     nsfw_flag,
   });
-  console.log(post);
+
   //if post in community
-  //1.community must exist
-  //2. if community is restricted or private only approved users can post
-  //3. check if user is muted or banned he can't post
-  //4. if nsfw flag in grnrral settings community is true ->flag post is true
-  //5.check allowed type post url,poll,image in community
-  //6. community content controls:
-  //require_words_in_post_title
-  //ban_words_from_post_title
-  //ban_words_from_post_body
-  //7. community post settings
-  //allow_multiple_images_per_post
   if (post_in_community_flag) {
-    const community = await communityNameExists(community_name);
-    if (!community) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "Community name not found",
-        },
-      };
+    //1.community must exist
+    const { success, community, error } = await getCommunity(community_name);
+    console.log(success, community, error);
+    if (!success) {
+      return { success, error };
+    }
+    //2. if community is restricted or private only approved users can post
+    const { err, general_settings } = await getCommunityGeneralSettings(
+      community_name
+    );
+    if (err) {
+      return next(err);
+    }
+    if (general_settings.visibility != "Public") {
+      const result = await checkApprovedUser(community, user._id);
+      if (!result.success) {
+        return result;
+      }
+    }
+
+    //3. check if user is banned he can't post
+    const result = await checkBannedUser(community, user._id);
+    if (!result.success) {
+      return result;
+    }
+
+    //4. if nsfw flag in general settings community is true ->flag post is true
+    post.nsfw_flag = general_settings.nsfw_flag;
+    //5.check allowed type post url,poll,image
+    //allow_multiple_images_per_post
+    const resultType = await checkPostSettings(post, community_name);
+    console.log(resultType);
+    if (!resultType.success) {
+      return resultType;
+    }
+    //6. community content controls:
+    const resultContent = await checkContentSettings(post, community_name);
+    if (!resultContent.success) {
+      return resultContent;
     }
     post.community_id = community._id;
   }
   //if post in user profile
   //check nsfw flag
   else {
-    console.log(post);
-    if (user.profile_settings.nsfw_flag) post.nsfw_flag = true;
+    post.nsfw_flag = user.profile_settings.nsfw_flag;
   }
 
   //if all good and i am going to post
@@ -134,19 +163,16 @@ export async function sharePost(request) {
     }
 
     if (post_in_community_flag) {
-      const community = await communityNameExists(community_name);
-      if (!community) {
-        return {
-          success: false,
-          error: {
-            status: 400,
-            message: "Community name not found",
-          },
-        };
+      const { success, community, error } = await getCommunity(community_name);
+      if (!success) {
+        return { success, error };
       }
       const { err, posts_and_comments } = await getCommunityPostsAndComments(
         community_name
       );
+      if (err) {
+        return next(err);
+      }
       if (!posts_and_comments.posts.allow_crossposting_of_posts) {
         return {
           success: false,
