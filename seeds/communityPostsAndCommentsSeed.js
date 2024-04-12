@@ -18,6 +18,7 @@ async function generateRandomPostsAndComments() {
         allow_image_uploads_and_links_to_image_hosting_sites: faker.datatype.boolean(),
         allow_multiple_images_per_post: faker.datatype.boolean(),
         allow_polls: faker.datatype.boolean(),
+        allow_videos: faker.datatype.boolean(),
         spam_filter_strength: {
           posts: getRandomElement(["Low", "High (default)", "All"]),
           links: getRandomElement(["Low", "High (default)", "All"]),

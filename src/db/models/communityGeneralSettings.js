@@ -3,9 +3,11 @@ import mongoose from "mongoose";
 const communityGeneralSettingsSchema = new mongoose.Schema({
     title: {
         type: String,
+        default: "",
     },
     description: {
         type: String,
+        default: "",
     },
     welcome_message: {
         send_welcome_message_flag: {
@@ -14,11 +16,13 @@ const communityGeneralSettingsSchema = new mongoose.Schema({
         },
         message: {
             type: String,
+            default: "",
         },
     },
     type: {
         type: String,
         enum: ["Public", "Private", "Restricted"],
+        default: "Public",
     },
     nsfw_flag: {
         type: Boolean,

@@ -3,9 +3,21 @@
 // Mod Tools --> Moderation --> Content Controls
 
 import { Community } from "../db/models/Community.js";
+import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
 import { CommunityContentControls } from "../db/models/communityContentControls.js";
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
-import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
+
+// The Cross Platform Team will need these attributes only:
+// General Settings:
+//  - title
+//  - description
+//  - type
+// Posts And Comments:
+//  - post_type_options
+//  - allow_image_uploads_and_links_to_image_hosting_sites
+//  - allow_polls
+//  - allow_videos
+
 
 //////////////////////////////////////////////////////////////////////// Get Settings //////////////////////////////////////////////////////////////
 const getCommunityGeneralSettings = async (community_name) => {
@@ -180,7 +192,13 @@ const changeCommunityPostsAndComments = async (
             return { err: { status: 404, message: 'Posts and comments not found' } };
         }
 
-        Object.assign(communityPostsAndComments, posts_and_comments);
+        if (posts_and_comments.posts) {
+            Object.assign(communityPostsAndComments.posts, posts_and_comments.posts);
+        }
+        
+        if (posts_and_comments.comments) {
+            Object.assign(communityPostsAndComments.comments, posts_and_comments.comments);
+        }
 
         await communityPostsAndComments.save();
 

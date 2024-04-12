@@ -196,100 +196,6 @@ const getCommunityMembersCount = async (community_name) => {
   }
 };
 
-//////////////////////////////////////////////////////////////////////// Mod Queue /////////////////////////////////////////////////////////////////////////
-const getRemovedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Determine the discussion item type based on posts_or_comments
-    let itemType;
-    if (posts_or_comments.toLowerCase() === 'posts and comments') {
-      itemType = ['post', 'comment'];
-    } else {
-      itemType = posts_or_comments.toLowerCase();
-    }
-
-    // Initialize the query object
-    let query = {
-      marked_as_spam_by_a_moderator: true,
-      discussion_item_type: { $in: itemType }
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the removed discussion items
-    const removedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return removedDiscussionItems;
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getEditedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Determine the discussion item type based on posts_or_comments
-    let itemType;
-    if (posts_or_comments.toLowerCase() === 'posts and comments') {
-      itemType = ['post', 'comment'];
-    } else {
-      itemType = posts_or_comments.toLowerCase();
-    }
-
-    // Initialize the query object
-    let query = {
-      edited_flag: true,
-      discussion_item_type: { $in: itemType }
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the edited discussion items
-    const editedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return editedDiscussionItems;
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getUnmoderatedDiscussionItems = async (community_name, time_filter) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Initialize the query object
-    let query = {
-      unmoderated_flag: true,
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the unmoderated discussion items
-    const unmoderatedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return unmoderatedDiscussionItems;
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
 //////////////////////////////////////////////////////////////////////// Comments Retrieval //////////////////////////////////////////////////////////////
 //to be extended -> I needed this to test moderation
 //should we store ids of posts owners or the username itself?
@@ -457,10 +363,6 @@ export {
   getDiscussionItemsByRandomCategory,
 
   getCommunityMembersCount,
-
-  getRemovedDiscussionItems,
-  getEditedDiscussionItems,
-  getUnmoderatedDiscussionItems,
 
   getDetailsWidget,
   editDetailsWidget,

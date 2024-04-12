@@ -51,8 +51,7 @@ async function generateRandomCommunities() {
         const users = await User.find();
         const moderators = users.slice(0, 3); // Select first 3 users as moderators
         const invitedModerators = users.slice(3, 6);
-        // Select a random user as the owner
-        const owner = getRandomElement(moderators);
+
         const fakeCommunity = {
             // Basic Attributes.
             created_at: Date.now(),
@@ -61,7 +60,7 @@ async function generateRandomCommunities() {
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
             ]),
             members_count: faker.number.int({ min: 0, max: 1000 }),
-            owner: owner._id,
+            owner: getRandomElement(moderators)._id,
 
             // Part 1 of embedded documents.
             general_settings: generalSettingsIds[i],
@@ -72,7 +71,6 @@ async function generateRandomCommunities() {
             approved_users: approved_users,
             muted_users: muted_users,
             banned_users: banned_users,
-
             moderators: moderators.map(user => ({
                 username: user.username,
                 moderator_since: faker.date.recent(),
@@ -83,22 +81,19 @@ async function generateRandomCommunities() {
                     manage_posts_and_comments: faker.datatype.boolean(),
                 },
                 profile_picture: user.profile_picture,
-
-
-
             })),
             invited_moderators: invitedModerators.map(user => user._id),
-            profile_picture: faker.image.avatar(),
-            banner_picture: faker.image.avatar(),
-            members_nickname: faker.company.name(),
-            currently_viewing_nickname: faker.company.name(),
-            owner: moderators[0]._id,
-            description: faker.company.catchPhrase(),
-
+           
             rules_ids: selectedRules,
             removal_reasons: [
                 { removal_reason_title: "Spam", reason_message: "This post is spam" },
             ],
+
+            profile_picture: faker.image.avatar(),
+            banner_picture: faker.image.avatar(),
+           
+            members_nickname: faker.company.name(),
+            currently_viewing_nickname: faker.company.name(),            
         };
 
         communities.push(fakeCommunity);

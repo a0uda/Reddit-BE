@@ -6,28 +6,40 @@ const communityContentControlsSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
-    guidline_text: String,
+    guidline_text: {
+      type: String,
+      default: "",
+    },
   },
   require_words_in_post_title: {
     flag: {
       type: Boolean,
       default: false,
     },
-    add_required_words: [String],
+    add_required_words: {
+      type: [String],
+      default: [],
+    }
   },
   ban_words_from_post_title: {
     flag: {
       type: Boolean,
       default: false,
     },
-    add_banned_words: [String],
+    add_banned_words: {
+      type: [String],
+      default: [],
+    }
   },
   ban_words_from_post_body: {
     flag: {
       type: Boolean,
       default: false,
     },
-    add_banned_words: [String],
+    add_banned_words: {
+      type: [String],
+      default: [],
+    }
   },
   require_or_ban_links_from_specific_domains: {
     flag: {
@@ -37,6 +49,7 @@ const communityContentControlsSchema = new mongoose.Schema({
     restriction_type: {
       type: String,
       enum: ["Required domains", "Blocked domains"],
+      default: "Required domains",
     },
     require_or_block_link_posts_with_these_domains: String,
   },
@@ -48,6 +61,7 @@ const communityContentControlsSchema = new mongoose.Schema({
     number_of_days: {
       type: Number,
       min: 0,
+      default: 0,
     },
   },
 });

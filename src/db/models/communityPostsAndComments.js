@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const communityPostsAndCommentsSchema = new mongoose.Schema({
@@ -6,6 +5,7 @@ const communityPostsAndCommentsSchema = new mongoose.Schema({
     post_type_options: {
       type: String,
       enum: ["Any", "Links Only", "Text Posts Only"],
+      default: "Any",
     },
     allow_crossposting_of_posts: {
       type: Boolean,
@@ -31,19 +31,27 @@ const communityPostsAndCommentsSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
+    // This attribute is only needed by the cross platform team.
+    allow_videos: {
+      type: Boolean,
+      default: true,
+    },
     spam_filter_strength: {
       // TODO: When exploring thse settings, "Low" was chosen by default, but the one of the other options was "High (default)". So, what is the default value?
       posts: {
         type: String,
         enum: ["Low", "High (default)", "All"],
+        default: "High (default)",
       },
       links: {
         type: String,
         enum: ["Low", "High (default)", "All"],
+        default: "High (default)",
       },
       comments: {
         type: String,
         enum: ["Low (default)", "High", "All"],
+        default: "Low (default)",
       },
     },
   },
