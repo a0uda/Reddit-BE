@@ -109,4 +109,9 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
+commentSchema.pre("find", function (next) {
+  this.find({ deleted: true }, "deleted deleted_at");
+  next();
+});
+
 export const Comment = mongoose.model("Comment", commentSchema);
