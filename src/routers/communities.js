@@ -43,6 +43,7 @@ import {
     addModerator,
     getModerators,
     deleteModerator,
+    moderatorLeaveCommunity,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -52,6 +53,10 @@ import {
     editCommunityRule,
     deleteCommunityRule,
     getCommunityRules,
+    getRemovalReasons,
+    addNewRemovalReasonToCommunity,
+    deleteRemovalReason,
+    editRemovalReason
 } from "../services/communityRulesAndRemovalReasons.js";
 
 import {
@@ -337,6 +342,58 @@ communityRouter.post("/communities/update-appearance-option/:community_name/:opt
     }
 });
 
+//////////////////////////////////////////////////////////////////////// Community removal reasons ////////////////////////////////////////////////////
+communityRouter.get("/communities/get-removal-reasons/:community_name", async (req, res, next) => {
+    try {
+        const community_name = req.params.community_name
+
+        const { err, removal_reasons } = await getRemovalReasons(community_name)
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(removal_reasons)
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.post("/communities/add-removal-reason", async (req, res, next) => {
+    try {
+        const { err, success } = await addNewRemovalReasonToCommunity(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+
+})
+communityRouter.post("/communities/delete-removal-reason", async (req, res, next) => {
+    try {
+        const { err, success } = await deleteRemovalReason(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+communityRouter.post("/communities/edit-removal-reason", async (req, res, next) => {
+    try {
+        const { err, success } = await editRemovalReason(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.
@@ -398,7 +455,7 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 })
 
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
-communityRouter.get("/communities/about/approved-users/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {
         const { err, users } = await getApprovedUsers(req.params.community_name)
 
@@ -636,5 +693,14 @@ communityRouter.post("/communities/remove-moderator", async (req, res, next) => 
         next(error)
     }
 })
-
+//moderator leave community
+communityRouter.post("/communities/moderator-leave", async (req, res, next) => {
+    try {
+        const { err, success } = await moderatorLeaveCommunity(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
 export { communityRouter }

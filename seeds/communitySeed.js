@@ -17,9 +17,9 @@ import { Rule } from '../src/db/models/Rule.js';
 import { User } from '../src/db/models/User.js';
 
 import { seedRules } from './communityRulesSeed.js';
-import { generateRandomMutedUsers } from './communityMutedUsersSeed.js';
-import { generateRandomBannedUsers } from "./communityBannedUsersSeed.js";
-import { generateRandomApprovedUsers } from "./communityApprovedUsersSeed.js";
+import generateRandomMutedUsers from './communityMutedUsersSeed.js';
+import generateRandomBannedUsers from "./communityBannedUsersSeed.js";
+import generateRandomApprovedUsers from "./communityApprovedUsersSeed.js";
 
 
 const COMMUNITY_COUNT = 20;
@@ -52,8 +52,7 @@ async function generateRandomCommunities() {
         const moderators = users.slice(0, 3); // Select first 3 users as moderators
         const invitedModerators = users.slice(3, 6);
         // Select a random user as the owner
-        const owner = faker.getRandomElement(users);
-
+        const owner = getRandomElement(moderators);
         const fakeCommunity = {
             // Basic Attributes.
             created_at: Date.now(),
@@ -73,13 +72,33 @@ async function generateRandomCommunities() {
             approved_users: approved_users,
             muted_users: muted_users,
             banned_users: banned_users,
+
             moderators: moderators.map(user => ({
-                _id: user._id,
-                moderator_since: faker.date.recent()
+                username: user.username,
+                moderator_since: faker.date.recent(),
+                has_access: {
+                    everything: faker.datatype.boolean(),
+                    manage_users: faker.datatype.boolean(),
+                    manage_settings: faker.datatype.boolean(),
+                    manage_posts_and_comments: faker.datatype.boolean(),
+                },
+                profile_picture: user.profile_picture,
+
+
+
             })),
             invited_moderators: invitedModerators.map(user => user._id),
-            
+            profile_picture: faker.image.avatar(),
+            banner_picture: faker.image.avatar(),
+            members_nickname: faker.company.name(),
+            currently_viewing_nickname: faker.company.name(),
+            owner: moderators[0]._id,
+            description: faker.company.catchPhrase(),
+
             rules_ids: selectedRules,
+            removal_reasons: [
+                { removal_reason_title: "Spam", reason_message: "This post is spam" },
+            ],
         };
 
         communities.push(fakeCommunity);

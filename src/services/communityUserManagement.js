@@ -122,12 +122,12 @@ const banUser = async (requestBody) => {
  */
 const getBannedUsers = async (community_name) => {
     try {
+
         const community = await communityNameExists(community_name);
-        console.log("community: ", community.banned_users);
+
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-
 
         return { users: community.banned_users };
     } catch (error) {
@@ -298,8 +298,8 @@ const approveUser = async (requestBody) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        // Check if user ID already exists in the approved_users array of the community
-        const isAlreadyApproved = isUserAlreadyApproved(community, user._id);
+        // Check if user username  already exists in the approved_users array of the community
+        const isAlreadyApproved = isUserAlreadyApproved(community, user.username);
         if (isAlreadyApproved) {
             return {
                 err: {
@@ -309,7 +309,7 @@ const approveUser = async (requestBody) => {
             };
         }
 
-        community.approved_users.push({ id: user._id, approved_at: new Date() });
+        community.approved_users.push({ username: user.username, approved_at: new Date(), profile_picture: user.profile_picture });
         await community.save();
         console.log(community.approved_users);
         return { success: true };
@@ -343,28 +343,40 @@ const getApprovedUsers = async (community_name) => {
                 err: { status: 500, message: "Community not found." },
             };
         }
-
-        // Fetch user views for each approved user
-        const users = await Promise.all(
-            community.approved_users.map(async (userObj) => {
-                const userView = await getApprovedUserView({
-                    id: userObj.id,
-                    approved_at: userObj.approved_at,
-                });
-                return userView;
-            })
-        );
-        return { users }; // Return the users array
+        const approved_users = community.approved_users;
+        return { users: approved_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 };
 
 //////////////////////////////////////////////////////////////////////// Moderators //////////////////////////////////////////////////////////////
-
+/**
+ * @param {Object} requestBody 
+ * @property {String} community_name
+ * @property {String} username
+ * @property {Object} has_access
+ * @property {Boolean} has_access.post
+ * @property {Boolean} has_access.everything
+ * @property {Boolean} has_access.manage_users
+ * @property {Boolean} has_access.manage_settings
+ * @property {Boolean} has_access.manage_posts_and_comments
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User not found."}}
+ * or
+ * {err: {status: 400, message: "User is already a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @returns 
+ */
 const addModerator = async (requestBody) => {
+    //TODO: INVITATION EMAIL SHOULD BE SENT TO THE USER
     try {
-        const { community_name, username } = requestBody;
+        const { community_name, username, has_access } = requestBody;
 
         // Find the community by name
         const community = await Community.findOne({ name: community_name });
@@ -379,27 +391,55 @@ const addModerator = async (requestBody) => {
         }
 
         // Check if the user is already a moderator of the community
-        const isModerator = community.moderators.some(moderator => moderator._id.equals(user._id));
+        const isModerator = community.moderators.some((moderator) => moderator.username === username);
         if (isModerator) {
             return { err: { status: 400, message: "User is already a moderator of the community." } };
         }
 
         // Add the user as a moderator to the community
         community.moderators.push({
-            _id: user._id,
-            moderator_since: new Date() // Set the moderator_since date to current date
+            username: user.username,
+            profile_picture: user.profile_picture,
+            moderator_since: new Date(),
+            has_access: {
+                everything: has_access.everything,
+                manage_users: has_access.manage_users,
+                manage_settings: has_access.manage_settings,
+                manage_posts_and_comments: has_access.manage_posts_and_comments,
+            },
         });
-
         // Save the updated community
         await community.save();
-
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 };
-
+/**
+ * 
+ * @param {String} community_name 
+ * @returns
+ * {moderators: [
+ * {username: "user1", profile_picture: "profile_picture1", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * ]}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * or
+ * {err: {status: 500, message: "Community not found."}}
+ * @example
+ * input:
+ * const community_name = "community1"
+ * @example
+ * Output:
+ * {
+ * moderators: [
+ * {username: "user1", profile_picture: "profile_picture1", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
+ * ]
+ */
 const getModerators = async (community_name) => {
+
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
@@ -408,24 +448,43 @@ const getModerators = async (community_name) => {
             };
         }
         const moderators = [];
-        // Iterate over the moderators array
-        for (const moderator of community.moderators) {
-            // Retrieve the moderator user from the User schema
-            const user = await User.findById(moderator._id);
-            if (user) {
-                // Extract desired fields from the user object
-                const { profile_picture, username } = user;
-                const moderated_since = moderator.moderator_since;
-                // Add moderator data to the moderators array
-                moderators.push({ profile_picture, username, moderated_since });
-            }
-        }
+        community.moderators.forEach((moderator) => {
+            moderators.push({
+                username: moderator.username,
+                profile_picture: moderator.profile_picture,
+                moderator_since: moderator.moderator_since,
+            });
+        });
         return { moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 };
-//delete moderator
+/**
+ * @param {Object} requestBody
+ * @property {String} community_name
+ * @property {String} username
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User not found."}}
+ * or
+ * {err: {status: 400, message: "User is not a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input:
+ * const requestBody = {
+ * community_name: "community1",
+ * username: "user1"
+ * }
+ * @example
+ * Output:
+ * {success: true}
+ * 
+*/
 const deleteModerator = async (requestBody) => {
     try {
         const { community_name, username } = requestBody;
@@ -443,7 +502,7 @@ const deleteModerator = async (requestBody) => {
         }
 
         // Check if the user is a moderator of the community
-        const moderatorIndex = community.moderators.findIndex(moderator => moderator._id.equals(user._id));
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (user.username));
         if (moderatorIndex === -1) {
             return { err: { status: 400, message: "User is not a moderator of the community." } };
         }
@@ -459,7 +518,62 @@ const deleteModerator = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+/**
+ * @param {Object} request
+ * @property {Object} request.body
+ * @property {String} request.body.community_name
+ * @returns
+ * {success: true}
+ * or
+ * {err: {status: 400, message: "Community not found."}}
+ * or
+ * {err: {status: 400, message: "User is not a moderator of the community."}}
+ * or
+ * {err: {status: 500, message: error.message}}
+ * @example
+ * input:
+ * const request = {
+ * body: {
+ * community_name: "community1"
+ * }
+ * }
+ * @example
+ * Output:
+ * {success: true}
 
+ */
+const moderatorLeaveCommunity = async (request) => {
+    //use verify token to get the username
+    console.log(request)
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+        //return error in auth token
+        return { err: { status: status, message: msg } };
+    }
+    const { community_name } = request.body;
+    console.log("community_name")
+    console.log(community_name);
+    const { username } = user;
+    try {
+        const community = await Community.findOne({ name: community_name });
+        if (!community) {
+            return { err: { status: 404, message: "Community not found." } };
+        }
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (username));
+        if (moderatorIndex === -1) {
+            return { err: { status: 400, message: "User is not a moderator of the community." } };
+        }
+        community.moderators.splice(moderatorIndex, 1);
+        await community.save();
+        return { success: true };
+    }
+    catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+
+
+}
 
 //////////////////////////////////////////////////////////////////////// Get All Users //////////////////////////////////////////////////////////////
 const getAllUsers = async () => {
@@ -484,6 +598,7 @@ export {
     addModerator,
     getModerators,
     deleteModerator,
+    moderatorLeaveCommunity,
 
     getAllUsers,
 };

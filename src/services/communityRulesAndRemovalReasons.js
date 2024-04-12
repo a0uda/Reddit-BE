@@ -3,11 +3,14 @@
 
 import { Rule } from "../db/models/Rule.js";
 
+
 import {
     communityNameExists,
     getRuleByTitle,
     getRuleById,
     deleteRule,
+    getRemovalReasonById,
+
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Rules ////////////////////////////////////////////////////////////////////
@@ -81,7 +84,116 @@ const addNewRuleToCommunity = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+const addNewRemovalReasonToCommunity = async (requestBody) => {
+    let {
+        community_name,
+        removal_reason_title,
+        removal_reason,
+    } = requestBody;
+    try {
+        const community = await communityNameExists(community_name);
+        console.log(community);
 
+        if (!community) {
+            return {
+                err: { status: 500, message: "community name does not exist " },
+            };
+        }
+        community.removal_reasons.push({
+            removal_reason_title,
+            removal_reason,
+        });
+        await community.save();
+        console.log(community.removal_reasons);
+        return { success: true };
+
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+}
+
+
+const editRemovalReason = async (requestBody) => {
+    let {
+        community_name,
+        removal_reason_id,
+        removal_reason_title,
+        removal_reason,
+    } = requestBody;
+    try {
+        const community = await communityNameExists(community_name);
+        console.log(community);
+
+        if (!community) {
+            return {
+                err: { status: 500, message: "community name does not exist " },
+            };
+        }
+        const removal_reasons = community.removal_reasons;
+        const removal_reason_index = removal_reasons.findIndex(
+            (reason) => reason._id == removal_reason_id
+        );
+        if (removal_reason_index === -1) {
+            return {
+                err: { status: 500, message: "removal reason id does not exist " },
+            };
+        }
+        removal_reasons[removal_reason_index].removal_reason_title =
+            removal_reason_title;
+        removal_reasons[removal_reason_index].removal_reason = removal_reason;
+        await community.save();
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+}
+const getRemovalReasons = async (community_name) => {
+    try {
+        const community = await communityNameExists(community_name);
+        console.log(community);
+
+        if (!community) {
+            return {
+                err: { status: 500, message: "community name does not exist " },
+            };
+        }
+        console.log("*******************")
+        console.log(community.removal_reasons);
+        return { removal_reasons: community.removal_reasons };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+const deleteRemovalReason = async (requestBody) => {
+    console.log("********************************hi")
+    let { community_name, removal_reason_id } = requestBody;
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return {
+                err: { status: 500, message: "community name does not exist " },
+            };
+        }
+        //check if removal reason  exists
+
+        const removal_reason = await getRemovalReasonById(removal_reason_id);
+        console.log(removal_reason);
+        if (removal_reason.err) {
+            console.log("removal_reason does not exist");
+            return { err: { status: 500, message: "removal_reason id does not exist" } };
+        }
+        community.removal_reasons = community.removal_reasons.filter(
+            (reason) => reason._id != removal_reason_id
+        );
+
+        await community.save();
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 /**
  * editCommunityRule - Edits an existing rule in a community.
  * @param {Object} requestBody - The request body containing the details of the rule to edit.
@@ -126,6 +238,8 @@ const editCommunityRule = async (requestBody) => {
             full_description,
         } = requestBody;
         const rule = await getRuleById(rule_id);
+        console.log(rule);
+        console.log(requestBody);
 
         if (!rule) {
             return { err: "No rule found with this id, enter a valid id." };
@@ -267,4 +381,8 @@ export {
     editCommunityRule,
     deleteCommunityRule,
     getCommunityRules,
+    addNewRemovalReasonToCommunity,
+    editRemovalReason,
+    deleteRemovalReason,
+    getRemovalReasons,
 }

@@ -80,14 +80,16 @@ const communitySchema = new mongoose.Schema({
   ////////////////////////////////////////////////////// User Management //////////////////////////////////////////////////////
   approved_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
         ref: "User",
       },
       approved_at: {
         type: Date,
         default: Date.now,
       },
+      profile_picture: String,
+
     },
   ],
   muted_users: [
@@ -133,19 +135,31 @@ const communitySchema = new mongoose.Schema({
     },
   ],
   moderators: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    username: {
+      type: String,
+    },
+    profile_picture: {
+      type: String,
     },
     moderator_since: {
       type: Date,
       default: Date.now
+    },
+    has_access: {
+      everything: { type: Boolean, default: true },
+      manage_users: { type: Boolean, default: true },
+      manage_settings: { type: Boolean, default: true },
+      manage_posts_and_comments: { type: Boolean, default: true },
     }
   }],
   invited_moderators: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      username: {
+        type: String,
+      },
+      profile_picture: {
+        type: String,
+      },
     },
   ],
 
@@ -190,8 +204,8 @@ const communitySchema = new mongoose.Schema({
 
   // TODO: "description" is an attribute in the "general settings" subdocument that needs to be filled with the "description" value provided by the user in the "edit community details widget".
 
-  
-  
+
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //TODO: These do not appear in the databse we are seeding.
   // I will work on adding them once I understand what they are used for.

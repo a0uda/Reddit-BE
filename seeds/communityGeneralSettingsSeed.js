@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { CommunityGeneralSettings } from "../src/db/models/communityGeneralSettings.js";
 import { getRandomElement } from "./seedHelpers.js";
+//import { title } from "faker/lib/locales/az/index.js";
 
 const GENERAL_SETTINGS_COUNT = 20;
 
@@ -10,7 +11,7 @@ async function generateRandomGeneralSettings() {
   for (let i = 0; i < GENERAL_SETTINGS_COUNT; i++) {
 
     const fakeSetting = {
-      title: faker.company.buzzPhrase(),
+      // title: faker.company.buzzPhrase(),
       description: faker.lorem.sentences(),
       welcome_message: {
         send_welcome_message_flag: faker.datatype.boolean(),

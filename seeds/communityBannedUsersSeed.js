@@ -1,10 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { getRandomElement } from "./seedHelpers.js";
+import { User } from "../src/db/models/User.js";
+import mongoose from "mongoose";
 
 const BANNED_USERS_COUNT = 6;
 
 async function generateRandomBannedUsers() {
     const banned_users = [];
+    const users = await User.find();
 
     for (let i = 0; i < BANNED_USERS_COUNT; i++) {
         const permanentFlag = faker.datatype.boolean();
