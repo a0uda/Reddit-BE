@@ -122,12 +122,12 @@ const banUser = async (requestBody) => {
  */
 const getBannedUsers = async (community_name) => {
     try {
+
         const community = await communityNameExists(community_name);
-        console.log("community: ", community.banned_users);
+
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-
 
         return { users: community.banned_users };
     } catch (error) {
@@ -298,8 +298,8 @@ const approveUser = async (requestBody) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        // Check if user ID already exists in the approved_users array of the community
-        const isAlreadyApproved = isUserAlreadyApproved(community, user._id);
+        // Check if user username  already exists in the approved_users array of the community
+        const isAlreadyApproved = isUserAlreadyApproved(community, user.username);
         if (isAlreadyApproved) {
             return {
                 err: {
@@ -309,7 +309,7 @@ const approveUser = async (requestBody) => {
             };
         }
 
-        community.approved_users.push({ id: user._id, approved_at: new Date() });
+        community.approved_users.push({ username: user.username, approved_at: new Date(), profile_picture: user.profile_picture });
         await community.save();
         console.log(community.approved_users);
         return { success: true };
@@ -343,18 +343,8 @@ const getApprovedUsers = async (community_name) => {
                 err: { status: 500, message: "Community not found." },
             };
         }
-
-        // Fetch user views for each approved user
-        const users = await Promise.all(
-            community.approved_users.map(async (userObj) => {
-                const userView = await getApprovedUserView({
-                    id: userObj.id,
-                    approved_at: userObj.approved_at,
-                });
-                return userView;
-            })
-        );
-        return { users }; // Return the users array
+        const approved_users = community.approved_users;
+        return { users: approved_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -363,8 +353,9 @@ const getApprovedUsers = async (community_name) => {
 //////////////////////////////////////////////////////////////////////// Moderators //////////////////////////////////////////////////////////////
 
 const addModerator = async (requestBody) => {
+    //TODO: INVITATION EMAIL SHOULD BE SENT TO THE USER
     try {
-        const { community_name, username } = requestBody;
+        const { community_name, username, has_access } = requestBody;
 
         // Find the community by name
         const community = await Community.findOne({ name: community_name });
@@ -379,20 +370,25 @@ const addModerator = async (requestBody) => {
         }
 
         // Check if the user is already a moderator of the community
-        const isModerator = community.moderators.some(moderator => moderator._id.equals(user._id));
+        const isModerator = community.moderators.some((moderator) => moderator.username === username);
         if (isModerator) {
             return { err: { status: 400, message: "User is already a moderator of the community." } };
         }
 
         // Add the user as a moderator to the community
         community.moderators.push({
-            _id: user._id,
-            moderator_since: new Date() // Set the moderator_since date to current date
+            username: user.username,
+            profile_picture: user.profile_picture,
+            moderator_since: new Date(),
+            has_access: {
+                everything: has_access.everything,
+                manage_users: has_access.manage_users,
+                manage_settings: has_access.manage_settings,
+                manage_posts_and_comments: has_access.manage_posts_and_comments,
+            },
         });
-
         // Save the updated community
         await community.save();
-
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -400,6 +396,7 @@ const addModerator = async (requestBody) => {
 };
 
 const getModerators = async (community_name) => {
+
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
@@ -408,18 +405,13 @@ const getModerators = async (community_name) => {
             };
         }
         const moderators = [];
-        // Iterate over the moderators array
-        for (const moderator of community.moderators) {
-            // Retrieve the moderator user from the User schema
-            const user = await User.findById(moderator._id);
-            if (user) {
-                // Extract desired fields from the user object
-                const { profile_picture, username } = user;
-                const moderated_since = moderator.moderator_since;
-                // Add moderator data to the moderators array
-                moderators.push({ profile_picture, username, moderated_since });
-            }
-        }
+        community.moderators.forEach((moderator) => {
+            moderators.push({
+                username: moderator.username,
+                profile_picture: moderator.profile_picture,
+                moderator_since: moderator.moderator_since,
+            });
+        });
         return { moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -443,7 +435,7 @@ const deleteModerator = async (requestBody) => {
         }
 
         // Check if the user is a moderator of the community
-        const moderatorIndex = community.moderators.findIndex(moderator => moderator._id.equals(user._id));
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username.equals(user.username));
         if (moderatorIndex === -1) {
             return { err: { status: 400, message: "User is not a moderator of the community." } };
         }

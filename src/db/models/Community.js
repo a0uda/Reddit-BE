@@ -80,14 +80,16 @@ const communitySchema = new mongoose.Schema({
   ////////////////////////////////////////////////////// User Management //////////////////////////////////////////////////////
   approved_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
         ref: "User",
       },
       approved_at: {
         type: Date,
         default: Date.now,
       },
+      profile_picture: String,
+
     },
   ],
   muted_users: [
@@ -133,19 +135,31 @@ const communitySchema = new mongoose.Schema({
     },
   ],
   moderators: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    username: {
+      type: String,
+    },
+    profile_picture: {
+      type: String,
     },
     moderator_since: {
       type: Date,
       default: Date.now
+    },
+    has_access: {
+      everything: { type: Boolean, default: true },
+      manage_users: { type: Boolean, default: true },
+      manage_settings: { type: Boolean, default: true },
+      manage_posts_and_comments: { type: Boolean, default: true },
     }
   }],
   invited_moderators: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      username: {
+        type: String,
+      },
+      profile_picture: {
+        type: String,
+      },
     },
   ],
 

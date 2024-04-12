@@ -5,7 +5,7 @@ import { CommunityContentControls } from "../db/models/communityContentControls.
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
 import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
 import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
-import { CommunityAppearance } from "../db/models/communityAppearance.js";
+//import { CommunityAppearance } from "../db/models/communityAppearance.js";
 
 import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
@@ -52,7 +52,7 @@ const addNewCommunity = async (requestBody) => {
   const communityGeneralSettings = new CommunityGeneralSettings();
   const communityContentControls = new CommunityContentControls();
   const communityPostsAndComments = new CommunityPostsAndComments();
-  const communityAppearance = new CommunityAppearance();
+  //const communityAppearance = new CommunityAppearance();
 
   const community = new Community({
     name,
@@ -62,7 +62,7 @@ const addNewCommunity = async (requestBody) => {
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
-    appearance: communityAppearance._id,
+    // appearance: communityAppearance._id,
   });
 
   try {

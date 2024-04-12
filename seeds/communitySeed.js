@@ -72,9 +72,20 @@ async function generateRandomCommunities() {
             approved_users: approved_users,
             muted_users: muted_users,
             banned_users: banned_users,
+
             moderators: moderators.map(user => ({
-                _id: user._id,
-                moderator_since: faker.date.recent()
+                username: user.username,
+                moderator_since: faker.date.recent(),
+                has_access: {
+                    everything: faker.datatype.boolean(),
+                    manage_users: faker.datatype.boolean(),
+                    manage_settings: faker.datatype.boolean(),
+                    manage_posts_and_comments: faker.datatype.boolean(),
+                },
+                profile_picture: user.profile_picture,
+
+
+
             })),
             invited_moderators: invitedModerators.map(user => user._id),
             profile_picture: faker.image.avatar(),

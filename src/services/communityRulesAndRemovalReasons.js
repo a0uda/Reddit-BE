@@ -180,13 +180,10 @@ const deleteRemovalReason = async (requestBody) => {
 
         const removal_reason = await getRemovalReasonById(removal_reason_id);
         console.log(removal_reason);
-        if (!removal_reason) {
+        if (removal_reason.err) {
             console.log("removal_reason does not exist");
             return { err: { status: 500, message: "removal_reason id does not exist" } };
         }
-
-        //await removal_reason.findByIdAndDelete(removal_reason_id);
-        //filter the removal reasons array such that the removal reason with the id is removed
         community.removal_reasons = community.removal_reasons.filter(
             (reason) => reason._id != removal_reason_id
         );

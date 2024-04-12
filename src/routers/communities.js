@@ -381,7 +381,18 @@ communityRouter.post("/communities/delete-removal-reason", async (req, res, next
         next(error)
     }
 })
-//removal_reason_id
+communityRouter.post("/communities/edit-removal-reason", async (req, res, next) => {
+    try {
+        const { err, success } = await editRemovalReason(req.body)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
 
 //////////////////////////////////////////////////////////////////////// Community Rules //////////////////////////////////////////////////////////////
 // TODO: Implement the "Reorder Rules" API.
@@ -443,7 +454,7 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 })
 
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
-communityRouter.get("/communities/about/approved-users/:community_name", async (req, res, next) => {
+communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {
         const { err, users } = await getApprovedUsers(req.params.community_name)
 

@@ -81,8 +81,13 @@ const getApprovedUserView = async ({ id, approved_at }) => {
   }
 };
 
-const isUserAlreadyApproved = (community, userId) => {
-  return community.approved_users.some((pair) => pair.id == userId);
+const isUserAlreadyApproved = (community, username) => {
+  // Check if the user is already approved where the community :{approved_users:{username,approved_at,picture}
+  const approvedUser = community.approved_users.find(
+    (user) => user.username === username
+  );
+  return approvedUser;
+
 };
 
 export {
