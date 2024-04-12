@@ -435,7 +435,7 @@ const deleteModerator = async (requestBody) => {
         }
 
         // Check if the user is a moderator of the community
-        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username.equals(user.username));
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (user.username));
         if (moderatorIndex === -1) {
             return { err: { status: 400, message: "User is not a moderator of the community." } };
         }
@@ -451,7 +451,38 @@ const deleteModerator = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+const moderatorLeaveCommunity = async (request) => {
+    //use verify token to get the username
+    console.log(request)
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+        //return error in auth token
+        return { err: { status: status, message: msg } };
+    }
+    const { community_name } = request.body;
+    console.log("community_name")
+    console.log(community_name);
+    const { username } = user;
+    try {
+        const community = await Community.findOne({ name: community_name });
+        if (!community) {
+            return { err: { status: 404, message: "Community not found." } };
+        }
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (username));
+        if (moderatorIndex === -1) {
+            return { err: { status: 400, message: "User is not a moderator of the community." } };
+        }
+        community.moderators.splice(moderatorIndex, 1);
+        await community.save();
+        return { success: true };
+    }
+    catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
 
+
+
+}
 
 //////////////////////////////////////////////////////////////////////// Get All Users //////////////////////////////////////////////////////////////
 const getAllUsers = async () => {
@@ -476,6 +507,7 @@ export {
     addModerator,
     getModerators,
     deleteModerator,
+    moderatorLeaveCommunity,
 
     getAllUsers,
 };

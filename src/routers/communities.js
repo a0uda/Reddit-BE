@@ -43,6 +43,7 @@ import {
     addModerator,
     getModerators,
     deleteModerator,
+    moderatorLeaveCommunity,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -692,5 +693,14 @@ communityRouter.post("/communities/remove-moderator", async (req, res, next) => 
         next(error)
     }
 })
-
+//moderator leave community
+communityRouter.post("/communities/moderator-leave", async (req, res, next) => {
+    try {
+        const { err, success } = await moderatorLeaveCommunity(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
 export { communityRouter }
