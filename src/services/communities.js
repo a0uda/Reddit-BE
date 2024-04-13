@@ -20,51 +20,30 @@ import {
   deleteRule,
   getApprovedUserView,
 } from "../utils/communities.js";
-/**
- * 
- * @param {object} requestBody 
- * @param {string} requestBody.name - The name of the new community.
- * @param {string} requestBody.type - The type of the new community.
- * @param {boolean} requestBody.nsfw_flag - The nsfw flag of the new community.
- * @param {string} requestBody.category - The category of the new community.
- * 
- * @returns
- * @property {string} community_name - The name of the new community.
- * @property {Object} err - The error message and status code.
- * 
- * @example
- * const requestBody = {
- * name: "new_community",
- * type: "public",
- * nsfw_flag: false,
- * category: "example_category",
- * }
- * @example
- * Output:
- * {
- * community_name: "new_community"
- * }
- */
-const addNewCommunity = async (requestBody) => {
-  // "title" and "visibility/type" have been removed from community to the general settings.
+
+const addNewCommunity = async (requestBody, creator) => {
   const { name, type, nsfw_flag, category } = requestBody;
 
   const communityGeneralSettings = new CommunityGeneralSettings();
   const communityContentControls = new CommunityContentControls();
   const communityPostsAndComments = new CommunityPostsAndComments();
-  //const communityAppearance = new CommunityAppearance();
+
+  communityGeneralSettings.title = name;
+  communityGeneralSettings.type = type;
+  communityGeneralSettings.nsfw_flag = nsfw_flag;
 
   const community = new Community({
     name,
-    type,
-    nsfw_flag,
     category,
+    owner: creator._id,
+    moderators: [{
+      username: creator.username
+    }],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
-    // appearance: communityAppearance._id,
   });
-
+  
   try {
     const duplicate_community = await Community.findOne({ name: name });
 
@@ -77,11 +56,10 @@ const addNewCommunity = async (requestBody) => {
     await communityGeneralSettings.save();
     await communityContentControls.save();
     await communityPostsAndComments.save();
-    await communityAppearance.save();
 
     const savedCommunity = await community.save();
 
-    return { community_name: savedCommunity.name };
+    return {community: savedCommunity};
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
