@@ -57,7 +57,7 @@ const banUser = async (request) => {
         console.log("banninguser: ", banningUser);
 
         if (!banningUser) {
-            return { success, err, status, banninguser, msg };
+            return { success, err, status, banningUser, msg };
         }
         const community = await communityNameExists(community_name);
         if (!community) {
@@ -71,13 +71,16 @@ const banUser = async (request) => {
         console.log("moderators: ", moderators);
         // search if  mutingUser username exists in moderators .username
         const isModerator = moderators.some(moderator => moderator.username === banningUser.username);
+        console.log("isModerator: ", isModerator);
+
         if (!isModerator) {
             return { err: { status: 400, message: "You are not a moderator in this community" } };
         }
         //get the community.moderator object of the muting user
         const moderator = community.moderators.find(moderator => moderator.username === banningUser.username);
         //check if moderator object is allowed to mute
-        if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+        console.log(moderator.has_access.everything, moderator.has_access.manage_users)
+        if (!moderator.has_access.everything || !moderator.has_access.manage_users) {
             return { err: { status: 400, message: "You are not allowed to ban/unban  users. permission denied" } };
         }
         if (action == "ban") {
@@ -110,6 +113,7 @@ const banUser = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
+
 /**
  * @param {String} community_name
  * @returns
@@ -199,7 +203,7 @@ const muteUser = async (request) => {
             //get the community.moderator object of the muting user
             const moderator = community.moderators.find(moderator => moderator.username === mutingUser.username);
             //check if moderator object is allowed to mute
-            if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+            if (!moderator.has_access.everything || !moderator.has_access.manage_users) {
                 return { err: { status: 400, message: "You are not allowed to mute/unmute  users. permission denied" } };
             }
             // Perform mute or unmute action
@@ -329,7 +333,7 @@ const approveUser = async (request) => {
         const moderator = community.moderators.find(moderator => moderator.username === approvingUser.username);
         console.log("moderator: ", moderator);
         //check if moderator object is allowed to mute
-        if (!moderator.has_access.everything || !moderator.has_access.user_management) {
+        if (!moderator.has_access.everything || !moderator.has_access.manage_users) {
             return { err: { status: 400, message: "You are not allowed to approve users. permission denied" } };
         }
         // Check if user username  already exists in the approved_users array of the community
@@ -481,15 +485,8 @@ const getModerators = async (community_name) => {
                 err: { status: 500, message: "Community not found." },
             };
         }
-        const moderators = [];
-        community.moderators.forEach((moderator) => {
-            moderators.push({
-                username: moderator.username,
-                profile_picture: moderator.profile_picture,
-                moderator_since: moderator.moderator_since,
-            });
-        });
-        return { moderators };
+
+        return { moderators: community.moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -519,11 +516,7 @@ const getEditableModerators = async (request) => {
 
         for (let i = 0; i < community.moderators.length; i++) {
             if (community.moderators[i].moderator_since > moderator.moderator_since) {
-                editableModerators.push({
-                    username: community.moderators[i].username,
-                    profile_picture: community.moderators[i].profile_picture,
-                    moderator_since: community.moderators[i].moderator_since,
-                });
+                editableModerators.push(community.moderators[i]);
             };
         }
 
