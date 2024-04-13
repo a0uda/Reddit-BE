@@ -14,11 +14,11 @@ import {
 
     getComments,
     addComment
-} from "../services/communities.js";
+} from "../services/communityService.js";
 
 import { 
     addNewCommunityController 
-} from "../controller/community.js";
+} from "../controller/communityController.js";
 
 import { 
     getCommunityGeneralSettingsController, 
@@ -27,7 +27,7 @@ import {
     changeCommunityGeneralSettingsController, 
     changeCommunityContentControlsController, 
     changeCommunityPostsAndCommentsController 
-} from "../controller/communitySettings.js";
+} from "../controller/communitySettingsController.js";
 
 import {
     banUser,
@@ -71,7 +71,7 @@ import {
     getRemovedItems,
     getReportedItems,
     getUnmoderatedItems
-} from "../services/communityQueue.js";
+} from "../services/communityQueueService.js";
 
 const communityRouter = express.Router();
 

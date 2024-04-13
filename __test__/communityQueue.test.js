@@ -1,4 +1,4 @@
-import { getRemovedItems, getReportedItems, getUnmoderatedItems } from '../src/services/communityQueue.js';
+import { getRemovedItems, getReportedItems, getUnmoderatedItems } from '../src/services/communityQueueService.js';
 import { Post } from '../src/db/models/Post.js';
 import { Comment } from '../src/db/models/Comment.js';
 

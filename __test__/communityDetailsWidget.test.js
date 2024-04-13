@@ -1,6 +1,6 @@
-import { getDetailsWidget, editDetailsWidget } from "../src/services/communities";
+import { getDetailsWidget, editDetailsWidget } from "../src/services/communityService";
 import { communityNameExists } from "../src/utils/communities";
-jest.mock("../src/services/communities");
+jest.mock("../src/services/communityService");
 jest.mock("../src/utils/communities");
 
 

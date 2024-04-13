@@ -9,7 +9,7 @@ import {
     changeCommunityGeneralSettings,
     changeCommunityContentControls,
     changeCommunityPostsAndComments
-} from '../services/communitySettings.js';
+} from '../services/communitySettingsService.js';
 
 async function getCommunityGeneralSettingsController(req, res, next) {
     try {

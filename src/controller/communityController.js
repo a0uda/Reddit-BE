@@ -1,8 +1,6 @@
 import { verifyAuthToken } from "./userAuth.js";
 
-import { Community } from "../db/models/Community.js";
-
-import { addNewCommunity } from "../services/communities.js";
+import { addNewCommunity } from "../services/communityService.js";
 
 export const addNewCommunityController = async (req, res, next) => {
     try {

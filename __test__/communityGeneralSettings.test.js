@@ -1,4 +1,4 @@
-import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../src/services/communitySettings.js';
+import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../src/services/communitySettingsService.js';
 import { Community } from '../src/db/models/Community.js';
 import { CommunityGeneralSettings } from '../src/db/models/communityGeneralSettings.js';
 

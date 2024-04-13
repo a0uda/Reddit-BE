@@ -1,4 +1,4 @@
-import { getCommunityPostsAndComments, changeCommunityPostsAndComments } from '../src/services/communitySettings.js';
+import { getCommunityPostsAndComments, changeCommunityPostsAndComments } from '../src/services/communitySettingsService.js';
 import { Community } from '../src/db/models/Community.js';
 import { CommunityPostsAndComments } from '../src/db/models/communityPostsAndComments.js';
 
