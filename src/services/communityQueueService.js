@@ -5,6 +5,7 @@ import {Comment} from '../db/models/Comment.js';
 // In each of these pages, the user can filter the discussion items by community and time.
 
 
+////////////////////////////////////////////////////////////////////////// Getting Queue Items //////////////////////////////////////////////////////////////////////////
 // This function fetches removed posts and comments from a specific community, sorted by creation date.
 const getRemovedItems = async (community_name, time_filter, posts_or_comments) => {
     try {
@@ -88,7 +89,10 @@ const getReportedItems = async (community_name, time_filter, posts_or_comments) 
 
     // Initialize the query object. This will be used to fetch the posts and comments.
     let query = {
-      'moderator_details.reported_flag': true
+      $and: [
+        {'moderator_details.reported_flag': true},
+        {'moderator_details.removed_flag': false}
+      ]
     };
 
     // If a specific community is specified, add it to the query. This will fetch posts and comments from that community only.
@@ -183,4 +187,37 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
   }
 };
 
-export { getRemovedItems, getReportedItems, getUnmoderatedItems };
+//////////////////////////////////////////////////////////////////////////// Buttons/Actions ////////////////////////////////////////////////////////////////////////////
+
+const removeItem = async (item_id, item_type) => {
+  try {
+    // Validate the input parameters. They should be strings.
+    if (typeof item_id !== 'string' || typeof item_type !== 'string') {
+      return { err: { status: 400, message: 'Invalid input parameters' } };
+    }
+
+    // If the item type is 'post', remove the post.
+    if (item_type.toLowerCase() === 'post') {
+      await Post.findByIdAndUpdate(item_id, { 'moderator_details.removed_flag': true });
+    }
+
+    // If the item type is 'comment', remove the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      await Comment.findByIdAndUpdate(item_id, { 'moderator_details.removed_flag': true });
+    }
+
+    // Return a success message.
+    return { message: 'Item removed successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+export { 
+  getRemovedItems, 
+  getReportedItems, 
+  getUnmoderatedItems,
+
+  removeItem
+};

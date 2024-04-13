@@ -1,7 +1,8 @@
-import { getRemovedItems, getReportedItems, getUnmoderatedItems } from '../src/services/communityQueueService.js';
+import { getRemovedItems, getReportedItems, getUnmoderatedItems, removeItem } from '../src/services/communityQueueService.js';
 import { Post } from '../src/db/models/Post.js';
 import { Comment } from '../src/db/models/Comment.js';
 
+////////////////////////////////////////////////////////////////////////// Getting Queue Items //////////////////////////////////////////////////////////////////////////
 describe('getRemovedItems', () => {
     it('should return an error when input parameters are invalid', async () => {
         const result = await getRemovedItems(123, 'newest first', 'posts');
@@ -50,7 +51,7 @@ describe('getRemovedItems', () => {
         // Check if the result contains the expected posts, sorted by creation date
         // We're sorting the mock posts by creation date and asserting that the result equals this sorted array.
         const expectedItems = mockPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ removedItems: expectedItems });
     });
 
     it('should return removed comments sorted by creation date', async () => {
@@ -82,7 +83,7 @@ describe('getRemovedItems', () => {
 
         // Check if the result contains the expected comments, sorted by creation date
         const expectedItems = mockComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ removedItems: expectedItems });
     });
 
     it('should return removed posts and comments sorted by creation date', async () => {
@@ -125,7 +126,7 @@ describe('getRemovedItems', () => {
 
         // Check if the result contains the expected posts and comments, sorted by creation date
         const expectedItems = [...mockPosts, ...mockComments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ removedItems: expectedItems });
     });
 
     it('should handle errors when fetching posts', async () => {
@@ -220,17 +221,17 @@ describe('getRemovedItems', () => {
 });
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe('getReportedItems', () => {
     const mockPosts = [
-        { created_at: new Date('2022-01-01'), moderator_details: { reported_flag: true} },
-        { created_at: new Date('2022-01-03'), moderator_details: { reported_flag: true} },
-        { created_at: new Date('2022-01-02'), moderator_details: { reported_flag: true} },
+        { created_at: new Date('2022-01-01'), moderator_details: { reported_flag: true, removed_flag: false } },
+        { created_at: new Date('2022-01-03'), moderator_details: { reported_flag: true, removed_flag: false } },
+        { created_at: new Date('2022-01-02'), moderator_details: { reported_flag: true, removed_flag: false } },
     ];
     const mockComments = [
-        { created_at: new Date('2022-01-04'), moderator_details: { reported_flag: true} },
-        { created_at: new Date('2022-01-02'), moderator_details: { reported_flag: true} },
-        { created_at: new Date('2022-01-01'), moderator_details: { reported_flag: true} },
+        { created_at: new Date('2022-01-04'), moderator_details: { reported_flag: true, removed_flag: false } },
+        { created_at: new Date('2022-01-02'), moderator_details: { reported_flag: true, removed_flag: false } },
+        { created_at: new Date('2022-01-01'), moderator_details: { reported_flag: true, removed_flag: false } },
     ];
 
     it('should return an error when input parameters are invalid', async () => {
@@ -251,7 +252,7 @@ describe('getReportedItems', () => {
     it('should return reported posts sorted by creation date', async () => {
         // Mock the Post model's find method
         // We're creating an array of mock posts that we want our mocked Post.find method to return.
-        
+
         // Here we're replacing the real Post.find method with a jest mock function.
         // This mock function returns an object with a sort method, which in turn returns a promise that resolves to our mock posts.
         // This way, when our function under test calls Post.find().sort(), it will receive the mock posts.
@@ -266,14 +267,17 @@ describe('getReportedItems', () => {
 
         // Here we're asserting that Post.find was called with the expected query object.
         expect(Post.find).toHaveBeenCalledWith({
-            'moderator_details.reported_flag': true,
+            $and: [
+                { 'moderator_details.reported_flag': true },
+                { 'moderator_details.removed_flag': false },
+            ],
             community_name: communityName
         });
 
         // Check if the result contains the expected posts, sorted by creation date
         // We're sorting the mock posts by creation date and asserting that the result equals this sorted array.
         const expectedItems = mockPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ reportedItems: expectedItems });
     });
 
     it('should return reported comments sorted by creation date', async () => {
@@ -291,13 +295,16 @@ describe('getReportedItems', () => {
         // Check if Comment.find was called with the correct arguments
         console.log(Comment.find.mock.calls);
         expect(Comment.find).toHaveBeenCalledWith({
-            'moderator_details.reported_flag': true,
+            $and: [
+                { 'moderator_details.reported_flag': true },
+                { 'moderator_details.removed_flag': false },
+            ],
             community_name: communityName
         });
 
         // Check if the result contains the expected comments, sorted by creation date
         const expectedItems = mockComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ reportedItems: expectedItems });
     });
 
     it('should return reported posts and comments sorted by creation date', async () => {
@@ -319,7 +326,10 @@ describe('getReportedItems', () => {
 
         // Check if Post.find and Comment.find were called with the correct arguments
         const expectedQuery = {
-            'moderator_details.reported_flag': true,
+            $and: [
+                { 'moderator_details.reported_flag': true },
+                { 'moderator_details.removed_flag': false },
+            ],
             community_name: communityName
         };
         expect(Post.find).toHaveBeenCalledWith(expectedQuery);
@@ -327,7 +337,7 @@ describe('getReportedItems', () => {
 
         // Check if the result contains the expected posts and comments, sorted by creation date
         const expectedItems = [...mockPosts, ...mockComments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ reportedItems: expectedItems });
     });
 
     it('should handle errors when fetching posts', async () => {
@@ -421,7 +431,7 @@ describe('getReportedItems', () => {
     });
 });
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe('getUnmoderatedItems', () => {
     const mockPosts = [
         {
@@ -520,7 +530,7 @@ describe('getUnmoderatedItems', () => {
         // Check if the result contains the expected posts, sorted by creation date
         // We're sorting the mock posts by creation date and asserting that the result equals this sorted array.
         const expectedItems = mockPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ unmoderatedItems: expectedItems });
     });
 
     it('should return unmoderated comments sorted by creation date', async () => {
@@ -549,7 +559,7 @@ describe('getUnmoderatedItems', () => {
 
         // Check if the result contains the expected comments, sorted by creation date
         const expectedItems = mockComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ unmoderatedItems: expectedItems });
     });
 
     it('should return unmoderated posts and comments sorted by creation date', async () => {
@@ -583,7 +593,7 @@ describe('getUnmoderatedItems', () => {
 
         // Check if the result contains the expected posts and comments, sorted by creation date
         const expectedItems = [...mockPosts, ...mockComments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        expect(result).toEqual(expectedItems);
+        expect(result).toEqual({ unmoderatedItems: expectedItems });
     });
 
     it('should handle errors when fetching posts', async () => {
@@ -674,5 +684,62 @@ describe('getUnmoderatedItems', () => {
 
         expect(Post.find).toHaveBeenCalled();
         expect(Comment.find).not.toHaveBeenCalled();
+    });
+});
+
+//////////////////////////////////////////////////////////////////////////// Buttons/Actions ////////////////////////////////////////////////////////////////////////////
+describe('removeItem', () => {
+    it('should return an error when input parameters are invalid', async () => {
+        const result = await removeItem(123, 'post');
+        expect(result).toHaveProperty('err');
+        expect(result.err).toHaveProperty('status', 400);
+        expect(result.err).toHaveProperty('message');
+    });
+
+    it('should remove a post when item type is post', async () => {
+        const itemId = 'postId';
+        const itemType = 'post';
+
+        // Mock the Post model's findByIdAndUpdate method
+        Post.findByIdAndUpdate = jest.fn().mockResolvedValue({});
+
+        const result = await removeItem(itemId, itemType);
+
+        // Check if Post.findByIdAndUpdate was called with the correct arguments
+        expect(Post.findByIdAndUpdate).toHaveBeenCalledWith(itemId, { 'moderator_details.removed_flag': true });
+
+        // Check if the result contains the success message
+        expect(result).toHaveProperty('message');
+    });
+
+    it('should remove a comment when item type is comment', async () => {
+        const itemId = 'commentId';
+        const itemType = 'comment';
+
+        // Mock the Comment model's findByIdAndUpdate method
+        Comment.findByIdAndUpdate = jest.fn().mockResolvedValue({});
+
+        const result = await removeItem(itemId, itemType);
+
+        // Check if Comment.findByIdAndUpdate was called with the correct arguments
+        expect(Comment.findByIdAndUpdate).toHaveBeenCalledWith(itemId, { 'moderator_details.removed_flag': true });
+
+        // Check if the result contains the success message
+        expect(result).toHaveProperty('message');
+    });
+
+    it('should handle errors when removing an item', async () => {
+        const itemId = 'itemId';
+        const itemType = 'post';
+
+        // Mock the Post model's findByIdAndUpdate method to throw an error
+        Post.findByIdAndUpdate = jest.fn().mockRejectedValue(new Error('Error removing item'));
+
+        const result = await removeItem(itemId, itemType);
+
+        // Check if the result contains an error object
+        expect(result).toHaveProperty('err');
+        expect(result.err).toHaveProperty('status', 500);
+        expect(result.err).toHaveProperty('message');
     });
 });
