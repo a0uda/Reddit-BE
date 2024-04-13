@@ -1,4 +1,7 @@
-import { getBlockedUserHelper, getMutedCommunitiesHelper } from "../services/users.js";
+import {
+  getBlockedUserHelper,
+  getMutedCommunitiesHelper,
+} from "../services/users.js";
 import {
   getAccountSettingsFormat,
   getProfileSettingsFormat,
@@ -16,31 +19,37 @@ import {
 } from "../utils/userSettings.js";
 
 import { verifyAuthToken } from "./userAuth.js";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function getSettings(request, flag) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
-  if (!user) {
-    return { success, err, status, user, msg };
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    var settings;
+    if (flag == "Account") settings = getAccountSettingsFormat(user);
+    else if (flag == "Profile") settings = getProfileSettingsFormat(user);
+    else if (flag == "Feed") settings = getFeedSettingsFormat(user);
+    else if (flag == "Notification")
+      settings = getNotificationsSettingsFormat(user);
+    else if (flag == "Chat") settings = getChatAndMsgsSettingsFormat(user);
+    else if (flag == "Email") settings = getEmailSettingsFormat(user);
+    return {
+      success: true,
+      message: "Settings retrieved successfully",
+      settings: settings,
+    };
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
   }
-  var settings;
-  if (flag == "Account") settings = getAccountSettingsFormat(user);
-  else if (flag == "Profile") settings = getProfileSettingsFormat(user);
-  else if (flag == "Feed") settings = getFeedSettingsFormat(user);
-  else if (flag == "Notification")
-    settings = getNotificationsSettingsFormat(user);
-  else if (flag == "Chat") settings = getChatAndMsgsSettingsFormat(user);
-  else if (flag == "Email") settings = getEmailSettingsFormat(user);
-  return {
-    success: true,
-    settings: settings,
-  };
 }
 
 export async function getSafetySettings(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
-      return { success, err, status, user, msg };
+      return generateResponse(success, status, err);
     }
 
     const blockedUsers = await getBlockedUserHelper(user);
@@ -49,14 +58,14 @@ export async function getSafetySettings(request) {
     const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
     return { success: true, settings };
   } catch (error) {
-    return { success: false, error };
+    return generateResponse(false, 400, error.message);
   }
 }
 
 export async function setSettings(request, flag) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
 
   const settings = request.body;
@@ -83,6 +92,6 @@ export async function setSettings(request, flag) {
 
   return {
     success: true,
-    msg: "Settings set successfully",
+    message: "Settings set successfully",
   };
 }

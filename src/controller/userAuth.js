@@ -10,23 +10,7 @@ import {
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validator from "validator";
-
-export function generateResponse(success, status, message) {
-  if (!success) {
-    return {
-      success: false,
-      error: {
-        status: status,
-        message: message,
-      },
-    };
-  } else {
-    return {
-      success: true,
-      message: message,
-    };
-  }
-}
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function isUsernameAvailable(username) {
   console.log(username);
