@@ -67,7 +67,9 @@ import {
 } from "../services/communityProfileAndBannerPictures.js";
 
 import {
-    getRemovedItems
+    getRemovedItems,
+    getReportedItems,
+    getUnmoderatedItems
 } from "../services/communityQueue.js";
 
 const communityRouter = express.Router();
@@ -259,6 +261,37 @@ communityRouter.get("/communities/about/removed-or-spammed/:community_name", asy
         next(error);
     }
 });
+
+communityRouter.get("/communities/about/reported/:community_name", async (req, res, next) => {
+    try {
+        const { community_name, time_filter, posts_or_comments } = req.body;
+
+        const { err, reportedItems } = await getReportedItems(community_name, time_filter, posts_or_comments);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(reportedItems);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+
+communityRouter.get("/communities/about/unmoderated/:community_name", async (req, res, next) => {
+    try {
+        const { community_name, time_filter, posts_or_comments } = req.body;
+
+        const { err, unmoderatedItems } = await getUnmoderatedItems(community_name, time_filter, posts_or_comments);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(unmoderatedItems);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+
 
 //////////////////////////////////////////////////////////////////////// Community removal reasons ////////////////////////////////////////////////////
 communityRouter.get("/communities/get-removal-reasons/:community_name", async (req, res, next) => {
