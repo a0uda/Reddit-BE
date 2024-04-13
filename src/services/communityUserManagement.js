@@ -481,15 +481,8 @@ const getModerators = async (community_name) => {
                 err: { status: 500, message: "Community not found." },
             };
         }
-        const moderators = [];
-        community.moderators.forEach((moderator) => {
-            moderators.push({
-                username: moderator.username,
-                profile_picture: moderator.profile_picture,
-                moderator_since: moderator.moderator_since,
-            });
-        });
-        return { moderators };
+
+        return { moderators: community.moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -519,11 +512,7 @@ const getEditableModerators = async (request) => {
 
         for (let i = 0; i < community.moderators.length; i++) {
             if (community.moderators[i].moderator_since > moderator.moderator_since) {
-                editableModerators.push({
-                    username: community.moderators[i].username,
-                    profile_picture: community.moderators[i].profile_picture,
-                    moderator_since: community.moderators[i].moderator_since,
-                });
+                editableModerators.push(community.moderators[i]);
             };
         }
 
