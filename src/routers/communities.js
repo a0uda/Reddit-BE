@@ -67,9 +67,7 @@ import {
 } from "../services/communityProfileAndBannerPictures.js";
 
 import {
-    getRemovedDiscussionItems,
-    getEditedDiscussionItems,
-    getUnmoderatedDiscussionItems,
+    getRemovedItems
 } from "../services/communityQueue.js";
 
 const communityRouter = express.Router();
@@ -246,49 +244,19 @@ communityRouter.get("/communities/get-members-count/:community_name", async (req
 })
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
-communityRouter.get("/communities/r/mod/about/spam", async (req, res, next) => {
+
+communityRouter.get("/communities/about/removed-or-spammed/:community_name", async (req, res, next) => {
     try {
-        const { community_name, time_filter, posts_or_comments } = req.body
+        const { community_name, time_filter, posts_or_comments } = req.body;
 
-        const removedDiscussionItems = await getRemovedDiscussionItems(community_name, time_filter, posts_or_comments)
+        const { err, removedItems } = await getRemovedItems(community_name, time_filter, posts_or_comments);
 
-        if (removedDiscussionItems.err) { return next(removedDiscussionItems.err) }
+        if (err) { return next(err) }
 
-        return res.status(200).send(removedDiscussionItems)
+        return res.status(200).send(removedItems);
     }
     catch (error) {
-        next(error)
-    }
-});
-
-communityRouter.get("/communities/r/mod/about/edited", async (req, res, next) => {
-    try {
-        const { community_name, time_filter, posts_or_comments } = req.body
-
-        const editedDiscussionItems = await getEditedDiscussionItems(community_name, time_filter, posts_or_comments)
-
-        if (editedDiscussionItems.err) { return next(editedDiscussionItems.err) }
-
-        return res.status(200).send(editedDiscussionItems)
-    }
-    catch (error) {
-        next(error)
-    }
-});
-
-
-communityRouter.get("/communities/r/mod/about/unmoderated", async (req, res, next) => {
-    try {
-        const { community_name, time_filter } = req.body
-
-        const unmoderatedDiscussionItems = await getUnmoderatedDiscussionItems(community_name, time_filter)
-
-        if (unmoderatedDiscussionItems.err) { return next(unmoderatedDiscussionItems.err) }
-
-        return res.status(200).send(unmoderatedDiscussionItems)
-    }
-    catch (error) {
-        next(error)
+        next(error);
     }
 });
 
