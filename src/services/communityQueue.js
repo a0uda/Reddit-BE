@@ -145,9 +145,11 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
 
     // Initialize the query object. This will be used to fetch the posts and comments.
     let query = {
-      'moderator_details.approved_flag': false,
-      'moderator_details.removed_flag': false,
-      'moderator_details.spammed_flag': false
+      $and: [
+      {'moderator_details.approved_flag': false},
+      {'moderator_details.removed_flag': false},
+      {'moderator_details.spammed_flag': false}
+      ]
     };
 
     // If a specific community is specified, add it to the query. This will fetch posts and comments from that community only.
