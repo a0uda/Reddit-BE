@@ -11,7 +11,7 @@ async function generateRandomGeneralSettings() {
   for (let i = 0; i < GENERAL_SETTINGS_COUNT; i++) {
 
     const fakeSetting = {
-      // title: faker.company.buzzPhrase(),
+      title: faker.company.buzzPhrase(),
       description: faker.lorem.sentences(),
       welcome_message: {
         send_welcome_message_flag: faker.datatype.boolean(),

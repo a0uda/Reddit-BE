@@ -74,26 +74,47 @@ const commentSchema = new mongoose.Schema({
     default: true,
   },
 
+  // moderator_details: {
+  //   //if in my own profile then Im the moderator
+  //   approved_by: String,
+  //   approved_date: Date,
+  //   removed_by: String,
+  //   removed_date: Date,
+  //   spammed_by: String,
+  //   spammed_type: String,
+  //   removed_flag: {
+  //     type: Boolean,
+  //     default: false,
+  //   },
+  //   approved_flag: {
+  //     type: Boolean,
+  //     default: false,
+  //   },
+  //   spammed_flag: {
+  //     type: Boolean,
+  //     default: false,
+  //   },
+  // },
+
   moderator_details: {
-    //if in my own profile then Im the moderator
-    approved_by: String,
-    approved_date: Date,
-    removed_by: String,
-    removed_date: Date,
-    spammed_by: String,
-    spammed_type: String,
-    removed_flag: {
-      type: Boolean,
-      default: false,
-    },
-    approved_flag: {
-      type: Boolean,
-      default: false,
-    },
-    spammed_flag: {
-      type: Boolean,
-      default: false,
-    },
+    approved_flag: {type: Boolean, default: false},
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    approved_date: { type: Date },
+   
+    removed_flag: { type: Boolean, default: false },
+    removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    removed_date: { type: Date },
+    removal_reason: { type: String }, // TODO: add removal reason (optional).
+   
+    spammed_flag: { type: Boolean, default: false },
+    spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    spammed_type: { type: String },
+    removal_reason: { type: String }, // TODO: add removal reason (optional).
+
+    // TODO: add reported_flag, reported_by, reported_type.
+    reported_flag: { type: Boolean, default: false },
+    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reported_type: { type: String },
   },
 });
 

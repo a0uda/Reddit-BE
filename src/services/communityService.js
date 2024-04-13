@@ -20,51 +20,30 @@ import {
   deleteRule,
   getApprovedUserView,
 } from "../utils/communities.js";
-/**
- * 
- * @param {object} requestBody 
- * @param {string} requestBody.name - The name of the new community.
- * @param {string} requestBody.type - The type of the new community.
- * @param {boolean} requestBody.nsfw_flag - The nsfw flag of the new community.
- * @param {string} requestBody.category - The category of the new community.
- * 
- * @returns
- * @property {string} community_name - The name of the new community.
- * @property {Object} err - The error message and status code.
- * 
- * @example
- * const requestBody = {
- * name: "new_community",
- * type: "public",
- * nsfw_flag: false,
- * category: "example_category",
- * }
- * @example
- * Output:
- * {
- * community_name: "new_community"
- * }
- */
-const addNewCommunity = async (requestBody) => {
-  // "title" and "visibility/type" have been removed from community to the general settings.
+
+const addNewCommunity = async (requestBody, creator) => {
   const { name, type, nsfw_flag, category } = requestBody;
 
   const communityGeneralSettings = new CommunityGeneralSettings();
   const communityContentControls = new CommunityContentControls();
   const communityPostsAndComments = new CommunityPostsAndComments();
-  //const communityAppearance = new CommunityAppearance();
+
+  communityGeneralSettings.title = name;
+  communityGeneralSettings.type = type;
+  communityGeneralSettings.nsfw_flag = nsfw_flag;
 
   const community = new Community({
     name,
-    type,
-    nsfw_flag,
     category,
+    owner: creator._id,
+    moderators: [{
+      username: creator.username
+    }],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
-    // appearance: communityAppearance._id,
   });
-
+  
   try {
     const duplicate_community = await Community.findOne({ name: name });
 
@@ -77,11 +56,10 @@ const addNewCommunity = async (requestBody) => {
     await communityGeneralSettings.save();
     await communityContentControls.save();
     await communityPostsAndComments.save();
-    await communityAppearance.save();
 
     const savedCommunity = await community.save();
 
-    return { community_name: savedCommunity.name };
+    return {community: savedCommunity};
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -191,100 +169,6 @@ const getCommunityMembersCount = async (community_name) => {
     const community = await Community.findOne({ name: community_name });
 
     return { members_count: community.members_count };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-//////////////////////////////////////////////////////////////////////// Mod Queue /////////////////////////////////////////////////////////////////////////
-const getRemovedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Determine the discussion item type based on posts_or_comments
-    let itemType;
-    if (posts_or_comments.toLowerCase() === 'posts and comments') {
-      itemType = ['post', 'comment'];
-    } else {
-      itemType = posts_or_comments.toLowerCase();
-    }
-
-    // Initialize the query object
-    let query = {
-      marked_as_spam_by_a_moderator: true,
-      discussion_item_type: { $in: itemType }
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the removed discussion items
-    const removedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return removedDiscussionItems;
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getEditedDiscussionItems = async (community_name, time_filter, posts_or_comments) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Determine the discussion item type based on posts_or_comments
-    let itemType;
-    if (posts_or_comments.toLowerCase() === 'posts and comments') {
-      itemType = ['post', 'comment'];
-    } else {
-      itemType = posts_or_comments.toLowerCase();
-    }
-
-    // Initialize the query object
-    let query = {
-      edited_flag: true,
-      discussion_item_type: { $in: itemType }
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the edited discussion items
-    const editedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return editedDiscussionItems;
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
-
-const getUnmoderatedDiscussionItems = async (community_name, time_filter) => {
-  try {
-    // Determine the sort order based on the time_filter
-    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
-
-    // Initialize the query object
-    let query = {
-      unmoderated_flag: true,
-    };
-
-    // If a specific community is specified, add it to the query
-    if (community_name !== 'All Subreddits' && community_name != null) {
-      const community = await Community.findOne({ name: community_name });
-      query.written_in_community = community._id;
-    }
-
-    // Fetch the unmoderated discussion items
-    const unmoderatedDiscussionItems = await DiscussionItemMinimal.find(query).sort({ created_at: sortOrder });
-
-    return unmoderatedDiscussionItems;
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -470,10 +354,6 @@ export {
   getDiscussionItemsByRandomCategory,
 
   getCommunityMembersCount,
-
-  getRemovedDiscussionItems,
-  getEditedDiscussionItems,
-  getUnmoderatedDiscussionItems,
 
   getDetailsWidget,
   editDetailsWidget,

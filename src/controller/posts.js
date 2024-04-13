@@ -1,7 +1,7 @@
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { communityNameExists } from "../utils/communities.js";
-import { getCommunityPostsAndComments } from "../services/communitySettings.js";
+import { getCommunityPostsAndComments } from "../services/communitySettingsService.js";
 import { toggler } from "../utils/toggler.js";
 import { checkNewPostInput, getPostCommentsHelper } from "../services/posts.js";
 
