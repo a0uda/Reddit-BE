@@ -78,11 +78,13 @@ export async function signupUser(requestBody) {
 
 export async function loginUser(requestBody) {
   const { username, password } = requestBody;
+  console.log("request body is ", requestBody);
   if (!username || !password) {
     return generateResponse(false, 400, "Missing required field");
   }
   const user = await User.findOne({ username });
-
+  console.log("username is ", username);
+  console.log("password is ", password);
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return generateResponse(false, 400, "Username or password are incorrect");
   }

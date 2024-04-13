@@ -132,9 +132,6 @@ export async function createPost(request) {
   };
 }
 
-//TODO still needs modifications beacuse we must add community name that we
-//shared the post to +flags -> maybe make it a new schema
-//aw akhly fe flag m3a post y2ol howa repsted wla la + caption w lma agy a3ml share a3ml new post
 export async function sharePost(request) {
   try {
     const { success, error, post, user, message } = await getPost(
@@ -147,26 +144,69 @@ export async function sharePost(request) {
     const {
       post_in_community_flag,
       community_name,
-      caption: optionalCaption,
+      caption,
       oc_flag,
       spoiler_flag,
       nsfw_flag,
     } = request.body;
-    if (post_in_community_flag === undefined) {
+    const shared_post = new Post({
+      created_at: Date.now(),
+      user_id: user._id,
+      type: "reposted",
+      title: caption,
+      post_in_community_flag,
+      oc_flag,
+      spoiler_flag,
+      nsfw_flag,
+      is_reposted_flag: true,
+      reposted: {
+        original_post_id: post._id,
+      },
+    });
+    if (post_in_community_flag == undefined || caption == undefined) {
       return {
         success: false,
         error: {
           status: 400,
-          message: "post_in_community_flag is missing",
+          message: "post_in_community_flag and caption are required",
+        },
+      };
+    }
+    // console.log(community_name);
+    //1.check user can't repost same post twice(IN SAME COMMUNITY)
+    const existingRepost = await Post.findOne({
+      "reposted.original_post_id": post._id,
+      user_id: user._id,
+      post_in_community_flag,
+      community_name,
+    });
+    if (existingRepost) {
+      return {
+        success: false,
+        error: {
+          status: 400,
+          message: "You have already reposted this post in the same community/your profile",
+        },
+      };
+    }
+    //2.check user can't repost a reposted post
+    if (post.is_reposted_flag) {
+      return {
+        success: false,
+        error: {
+          status: 400,
+          message: "You cannot repost a reposted post",
         },
       };
     }
 
+    //check if repost in community
     if (post_in_community_flag) {
       const { success, community, error } = await getCommunity(community_name);
       if (!success) {
         return { success, error };
       }
+     
       const { err, posts_and_comments } = await getCommunityPostsAndComments(
         community_name
       );
@@ -182,13 +222,35 @@ export async function sharePost(request) {
           },
         };
       }
+      //2. if community is restricted or private only approved users can post
+      const { err: err2, general_settings } = await getCommunityGeneralSettings(
+        community_name
+      );
+      if (err2) {
+        return next(err2);
+      }
+      if (general_settings.visibility != "Public") {
+        const result = await checkApprovedUser(community, user._id);
+        if (!result.success) {
+          return result;
+        }
+      }
+
+      //3. check if user is banned he can't post
+      const result = await checkBannedUser(community, user._id);
+      if (!result.success) {
+        return result;
+      }
+
+      shared_post.community_name = community_name;
+      shared_post.community_id = community._id;
     }
-    var caption;
-    if (!optionalCaption) caption = null;
-    post.reposted.push({ shared_by: user._id, caption });
+
     post.shares_count++;
     post.user_details.total_shares++;
+    await shared_post.save();
     await post.save();
+
     return {
       success: true,
       error: {},
@@ -743,4 +805,49 @@ export async function getUserPostDetails(request) {
     },
     message: "Post user details retrieved sucessfully",
   };
+}
+
+export async function postDelete(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const postId = request.body.id;
+
+    const post = await Post.findOne({
+      _id: postId,
+      user_id: user._id,
+    });
+
+    if (!post) {
+      return {
+        success: false,
+        status: 400,
+        err: "Post Not Found or User Not Authorized",
+        msg: "Post not found or user is not authorized to delete it.",
+      };
+    }
+
+    post.deleted_at = Date.now();
+    post.deleted = true;
+    await post.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Post deleted successfully",
+    };
+  } catch (error) {
+    // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
 }
