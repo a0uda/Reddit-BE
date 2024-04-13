@@ -185,7 +185,8 @@ export async function sharePost(request) {
         success: false,
         error: {
           status: 400,
-          message: "You have already reposted this post in the same community/your profile",
+          message:
+            "You have already reposted this post in the same community/your profile",
         },
       };
     }
@@ -206,7 +207,7 @@ export async function sharePost(request) {
       if (!success) {
         return { success, error };
       }
-     
+
       const { err, posts_and_comments } = await getCommunityPostsAndComments(
         community_name
       );
@@ -607,8 +608,8 @@ export async function postSave(request) {
       return {
         success: false,
         status: 400,
-        err: "Post Not Found or User Not Authorized",
-        msg: "Post not found or user is not authorized to modify it.",
+        err: "Post Not Found ",
+        msg: "Post not found ",
       };
     }
 

@@ -354,8 +354,8 @@ export async function commentSave(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
-        msg: "Comment not found or user is not authorized to modify it.",
+        err: "Comment Not Found ",
+        msg: "Comment not found ",
       };
     }
 
