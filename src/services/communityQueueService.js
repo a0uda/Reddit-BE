@@ -1,5 +1,6 @@
 import {Post} from '../db/models/Post.js';
 import {Comment} from '../db/models/Comment.js';
+import {Community} from '../db/models/Community.js';
 
 // Mod Tools --> Queue --> (Moderated, Removed, Reported, Edited, Unmoderated) Pages.
 // In each of these pages, the user can filter the discussion items by community and time.
@@ -189,21 +190,58 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
 
 //////////////////////////////////////////////////////////////////////////// Buttons/Actions ////////////////////////////////////////////////////////////////////////////
 
-const removeItem = async (item_id, item_type) => {
-  try {
+const removeItem = async (item_id, item_type, removed_by, removed_removal_reason = null) => {
+  try {    
     // Validate the input parameters. They should be strings.
     if (typeof item_id !== 'string' || typeof item_type !== 'string') {
       return { err: { status: 400, message: 'Invalid input parameters' } };
     }
 
+    // Validate that the input is either 'post' or 'comment'.
+    if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+      return { err: { status: 400, message: 'Invalid item type' } };
+    }
+
+    // Validate that the post or comment exists in the database.
+    if (item_type.toLowerCase() === 'post') {
+      const post = await Post.findById(item_id);
+      if (!post) {
+        return { err: { status: 404, message: 'Post not found' } };
+      }
+    }
+    if (item_type.toLowerCase() === 'comment') {
+      const comment = await Comment.findById(item_id);
+      if (!comment) {
+        return { err: { status: 404, message: 'Comment not found' } };
+      }
+    }
+
+    // If a removal reason is provided, validate that it is a valid removal reason title.
+    if (removed_removal_reason) {
+      const community = await Community.findOne({ 'removal_reasons.removal_reason_title': removed_removal_reason });
+      if (!community) {
+        return { err: { status: 400, message: 'Invalid removal reason' } };
+      }
+    }
+
     // If the item type is 'post', remove the post.
     if (item_type.toLowerCase() === 'post') {
-      await Post.findByIdAndUpdate(item_id, { 'moderator_details.removed_flag': true });
+      await Post.findByIdAndUpdate(item_id, { 
+        'moderator_details.removed_flag': true,
+        'moderator_details.removed_by': removed_by,
+        'moderator_details.removed_date': new Date(),
+        'moderator_details.removed_removal_reason': removed_removal_reason
+      });
     }
 
     // If the item type is 'comment', remove the comment.
     if (item_type.toLowerCase() === 'comment') {
-      await Comment.findByIdAndUpdate(item_id, { 'moderator_details.removed_flag': true });
+      await Comment.findByIdAndUpdate(item_id, { 
+        'moderator_details.removed_flag': true,
+        'moderator_details.removed_by': removed_by,
+        'moderator_details.removed_date': new Date(),
+        'moderator_details.removed_removal_reason': removed_removal_reason
+      });
     }
 
     // Return a success message.
@@ -214,10 +252,12 @@ const removeItem = async (item_id, item_type) => {
   }
 }
 
+
+
 export { 
   getRemovedItems, 
   getReportedItems, 
   getUnmoderatedItems,
 
-  removeItem
+  removeItem,
 };
