@@ -177,7 +177,7 @@ export async function muteCommunity(request) {
     return {
       success: true,
       status: 200,
-      msg: `Communiy ${operation} successfully.`,
+      msg: `Community ${operation} successfully.`,
     };
   } catch (error) {
     console.error("Error:", error);
