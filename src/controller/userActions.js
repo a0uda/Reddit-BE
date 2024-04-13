@@ -7,6 +7,7 @@ import { followUserHelper } from "../services/users.js";
 import bcrypt from "bcryptjs";
 import { Post } from "../db/models/Post.js";
 import { getPost } from "./posts.js";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function blockUser(request) {
   try {
@@ -193,62 +194,57 @@ export async function favoriteCommunity(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
-      return { success, err, status, user, msg };
+      return generateResponse(success, status, err);
+    }
+    const community_name = request.body.community_name;
+    if (!community_name) {
+      return generateResponse(false, 400, "Missing community_name");
     }
     const communityToFav = await Community.findOne({
       name: request.body.community_name,
     });
     if (!communityToFav) {
-      return {
-        success: false,
-        err: "Community Not Found",
-        status: 404,
-      };
+      return generateResponse(false, 404, "Community not found");
     }
     const userCommunities = user.communities;
 
-    // console.log(communityToFav._id)
-    // console.log(communityToFav._id)
+    console.log(communityToFav._id);
+    console.log(userCommunities);
     const index = userCommunities.findIndex(
-      (community) => community.id === communityToFav._id.toString()
+      (community) => community.id.toString() === communityToFav._id.toString()
     );
     if (index !== -1) {
       userCommunities[index].favorite_flag =
         !userCommunities[index].favorite_flag;
       user.markModified("communities");
       await user.save();
-      return {
-        success: true,
-        msg: `Community modified successfully.`,
-      };
+      return generateResponse(true, null, "Community modified successfully.");
     }
 
     const userModCommunities = user.moderated_communities;
 
     const index2 = userModCommunities.findIndex(
-      (community) => community.id === communityToFav._id.toString()
+      (community) => community.id.toString() === communityToFav._id.toString()
     );
     if (index2 !== -1) {
       userModCommunities[index2].favorite_flag =
         !userModCommunities[index2].favorite_flag;
       user.markModified("moderated_communities");
       await user.save();
-      return {
-        success: true,
-        msg: `Moderated community modified successfully.`,
-      };
+      return generateResponse(
+        true,
+        null,
+        "Moderated community modified successfully."
+      );
     }
 
-    return {
-      success: false,
-      err: "Community Not Found in user",
-      status: 404,
-    };
+    return generateResponse(
+      false,
+      404,
+      "Community not found in user communities"
+    );
   } catch (error) {
-    return {
-      success: false,
-      err: "Internal Server Error",
-    };
+    generateResponse(false, 500, "Internal Server error");
   }
 }
 
