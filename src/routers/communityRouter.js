@@ -16,19 +16,6 @@ import {
     addComment
 } from "../services/communityService.js";
 
-import { 
-    addNewCommunityController 
-} from "../controller/communityController.js";
-
-import { 
-    getCommunityGeneralSettingsController, 
-    getCommunityContentControlsController, 
-    getCommunityPostsAndCommentsController, 
-    changeCommunityGeneralSettingsController, 
-    changeCommunityContentControlsController, 
-    changeCommunityPostsAndCommentsController 
-} from "../controller/communitySettingsController.js";
-
 import {
     banUser,
     getBannedUsers,
@@ -67,14 +54,31 @@ import {
     deleteCommunityBannerPicture,
 } from "../services/communityProfileAndBannerPictures.js";
 
-import {
-    getRemovedItems,
-    getReportedItems,
-    getUnmoderatedItems
-} from "../services/communityQueueService.js";
+import { 
+    addNewCommunityController 
+} from "../controller/communityController.js";
+
+import { 
+    getCommunityGeneralSettingsController, 
+    getCommunityContentControlsController, 
+    getCommunityPostsAndCommentsController, 
+    changeCommunityGeneralSettingsController, 
+    changeCommunityContentControlsController, 
+    changeCommunityPostsAndCommentsController 
+} from "../controller/communitySettingsController.js";
+
+import { 
+    getRemovedItemsController, 
+    getReportedItemsController, 
+    getUnmoderatedItemsController 
+} from '../controller/communityQueueController.js';
+
 
 const communityRouter = express.Router();
 
+
+
+//////////////////////////////////////////////////////////////////////// Add Community //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
@@ -85,6 +89,11 @@ communityRouter.get("/communities/get-posts-and-comments/:community_name", getCo
 communityRouter.post("/communities/change-general-settings/:community_name", changeCommunityGeneralSettingsController);
 communityRouter.post("/communities/change-content-controls/:community_name", changeCommunityContentControlsController);
 communityRouter.post("/communities/change-posts-and-comments/:community_name", changeCommunityPostsAndCommentsController);
+
+//////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
+communityRouter.get("/communities/about/removed-or-spammed/:community_name", getRemovedItemsController);
+communityRouter.get("/communities/about/reported/:community_name", getReportedItemsController);
+communityRouter.get("/communities/about/unmoderated/:community_name", getUnmoderatedItemsController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
@@ -148,54 +157,6 @@ communityRouter.get("/communities/get-members-count/:community_name", async (req
         next(error)
     }
 })
-
-//////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
-
-communityRouter.get("/communities/about/removed-or-spammed/:community_name", async (req, res, next) => {
-    try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
-
-        const { err, removedItems } = await getRemovedItems(community_name, time_filter, posts_or_comments);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(removedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-});
-
-communityRouter.get("/communities/about/reported/:community_name", async (req, res, next) => {
-    try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
-
-        const { err, reportedItems } = await getReportedItems(community_name, time_filter, posts_or_comments);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(reportedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-});
-
-communityRouter.get("/communities/about/unmoderated/:community_name", async (req, res, next) => {
-    try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
-
-        const { err, unmoderatedItems } = await getUnmoderatedItems(community_name, time_filter, posts_or_comments);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(unmoderatedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-});
-
 
 //////////////////////////////////////////////////////////////////////// Community removal reasons ////////////////////////////////////////////////////
 communityRouter.get("/communities/get-removal-reasons/:community_name", async (req, res, next) => {
