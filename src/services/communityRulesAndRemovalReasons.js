@@ -127,7 +127,7 @@ const editRemovalReason = async (requestBody) => {
 
         if (!community) {
             return {
-                err: { status: 500, message: "community name does not exist " },
+                err: { status: 400, message: "community name does not exist " },
             };
         }
         const removal_reasons = community.removal_reasons;
@@ -136,7 +136,7 @@ const editRemovalReason = async (requestBody) => {
         );
         if (removal_reason_index === -1) {
             return {
-                err: { status: 500, message: "removal reason id does not exist " },
+                err: { status: 400, message: "removal reason id does not exist " },
             };
         }
         removal_reasons[removal_reason_index].removal_reason_title =
