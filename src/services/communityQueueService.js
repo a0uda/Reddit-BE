@@ -57,7 +57,7 @@ const getRemovedItems = async (community_name, time_filter, posts_or_comments) =
       removedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
   
       // Return the sorted array of removed posts and comments.
-      return removedItems;
+      return {removedItems};
       
     } catch (error) {
       // If an error occurs, return an error object with the status code and message.
@@ -112,9 +112,9 @@ const getReportedItems = async (community_name, time_filter, posts_or_comments) 
     // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
     let reportedItems = [...reportedPosts, ...reportedComments];
     reportedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
-
+    
     // Return the sorted array of reported posts and comments.
-    return reportedItems;
+    return {reportedItems};
     
   } catch (error) {
     // If an error occurs, return an error object with the status code and message.
@@ -175,7 +175,7 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
     unmoderatedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
 
     // Return the sorted array of unmoderated posts and comments.
-    return unmoderatedItems;
+    return {unmoderatedItems};
     
   } catch (error) {
     // If an error occurs, return an error object with the status code and message.

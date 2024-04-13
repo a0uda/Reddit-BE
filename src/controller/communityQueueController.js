@@ -10,7 +10,7 @@ import {
 
 export const getRemovedItemsController = async (req, res, next) => {
     try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.body;
         
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -18,6 +18,8 @@ export const getRemovedItemsController = async (req, res, next) => {
             const err = { status: status, message: auth_error };
             return next(err);
         }
+
+        const community_name = req.params.community_name;
 
         const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
         
@@ -39,7 +41,7 @@ export const getRemovedItemsController = async (req, res, next) => {
 
 export const getReportedItemsController = async (req, res, next) => {
     try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.body;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -48,13 +50,15 @@ export const getReportedItemsController = async (req, res, next) => {
             return next(err);
         }
 
+        const community_name = req.params.community_name;
+
         const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
         
         if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Removed Items Queue." };
+            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Reported Items Queue." };
             return next(err);
         }
-
+        
         const { err, reportedItems } = await getReportedItems(community_name, time_filter, posts_or_comments);
 
         if (err) { return next(err) }
@@ -68,7 +72,7 @@ export const getReportedItemsController = async (req, res, next) => {
 
 export const getUnmoderatedItemsController = async (req, res, next) => {
     try {
-        const { community_name, time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.body;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -76,6 +80,8 @@ export const getUnmoderatedItemsController = async (req, res, next) => {
             const err = { status: status, message: auth_error };
             return next(err);
         }
+
+        const community_name = req.params.community_name;
 
         const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
         
