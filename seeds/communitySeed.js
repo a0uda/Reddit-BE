@@ -38,7 +38,7 @@ async function generateRandomCommunities() {
 
     const communities = [];
     const users = await User.find();
-    const owner = users[0]; // Set the first user as the owner of all communities.
+    const owner = await User.findOne();
 
     for (let i = 0; i < COMMUNITY_COUNT; i++) {
 
@@ -48,7 +48,6 @@ async function generateRandomCommunities() {
         const muted_users = await generateRandomMutedUsers();
         const banned_users = await generateRandomBannedUsers();
         const approved_users = await generateRandomApprovedUsers();
-        const users = await User.find();
         const moderators = users.slice(0, 3); // Select first 3 users as moderators
         const invitedModerators = users.slice(3, 6);
 
@@ -60,7 +59,7 @@ async function generateRandomCommunities() {
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
             ]),
             members_count: faker.number.int({ min: 0, max: 1000 }),
-            owner: getRandomElement(moderators)._id,
+            owner: owner._id,
 
             // Part 1 of embedded documents.
             general_settings: generalSettingsIds[i],

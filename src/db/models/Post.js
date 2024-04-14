@@ -104,12 +104,12 @@ export const postSchema = new mongoose.Schema({
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
-    removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
    
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String },
-    removal_reason: { type: String }, // TODO: add removal reason (optional).
+    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },

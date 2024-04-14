@@ -1,10 +1,12 @@
 import {Post} from '../db/models/Post.js';
 import {Comment} from '../db/models/Comment.js';
+import {Community} from '../db/models/Community.js';
 
 // Mod Tools --> Queue --> (Moderated, Removed, Reported, Edited, Unmoderated) Pages.
 // In each of these pages, the user can filter the discussion items by community and time.
 
 
+////////////////////////////////////////////////////////////////////////// Getting Queue Items //////////////////////////////////////////////////////////////////////////
 // This function fetches removed posts and comments from a specific community, sorted by creation date.
 const getRemovedItems = async (community_name, time_filter, posts_or_comments) => {
     try {
@@ -57,7 +59,7 @@ const getRemovedItems = async (community_name, time_filter, posts_or_comments) =
       removedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
   
       // Return the sorted array of removed posts and comments.
-      return removedItems;
+      return {removedItems};
       
     } catch (error) {
       // If an error occurs, return an error object with the status code and message.
@@ -88,7 +90,10 @@ const getReportedItems = async (community_name, time_filter, posts_or_comments) 
 
     // Initialize the query object. This will be used to fetch the posts and comments.
     let query = {
-      'moderator_details.reported_flag': true
+      $and: [
+        {'moderator_details.reported_flag': true},
+        {'moderator_details.removed_flag': false}
+      ]
     };
 
     // If a specific community is specified, add it to the query. This will fetch posts and comments from that community only.
@@ -112,9 +117,9 @@ const getReportedItems = async (community_name, time_filter, posts_or_comments) 
     // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
     let reportedItems = [...reportedPosts, ...reportedComments];
     reportedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
-
+    
     // Return the sorted array of reported posts and comments.
-    return reportedItems;
+    return {reportedItems};
     
   } catch (error) {
     // If an error occurs, return an error object with the status code and message.
@@ -175,7 +180,7 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
     unmoderatedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
 
     // Return the sorted array of unmoderated posts and comments.
-    return unmoderatedItems;
+    return {unmoderatedItems};
     
   } catch (error) {
     // If an error occurs, return an error object with the status code and message.
@@ -183,4 +188,191 @@ const getUnmoderatedItems = async (community_name, time_filter, posts_or_comment
   }
 };
 
-export { getRemovedItems, getReportedItems, getUnmoderatedItems };
+//////////////////////////////////////////////////////////////////////////// Buttons/Actions ////////////////////////////////////////////////////////////////////////////
+
+const removeItem = async (item_id, item_type, removed_by, removed_removal_reason = null) => {
+  try {    
+    // Validate the input parameters. They should be strings.
+    if (typeof item_id !== 'string' || typeof item_type !== 'string') {
+      return { err: { status: 400, message: 'Invalid input parameters' } };
+    }
+
+    // Validate that the input is either 'post' or 'comment'.
+    if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+      return { err: { status: 400, message: 'Invalid item type' } };
+    }
+
+    // Validate that the post or comment exists in the database.
+    if (item_type.toLowerCase() === 'post') {
+      const post = await Post.findById(item_id);
+      if (!post) {
+        return { err: { status: 404, message: 'Post not found' } };
+      }
+    }
+    if (item_type.toLowerCase() === 'comment') {
+      const comment = await Comment.findById(item_id);
+      if (!comment) {
+        return { err: { status: 404, message: 'Comment not found' } };
+      }
+    }
+
+    // If a removal reason is provided, validate that it is a valid removal reason title.
+    if (removed_removal_reason) {
+      const community = await Community.findOne({ 'removal_reasons.removal_reason_title': removed_removal_reason });
+      if (!community) {
+        return { err: { status: 400, message: 'Invalid removal reason' } };
+      }
+    }
+
+    // If the item type is 'post', remove the post.
+    if (item_type.toLowerCase() === 'post') {
+      await Post.findByIdAndUpdate(item_id, { 
+        'moderator_details.removed_flag': true,
+        'moderator_details.removed_by': removed_by,
+        'moderator_details.removed_date': new Date(),
+        'moderator_details.removed_removal_reason': removed_removal_reason
+      });
+    }
+
+    // If the item type is 'comment', remove the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      await Comment.findByIdAndUpdate(item_id, { 
+        'moderator_details.removed_flag': true,
+        'moderator_details.removed_by': removed_by,
+        'moderator_details.removed_date': new Date(),
+        'moderator_details.removed_removal_reason': removed_removal_reason
+      });
+    }
+
+    // Return a success message.
+    return { message: 'Item removed successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+const spamItem = async (item_id, item_type, spammed_by, spammed_removal_reason = null) => {
+  try {    
+    // Validate the input parameters. They should be strings.
+    if (typeof item_id !== 'string' || typeof item_type !== 'string') {
+      return { err: { status: 400, message: 'Invalid input parameters' } };
+    }
+
+    // Validate that the input is either 'post' or 'comment'.
+    if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+      return { err: { status: 400, message: 'Invalid item type' } };
+    }
+
+    // Validate that the post or comment exists in the database.
+    if (item_type.toLowerCase() === 'post') {
+      const post = await Post.findById(item_id);
+      if (!post) {
+        return { err: { status: 404, message: 'Post not found' } };
+      }
+    }
+    if (item_type.toLowerCase() === 'comment') {
+      const comment = await Comment.findById(item_id);
+      if (!comment) {
+        return { err: { status: 404, message: 'Comment not found' } };
+      }
+    }
+
+    // If a removal reason is provided, validate that it is a valid removal reason title.
+    if (spammed_removal_reason) {
+      const community = await Community.findOne({ 'removal_reasons.removal_reason_title': spammed_removal_reason });
+      if (!community) {
+        return { err: { status: 400, message: 'Invalid removal reason' } };
+      }
+    }
+
+    // If the item type is 'post', remove the post.
+    if (item_type.toLowerCase() === 'post') {
+      await Post.findByIdAndUpdate(item_id, { 
+        'moderator_details.spammed_flag': true,
+        'moderator_details.spammed_by': spammed_by,
+        'moderator_details.spammed_date': new Date(),
+        'moderator_details.spammed_removal_reason': spammed_removal_reason
+      });
+    }
+
+    // If the item type is 'comment', remove the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      await Comment.findByIdAndUpdate(item_id, { 
+        'moderator_details.spammed_flag': true,
+        'moderator_details.spammed_by': spammed_by,
+        'moderator_details.spammed_date': new Date(),
+        'moderator_details.spammed_removal_reason': spammed_removal_reason
+      });
+    }
+
+    // Return a success message.
+    return { message: 'Item marked as spam successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+const reportItem = async (item_id, item_type, reported_by) => {
+  try {    
+    // Validate the input parameters. They should be strings.
+    if (typeof item_id !== 'string' || typeof item_type !== 'string') {
+      return { err: { status: 400, message: 'Invalid input parameters' } };
+    }
+
+    // Validate that the input is either 'post' or 'comment'.
+    if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+      return { err: { status: 400, message: 'Invalid item type' } };
+    }
+
+    // Validate that the post or comment exists in the database.
+    if (item_type.toLowerCase() === 'post') {
+      const post = await Post.findById(item_id);
+      if (!post) {
+        return { err: { status: 404, message: 'Post not found' } };
+      }
+    }
+    if (item_type.toLowerCase() === 'comment') {
+      const comment = await Comment.findById(item_id);
+      if (!comment) {
+        return { err: { status: 404, message: 'Comment not found' } };
+      }
+    }
+
+    // If the item type is 'post', report the post.
+    if (item_type.toLowerCase() === 'post') {
+      await Post.findByIdAndUpdate(item_id, { 
+        'moderator_details.reported_flag': true,
+        'moderator_details.reported_by': reported_by,
+        'moderator_details.reported_date': new Date()
+      });
+    }
+
+    // If the item type is 'comment', report the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      await Comment.findByIdAndUpdate(item_id, { 
+        'moderator_details.reported_flag': true,
+        'moderator_details.reported_by': reported_by,
+        'moderator_details.reported_date': new Date()
+      });
+    }
+
+    // Return a success message.
+    return { message: 'Item reported successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+
+export { 
+  getRemovedItems, 
+  getReportedItems, 
+  getUnmoderatedItems,
+
+  removeItem,
+  spamItem,
+  reportItem
+};

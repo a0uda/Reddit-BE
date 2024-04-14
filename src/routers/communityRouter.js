@@ -70,7 +70,11 @@ import {
 import { 
     getRemovedItemsController, 
     getReportedItemsController, 
-    getUnmoderatedItemsController 
+    getUnmoderatedItemsController,
+
+    removeItemController,
+    spamItemController,
+    reportItemController
 } from '../controller/communityQueueController.js';
 
 
@@ -94,6 +98,10 @@ communityRouter.post("/communities/change-posts-and-comments/:community_name", c
 communityRouter.get("/communities/about/removed-or-spammed/:community_name", getRemovedItemsController);
 communityRouter.get("/communities/about/reported/:community_name", getReportedItemsController);
 communityRouter.get("/communities/about/unmoderated/:community_name", getUnmoderatedItemsController);
+
+communityRouter.post("/communities/remove-item/:community_name", removeItemController);
+communityRouter.post("/communities/spam-item/:community_name", spamItemController);
+communityRouter.post("/communities/report-item/:community_name", reportItemController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
