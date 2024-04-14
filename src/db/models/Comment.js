@@ -109,4 +109,14 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
+commentSchema.pre("find", function (next) {
+  // Define the projection based on whether the post is deleted or not
+  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+
+  // Set the projection to the query
+  this.select(projection);
+
+  next();
+});
+
 export const Comment = mongoose.model("Comment", commentSchema);

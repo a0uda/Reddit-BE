@@ -30,7 +30,7 @@ export const postSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["image_and_videos", "polls", "url", "text", "hybrid","reposted"],
+    enum: ["image_and_videos", "polls", "url", "text", "hybrid", "reposted"],
     default: "text",
   },
   link_url: {
@@ -134,4 +134,17 @@ export const postSchema = new mongoose.Schema({
     },
   ],
 });
+postSchema.pre("find", function (next) {
+  // Define the projection based on whether the post is deleted or not
+  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+
+  // Set the projection to the query
+  this.select(projection);
+
+  next();
+});
 export const Post = mongoose.model("Post", postSchema);
+
+// postSchema.pre("find", function () {
+//   this.where({ deleted: false });
+// });

@@ -115,7 +115,7 @@ export async function addOrRemovePicture(
       return { success, err, status, user, msg };
     }
     if (!remove) {
-      user.profile_settings[pictureField] = request.body[pictureField];
+      user.pictureField = request.body[pictureField];
       await user.save();
       return {
         success: true,
@@ -123,7 +123,7 @@ export async function addOrRemovePicture(
         msg: `User ${pictureField} added successfully`,
       };
     } else {
-      user.profile_settings[pictureField] = "";
+      user.pictureField = "";
       await user.save();
       return {
         success: true,
@@ -159,18 +159,24 @@ export async function muteCommunity(request) {
       };
     }
     const userMutedList = user.safety_and_privacy_settings.muted_communities;
+    const existingIndex = userMutedList.findIndex(
+      (item) => String(item._id) === String(communityToMute._id)
+    );
 
-    const index = userMutedList.indexOf(communityToMute._id);
     let operation = "";
-    if (index !== -1) {
-      userMutedList.splice(index, 1);
-      console.log("Community removed from muted communities.");
+    if (existingIndex !== -1) {
+      // Remove the community from the muted list
+      userMutedList.splice(existingIndex, 1);
       operation = "unmuted";
     } else {
-      userMutedList.push(communityToMute._id);
-      console.log("Community added to muted communities.");
+      // Add the community to the muted list
+      userMutedList.push({
+        _id: communityToMute._id,
+        muted_date: new Date(),
+      });
       operation = "muted";
     }
+
     user.safety_and_privacy_settings.muted_communities = userMutedList;
     await user.save();
     return {

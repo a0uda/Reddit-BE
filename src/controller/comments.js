@@ -87,7 +87,9 @@ export async function newComment(request) {
 
   //check if user posting a comment in community he is banned in he can't comment
   if (post.post_in_community_flag) {
-    const { success, community, error } = await getCommunity(post.community_name);
+    const { success, community, error } = await getCommunity(
+      post.community_name
+    );
     if (!success) {
       return { success, error };
     }
@@ -148,7 +150,9 @@ export async function replyToComment(request) {
     };
   }
   if (comment.comment_in_community_flag) {
-    const { success, community, error } = await getCommunity(comment.community_name);
+    const { success, community, error } = await getCommunity(
+      comment.community_name
+    );
     if (!success) {
       return { success, error };
     }
@@ -350,8 +354,8 @@ export async function commentSave(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
-        msg: "Comment not found or user is not authorized to modify it.",
+        err: "Comment Not Found ",
+        msg: "Comment not found ",
       };
     }
 
@@ -514,6 +518,50 @@ export async function commentReport(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}
+
+export async function commentDelete(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const commentId = request.body.id;
+
+    const comment = await Comment.findOne({
+      _id: commentId,
+      user_id: user._id,
+    });
+
+    if (!comment) {
+      return {
+        success: false,
+        status: 400,
+        err: "Comment Not Found or User Not Authorized",
+        msg: "Comment not found or user is not authorized to delete it.",
+      };
+    }
+
+    comment.deleted_at = Date.now();
+    comment.deleted = true;
+    await comment.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Comment deleted successfully",
+    };
+  } catch (error) {
     console.error("Error:", error);
     return {
       success: false,

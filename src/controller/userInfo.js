@@ -8,6 +8,8 @@ import {
   getModeratedCommunitiesHelper,
   getUserPostsHelper,
   getUserCommentsHelper,
+  getMutedCommunitiesHelper,
+  getBlockedUserHelper,
 } from "../services/users.js";
 
 export async function getFollowers(request) {
@@ -93,7 +95,7 @@ export async function getUserPosts(request, postType) {
         msg: "User not found",
       };
     }
-    const posts = await getUserPostsHelper(user, postType);
+    const posts = await getUserPostsHelper(user);
     return {
       success: true,
       status: 200,
@@ -289,6 +291,58 @@ export async function getCommunities(request, communityType) {
         communities: communities,
       };
     }
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getBlockedUsers(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // console.log(success, err, status, user, msg);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const blocked_users = getBlockedUserHelper(user);
+    return {
+      success: true,
+      msg: "Your blocked users list is retrieved successfully",
+      status: 200,
+      blocked_users: blocked_users,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getMutedCommunities(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // console.log(success, err, status, user, msg);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const muted_communities = getMutedCommunitiesHelper(user);
+    return {
+      success: true,
+      msg: "Your muted communities list is retrieved successfully",
+      status: 200,
+      muted_communities: muted_communities,
+    };
   } catch (error) {
     console.error("Error:", error);
     return {
