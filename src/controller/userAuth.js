@@ -253,6 +253,10 @@ export async function changeEmail(request) {
     return generateResponse(false, 400, "This is already the user email");
   }
 
+  const emailAvailableResponse = await isEmailAvailable(new_email);
+
+  if (emailAvailableResponse.success == false) return emailAvailableResponse;
+
   try {
     user.email = new_email;
     user.verified_email_flag = false;
