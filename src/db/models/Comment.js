@@ -16,9 +16,21 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  //bool is reply if the comment is reply
+  is_reply: {
+    type: Boolean,
+    default: false,
+  },
+  //id of parent comment if it is reply else null
   parent_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Comment",
+    default: null,
+  },
+  //the username of the person of the parent comment if it is a reply
+  parent_username: {
+    type: String,
+    default: null,
   },
   replies_comments_ids: [
     {
@@ -116,6 +128,11 @@ const commentSchema = new mongoose.Schema({
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String },
   },
+});
+
+commentSchema.pre("find", function (next) {
+  this.find({ deleted: true }, "deleted deleted_at");
+  next();
 });
 
 export const Comment = mongoose.model("Comment", commentSchema);

@@ -30,7 +30,7 @@ export const postSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["image_and_videos", "polls", "url", "text", "hybrid"],
+    enum: ["image_and_videos", "polls", "url", "text", "hybrid","reposted"],
     default: "text",
   },
   link_url: {
@@ -122,11 +122,32 @@ export const postSchema = new mongoose.Schema({
     upvote_rate: { type: Number, default: 0, min: 0 },
     total_shares: { type: Number, default: 0, min: 0 },
   },
+  //flag to check if post is reposted or not
+  is_reposted_flag: {
+    type: Boolean,
+    default: false,
+  },
+  //if true fill in this object
   reposted: [
     {
-      shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      caption: { type: String ,default: null},
+      //don't need it as user id is the one who reposted
+      // shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      //don't need it as title is the caption
+      // caption: { type: String, default: null },
+      //shared to-> community name aady
+      original_post_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
     },
   ],
 });
+postSchema.pre("find", function (next) {
+  this.find({ deleted: true }, "deleted deleted_at title");
+  next();
+});
 export const Post = mongoose.model("Post", postSchema);
+
+// postSchema.pre("find", function () {
+//   this.where({ deleted: false });
+// });

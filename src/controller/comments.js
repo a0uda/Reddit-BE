@@ -4,7 +4,11 @@ import { User } from "../db/models/User.js";
 import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
-import { communityNameExists } from "../utils/communities.js";
+import {
+  checkBannedUser,
+  getCommentRepliesHelper,
+  getCommunity,
+} from "../services/posts.js";
 
 export async function getComment(request, verifyUser) {
   let user;
@@ -43,6 +47,24 @@ export async function getComment(request, verifyUser) {
   };
 }
 
+export async function getCommentWithReplies(request, verifyUser) {
+  const { success, error, comment, user, message } = await getComment(
+    request,
+    false
+  );
+  console.log(comment);
+  if (!success) {
+    return { success, error };
+  }
+  const commentWithReplies = await getCommentRepliesHelper(comment);
+  return {
+    success: true,
+    comment: commentWithReplies,
+    user,
+    message: "Comment Retrieved sucessfully",
+  };
+}
+
 export async function newComment(request) {
   const { success, error, post, user, message } = await getPost(request, true);
   if (!success) {
@@ -62,29 +84,19 @@ export async function newComment(request) {
       error: { status: 400, message: "Post is locked can't comment" },
     };
   }
+
   //check if user posting a comment in community he is banned in he can't comment
   if (post.post_in_community_flag) {
-    const community = await communityNameExists(post.community_name);
-    if (!community) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "Community name not found",
-        },
-      };
-    }
-    const isBannedUser = community.banned_users.find(
-      (userBanned) => userBanned.id.toString() == user._id.toString()
+    const { success, community, error } = await getCommunity(
+      post.community_name
     );
-    if (isBannedUser) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "User can't comment he is banned",
-        },
-      };
+    if (!success) {
+      return { success, error };
+    }
+    // console.log(community.banned_users,user._id)
+    const result = await checkBannedUser(community, user._id);
+    if (!result.success) {
+      return result;
     }
   }
   const comment = new Comment({
@@ -92,6 +104,8 @@ export async function newComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
+    parent_username: null, //i am a comment not a reply
+    is_reply: false, //i am a comment not a reply
     created_at: Date.now(),
     description,
     comment_in_community_flag: post.post_in_community_flag, //same as post
@@ -111,12 +125,15 @@ export async function newComment(request) {
 }
 
 export async function replyToComment(request) {
-  const { success, error, comment, user, message } = await getComment(request, true);
-  console.log(comment)
+  const { success, error, comment, user, message } = await getComment(
+    request,
+    true
+  );
+  console.log(comment);
   if (!success) {
     return { success, error };
   }
-  
+
   const description = request?.body?.description;
   if (description == undefined || description == null) {
     return {
@@ -133,15 +150,11 @@ export async function replyToComment(request) {
     };
   }
   if (comment.comment_in_community_flag) {
-    const community = await communityNameExists(comment.community_name);
-    if (!community) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: "Community name not found",
-        },
-      };
+    const { success, community, error } = await getCommunity(
+      comment.community_name
+    );
+    if (!success) {
+      return { success, error };
     }
     const isBannedUser = community.banned_users.find(
       (userBanned) => userBanned.id.toString() == user._id.toString()
@@ -161,6 +174,8 @@ export async function replyToComment(request) {
     user_id: user._id,
     username: user.username,
     parent_id: comment._id, //i am  a reply so my parent is another comment
+    parent_username: comment.username, //reply so my parent is another comment
+    is_reply: true, //reply so true
     created_at: Date.now(),
     description,
     comment_in_community_flag: comment.post_in_community_flag, //same as post
@@ -503,6 +518,50 @@ export async function commentReport(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
+    console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred.",
+    };
+  }
+}
+
+export async function commentDelete(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+
+    const commentId = request.body.id;
+
+    const comment = await Comment.findOne({
+      _id: commentId,
+      user_id: user._id,
+    });
+
+    if (!comment) {
+      return {
+        success: false,
+        status: 400,
+        err: "Comment Not Found or User Not Authorized",
+        msg: "Comment not found or user is not authorized to delete it.",
+      };
+    }
+
+    comment.deleted_at = Date.now();
+    comment.deleted = true;
+    await comment.save();
+
+    return {
+      success: true,
+      status: 200,
+      msg: "Comment deleted successfully",
+    };
+  } catch (error) {
     console.error("Error:", error);
     return {
       success: false,
