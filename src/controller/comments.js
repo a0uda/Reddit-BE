@@ -43,7 +43,7 @@ export async function getComment(request, verifyUser) {
     success: true,
     comment,
     user,
-    message: "Comment Retrieved sucessfully",
+    message: "Comment Retrieved successfully",
   };
 }
 
