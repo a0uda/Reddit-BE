@@ -11,7 +11,7 @@ jest.mock("../src/controller/userAuth");
 //3. Test the muteUser function (mute and unmute user)
 //4. Test the getMutedUsers function
 //5. Test the unmuteUser function
-
+//TODO:
 
 //7. Test the banUser function (ban and unban user)
 //8. Test the getBannedUsers function
