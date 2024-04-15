@@ -131,20 +131,42 @@ export function setProfileSettings(user, profileSettings) {
 }
 
 export function setFeedSettings(user, feedSettings) {
-  if (
-    feedSettings?.communitiy_content_sort &&
-    typeof feedSettings?.communitiy_content_sort === "object"
-  ) {
-    user.feed_settings.communitiy_content_sort = {
-      ...user.feed_settings.communitiy_content_sort,
-      ...feedSettings.communitiy_content_sort,
-    };
-  }
-  if (feedSettings && typeof feedSettings === "object") {
-    user.feed_settings = {
-      ...user.feed_settings,
-      ...feedSettings,
-    };
+  if (feedSettings) {
+    // Check and update Adult_content_flag
+    if (feedSettings.Adult_content_flag !== undefined) {
+      user.feed_settings.Adult_content_flag = feedSettings.Adult_content_flag;
+    }
+    // Check and update autoplay_media
+    if (feedSettings.autoplay_media !== undefined) {
+      user.feed_settings.autoplay_media = feedSettings.autoplay_media;
+    }
+    // Check and update communitiy_content_sort
+    if (feedSettings.communitiy_content_sort) {
+      if (typeof feedSettings.communitiy_content_sort === "object") {
+        user.feed_settings.communitiy_content_sort = {
+          ...user.feed_settings.communitiy_content_sort,
+          ...feedSettings.communitiy_content_sort,
+        };
+      }
+    }
+    // Check and update global_content
+    if (feedSettings.global_content) {
+      if (typeof feedSettings.global_content === "object") {
+        user.feed_settings.global_content = {
+          ...user.feed_settings.global_content,
+          ...feedSettings.global_content,
+        };
+      }
+    }
+    // Check and update Open_posts_in_new_tab
+    if (feedSettings.Open_posts_in_new_tab !== undefined) {
+      user.feed_settings.Open_posts_in_new_tab =
+        feedSettings.Open_posts_in_new_tab;
+    }
+    // Check and update community_themes
+    if (feedSettings.community_themes !== undefined) {
+      user.feed_settings.community_themes = feedSettings.community_themes;
+    }
   }
   return user;
 }

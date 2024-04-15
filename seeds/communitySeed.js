@@ -79,10 +79,9 @@ async function generateRandomCommunities() {
                     manage_settings: faker.datatype.boolean(),
                     manage_posts_and_comments: faker.datatype.boolean(),
                 },
-                profile_picture: user.profile_picture,
             })),
             invited_moderators: invitedModerators.map(user => user._id),
-           
+
             rules_ids: selectedRules,
             removal_reasons: [
                 { removal_reason_title: "Spam", reason_message: "This post is spam" },
@@ -90,9 +89,9 @@ async function generateRandomCommunities() {
 
             profile_picture: faker.image.avatar(),
             banner_picture: faker.image.avatar(),
-           
+
             members_nickname: faker.company.name(),
-            currently_viewing_nickname: faker.company.name(),            
+            currently_viewing_nickname: faker.company.name(),
         };
 
         communities.push(fakeCommunity);

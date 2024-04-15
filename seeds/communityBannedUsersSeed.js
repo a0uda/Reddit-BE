@@ -21,7 +21,7 @@ async function generateRandomBannedUsers() {
             permanent_flag: permanentFlag,
             banned_until: banned_until,
             note_for_ban_message: faker.lorem.sentence(),
-            profile_picture: faker.image.avatar()
+
         };
 
         banned_users.push(fakeBannedUser);

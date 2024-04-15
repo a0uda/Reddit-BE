@@ -10,35 +10,28 @@ import {
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validator from "validator";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function isUsernameAvailable(username) {
   console.log(username);
   const user = await User.findOne({ username });
   if (user)
-    return {
-      success: false,
-      status: 400,
-      err: "Username already exists, choose another",
-    };
-  else return { success: true, msg: "Username is available" };
+    return generateResponse(
+      false,
+      400,
+      "Username already exists, choose another"
+    );
+  else return generateResponse(true, null, "Username is available");
 }
 
 export async function isEmailAvailable(email) {
   if (!validator.isEmail(email)) {
-    return {
-      success: false,
-      status: 400,
-      err: "Invalid email",
-    };
+    return generateResponse(false, 400, "Invalid email");
   }
   const user = await User.findOne({ email });
   if (user)
-    return {
-      success: false,
-      status: 400,
-      err: "Email already exists, choose another",
-    };
-  else return { success: true, msg: "Email is available" };
+    return generateResponse(false, 400, "Email already exists, choose another");
+  else return generateResponse(true, null, "Email is available");
 }
 
 export async function verifyAuthToken(request) {
@@ -57,63 +50,75 @@ export async function verifyAuthToken(request) {
 }
 
 export async function signupUser(requestBody) {
-  const { username, email, password, gender } = requestBody;
-
-  const usernameAvailableResponse = await isUsernameAvailable(username);
-  const emailAvailableResponse = await isEmailAvailable(email);
-
-  if (usernameAvailableResponse.success == false)
-    return usernameAvailableResponse;
-  if (emailAvailableResponse.success == false) return emailAvailableResponse;
-
-  const user = new User({ username, email, password, gender });
-  user.is_password_set_flag = true;
   try {
+    const { username, email, password, gender } = requestBody;
+    if (!username || !email || !password || !gender) {
+      return generateResponse(false, 400, "Missing required field");
+    }
+    const usernameAvailableResponse = await isUsernameAvailable(username);
+    const emailAvailableResponse = await isEmailAvailable(email);
+
+    if (usernameAvailableResponse.success == false)
+      return usernameAvailableResponse;
+    if (emailAvailableResponse.success == false) return emailAvailableResponse;
+
+    const user = new User({ username, email, password, gender });
+    user.is_password_set_flag = true;
+
     await user.generateAuthToken();
     await user.save();
     console.log("saving user");
+    //send verification email to user
+    await redirectToVerifyEmail(user._id, user.email);
+    return { success: true, user, message: "User Signed up successfully" };
   } catch (error) {
-    if (error.name === "ValidationError") {
-      // Handle validation errors
-      return { succes: false, err: error.message };
-    } else {
-      // Handle other types of errors
-      return { succes: false, err: error.message };
-    }
+    return generateResponse(false, 400, error.message);
   }
-  //send verification email to user
-  await redirectToVerifyEmail(user._id, user.email);
-  return { success: true, user };
 }
 
 export async function loginUser(requestBody) {
   const { username, password } = requestBody;
+  console.log("request body is ", requestBody);
+  if (!username || !password) {
+    return generateResponse(false, 400, "Missing required field");
+  }
   const user = await User.findOne({ username });
-
+  console.log("username is ", username);
+  console.log("password is ", password);
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return { success: false, err: "Username or password are incorrect" };
+    return generateResponse(false, 400, "Username or password are incorrect");
   }
 
   const refreshToken = await user.generateAuthToken();
   await user.save();
 
-  return { success: true, user, refreshToken: refreshToken };
+  return {
+    success: true,
+    message: "User logged in successfully",
+    user,
+    refreshToken: refreshToken,
+  };
 }
 
 export async function logoutUser(requestBody) {
   const { username, token } = requestBody;
+  if (!username || !token) {
+    return generateResponse(false, 400, "Missing required field");
+  }
   console.log(username, token);
   const user = await User.findOne({ username });
   if (!user || user.token != token) {
-    console.log(token);
-    console.log(user.token);
-    return { success: false, err: "Not a valid username or existing token" };
+    return generateResponse(
+      false,
+      400,
+      "Not a valid username or existing token"
+    );
   }
 
   user.token = "";
   await user.save();
 
-  return { success: true, msg: "Logged Out Successfully" };
+  return generateResponse(true, null, "Logged Out Successfully");
 }
 
 export async function verifyEmail(requestParams, isUserEmailVerify) {
@@ -143,74 +148,72 @@ export async function verifyEmail(requestParams, isUserEmailVerify) {
 
 export async function forgetPassword(requestBody) {
   const { username, email } = requestBody;
+  if (!username || !email) {
+    return generateResponse(false, 400, "Missing required field");
+  }
   const user = await User.findOne({ email });
   if (!user) {
-    return { success: false, status: 404, err: "Email not found" };
+    return generateResponse(false, 404, "Email not found");
   }
-  if (user.username != username) {
-    return { success: false, status: 400, err: "Username doesn't match email" };
+  if (user.username !== username) {
+    return generateResponse(false, 400, "Username doesn't match email");
   }
   if (!user.verified_email_flag) {
-    return {
-      success: false,
-      status: 400,
-      err: "User email is not verified yet",
-    };
+    return generateResponse(false, 400, "User email is not verified yet");
   }
   await redirectToResetPassword(user._id, email);
-  return { success: true, user, msg: "Forget password email is sent" };
+  return generateResponse(true, null, "Forget password email is sent");
 }
 
 export async function forgetUsername(requestBody) {
-  const { email } = requestBody;
-  const user = await User.findOne({ email });
-  if (!user) {
-    return { success: false, status: 404, err: "Email not found" };
-  }
-  if (!user.verified_email_flag) {
-    return {
-      success: false,
-      status: 400,
-      err: "User email is not verified yet",
-    };
-  }
   try {
+    const { email } = requestBody;
+    if (!email) {
+      return generateResponse(false, 400, "Missing email field");
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return generateResponse(false, 404, "Email not found");
+    }
+    if (!user.verified_email_flag) {
+      return generateResponse(false, 400, "User email is not verified yet");
+    }
     await redirectToForgetUsername(user._id, email, user.username);
-    return { success: true, user, msg: "Forget username email is sent" };
+    return generateResponse(true, null, "Forget username email is sent");
   } catch (error) {
-    return { success: false, err: error };
+    return generateResponse(false, null, error);
   }
 }
 
 export async function resetPassword(request) {
   const token = request.headers.authorization?.split(" ")[1];
   if (!token) {
-    return { success: false, status: 401, err: "Access Denied" };
+    return generateResponse(false, 401, "Access Denied");
   }
   const { new_password, verified_password } = request.body;
-
-  if (new_password != verified_password) {
-    return {
-      success: false,
-      status: 400,
-      err: "New password and verifed password does't match",
-    };
+  if (!verified_password || !new_password) {
+    return generateResponse(false, 400, "Missing required fields");
   }
-
+  if (new_password != verified_password) {
+    return generateResponse(
+      false,
+      400,
+      "New password and verified password don't match"
+    );
+  }
+  if (new_password.length < 8) {
+    return generateResponse(false, 400, "Min length is 8");
+  }
   const userToken = jwt.verify(token, process.env.JWT_SECRET);
   const userId = userToken._id;
   const user = await User.findById(userId);
 
   if (!user) {
-    return { success: false, status: 404, err: "User not found" };
+    return generateResponse(false, 404, "User not found");
   }
 
   if (!user.verified_email_flag) {
-    return {
-      success: false,
-      status: 400,
-      err: "User email is not verified yet",
-    };
+    return generateResponse(false, 400, "User email is not verified yet");
   }
 
   try {
@@ -222,10 +225,10 @@ export async function resetPassword(request) {
     return {
       success: true,
       user,
-      msg: "User password has been reset successfully",
+      message: "User password has been reset successfully",
     };
   } catch (error) {
-    return { succes: false, err: error.message };
+    return generateResponse(false, null, error.message);
   }
 }
 
@@ -233,26 +236,26 @@ export async function changeEmail(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
 
+  const { new_email, password } = request.body;
+  if (!new_email || !password) {
+    return generateResponse(false, 400, "Missing required field");
+  }
   const result = await bcrypt.compare(password, user.password);
   if (!result) {
-    return {
-      success: false,
-      status: 400,
-      err: "Password is wrong",
-    };
+    return generateResponse(false, 400, "Password is wrong");
   }
 
   const userOldEmail = user.email;
   if (userOldEmail == new_email) {
-    return {
-      success: false,
-      status: 400,
-      err: "This is already the user email",
-    };
+    return generateResponse(false, 400, "This is already the user email");
   }
+
+  const emailAvailableResponse = await isEmailAvailable(new_email);
+
+  if (emailAvailableResponse.success == false) return emailAvailableResponse;
 
   try {
     user.email = new_email;
@@ -267,13 +270,13 @@ export async function changeEmail(request) {
     //send verification email to new user email
     await redirectToVerifyEmail(user._id, new_email);
 
-    return {
-      success: true,
-      user,
-      msg: "User email has been changed successfully and a verification mail has been sent",
-    };
+    return generateResponse(
+      true,
+      null,
+      "User email has been changed successfully and a verification mail has been sent"
+    );
   } catch (error) {
-    return { succes: false, err: error.message };
+    return generateResponse(false, null, error.message);
   }
 }
 
@@ -281,34 +284,39 @@ export async function changePassword(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
-
-  const result = await bcrypt.compare(current_password, user.password);
-  if (!result) {
-    return {
-      success: false,
-      status: 400,
-      err: "Current password is wrong",
-    };
-  }
-
-  const result2 = await bcrypt.compare(new_password, user.password);
-  console.log(result2);
-  if (result2) {
-    return {
-      success: false,
-      status: 400,
-      err: "Can't change password to current password",
-    };
+  const { current_password, new_password, verified_new_password } =
+    request.body;
+  if (!current_password || !new_password || !verified_new_password) {
+    return generateResponse(false, 400, "Missing required field");
   }
 
   if (new_password != verified_new_password) {
-    return {
-      success: false,
-      status: 400,
-      err: "New password doesn't match new verified password",
-    };
+    return generateResponse(
+      false,
+      400,
+      "New password doesn't match new verified password"
+    );
+  }
+
+  if (new_password.length < 8) {
+    return generateResponse(false, 400, "Min length is 8");
+  }
+
+  console.log(user.password);
+  const result = await bcrypt.compare(current_password, user.password);
+  if (!result) {
+    return generateResponse(false, 400, "Current password is wrong");
+  }
+
+  const result2 = await bcrypt.compare(new_password, user.password);
+  if (result2) {
+    return generateResponse(
+      false,
+      400,
+      "Can't change password to current password"
+    );
   }
 
   try {
@@ -322,13 +330,13 @@ export async function changePassword(request) {
       await sendChangePassword(user.email, user.username);
     }
 
-    return {
-      success: true,
-      user,
-      msg: "User password has been changed successfully and a mail has been sent",
-    };
+    return generateResponse(
+      true,
+      null,
+      "User password has been changed successfully and a mail has been sent"
+    );
   } catch (error) {
-    return { succes: false, status: 403, err: error.message };
+    return generateResponse(false, 400, error.message);
   }
 }
 
@@ -336,10 +344,19 @@ export async function changeUsername(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
 
   const username = request.body.username;
+  if (!username) {
+    return generateResponse(false, 400, "Missing username field");
+  }
+
+  const userOldUsername = user.username;
+  if (userOldUsername == username) {
+    return generateResponse(false, 400, "This is already the user username");
+  }
+
   const usernameAvailableResponse = await isUsernameAvailable(username);
 
   if (usernameAvailableResponse.success == false)
@@ -350,12 +367,12 @@ export async function changeUsername(request) {
 
     await user.save();
 
-    return {
-      success: true,
-      user,
-      msg: "Username has been changed successfully",
-    };
+    return generateResponse(
+      true,
+      null,
+      "Username has been changed successfully"
+    );
   } catch (error) {
-    return { succes: false, status: 400, err: error.message };
+    return generateResponse(false, 400, error.message);
   }
 }

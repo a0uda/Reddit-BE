@@ -88,7 +88,6 @@ const communitySchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
       },
-      profile_picture: String,
 
     },
   ],
@@ -104,7 +103,7 @@ const communitySchema = new mongoose.Schema({
       },
       mute_date: Date,
       mute_reason: String,
-      profile_picture: String
+
     },
   ],
   banned_users: [
@@ -129,18 +128,14 @@ const communitySchema = new mongoose.Schema({
       note_for_ban_message: {
         type: String,
       },
-      profile_picture: {
-        type: String,
-      },
+
     },
   ],
   moderators: [{
     username: {
       type: String,
     },
-    profile_picture: {
-      type: String,
-    },
+
     moderator_since: {
       type: Date,
       default: Date.now
@@ -152,16 +147,6 @@ const communitySchema = new mongoose.Schema({
       manage_posts_and_comments: { type: Boolean, default: true },
     }
   }],
-  invited_moderators: [
-    {
-      username: {
-        type: String,
-      },
-      profile_picture: {
-        type: String,
-      },
-    },
-  ],
 
   ////////////////////////////////////////////////////// Rules & Removal Reasons //////////////////////////////////////////////////////
   rules_ids: [

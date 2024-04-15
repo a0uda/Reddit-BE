@@ -54,22 +54,22 @@ import {
     deleteCommunityBannerPicture,
 } from "../services/communityProfileAndBannerPictures.js";
 
-import { 
-    addNewCommunityController 
+import {
+    addNewCommunityController
 } from "../controller/communityController.js";
 
-import { 
-    getCommunityGeneralSettingsController, 
-    getCommunityContentControlsController, 
-    getCommunityPostsAndCommentsController, 
-    changeCommunityGeneralSettingsController, 
-    changeCommunityContentControlsController, 
-    changeCommunityPostsAndCommentsController 
+import {
+    getCommunityGeneralSettingsController,
+    getCommunityContentControlsController,
+    getCommunityPostsAndCommentsController,
+    changeCommunityGeneralSettingsController,
+    changeCommunityContentControlsController,
+    changeCommunityPostsAndCommentsController
 } from "../controller/communitySettingsController.js";
 
-import { 
-    getRemovedItemsController, 
-    getReportedItemsController, 
+import {
+    getRemovedItemsController,
+    getReportedItemsController,
     getUnmoderatedItemsController,
 
     removeItemController,
@@ -501,10 +501,14 @@ communityRouter.post("/communities/add-moderator", async (req, res, next) => {
 communityRouter.get("/communities/about/moderators/:community_name", async (req, res, next) => {
 
     try {
-        const { err, moderators } = await getModerators(req.params.community_name)
+        const { err, returned_moderators } = await getModerators(req.params.community_name)
         if (err) { return next(err) }
-        return res.status(200).send(moderators)
+
+
+
+        return res.status(200).send(returned_moderators)
     } catch (error) {
+
         next(error)
     }
 })

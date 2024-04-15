@@ -9,11 +9,12 @@ import {
   getUserPostsHelper,
   getUserCommentsHelper,
 } from "../services/users.js";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
   const followerDetails = await Promise.all(
     user.followers_ids.map(async (followerId) => {
@@ -22,11 +23,12 @@ export async function getFollowers(request) {
     })
   ).then((details) => details.filter((detail) => detail != null));
 
-  if (followerDetails.length == 0) {
-    return { success: false, status: 400, err: "User has no followers" };
-  }
+  // if (followerDetails.length === 0) {
+  //   return generateResponse(false, 400, "User has no followers");
+  // }
   return {
     success: true,
+    message: "User followers retrieved successfully",
     users: followerDetails,
   };
 }
@@ -35,20 +37,22 @@ export async function getFollowing(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
+  console.log(user);
   const followingDetails = await Promise.all(
     user.following_ids.map(async (followingId) => {
       const following = await User.findById(followingId);
-      return getFriendsFormat(following);
+      if (following) return getFriendsFormat(following);
     })
-  );
-  if (followingDetails.length == 0) {
-    return { success: false, status: 400, err: "User follows no one" };
-  }
+  ).then((details) => details.filter((detail) => detail != null));
+  // if (followingDetails.length === 0) {
+  //   return generateResponse(false, 400, "User follows no one");
+  // }
 
   return {
     success: true,
+    message: "User following retrieved successfully",
     users: followingDetails,
   };
 }
@@ -56,13 +60,13 @@ export async function getFollowing(request) {
 export async function getFollowersCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-  // console.log(success, err, status, user, msg);
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
   const followersUsers = user.followers_ids;
   return {
     success: true,
+    message: "User followers count retrieved successfully",
     count: followersUsers.length,
   };
 }
@@ -71,12 +75,13 @@ export async function getFollowingCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
   if (!user) {
-    return { success, err, status, user, msg };
+    return generateResponse(success, status, err);
   }
   const followingUsers = user.following_ids;
 
   return {
     success: true,
+    message: "User following count retrieved successfully",
     count: followingUsers.length,
   };
 }
@@ -209,61 +214,47 @@ export async function getComments(request) {
 export async function getOverview(request) {
   try {
     const { username } = request.params;
+    if (!username) {
+      return generateResponse(false, 400, "Missing Username in params");
+    }
     const user = await User.findOne({ username });
     if (!user) {
-      return {
-        success: false,
-        err: "No user found with username",
-        status: 404,
-        msg: "User not found",
-      };
+      return generateResponse(false, 404, "No user found with username");
     }
     const posts = await getUserPostsHelper(user);
     const comments = await getUserCommentsHelper(user);
 
     return {
       success: true,
-      msg: "Comments and posts retrieved successfully",
-      overview: { Posts: posts, Comments: comments },
+      message: "Comments and posts retrieved successfully",
+      overview: { posts: posts, comments: comments },
     };
   } catch (error) {
     console.error("Error:", error);
-    return {
-      success: false,
-      status: 500,
-      err: "Internal Server Error",
-      msg: "An error occurred while retrieving posts.",
-    };
+    return generateResponse(false, 500, "Internal Server Error");
   }
 }
 
 export async function getAbout(request) {
   try {
     const { username } = request.params;
+    if (!username) {
+      return generateResponse(false, 400, "Missing Username in params");
+    }
     const user = await User.findOne({ username });
     if (!user) {
-      return {
-        success: false,
-        err: "No user found with username",
-        status: 404,
-        msg: "User not found",
-      };
+      return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
 
     return {
       success: true,
-      msg: "About retrieved successfully",
+      message: "About retrieved successfully",
       about: about,
     };
   } catch (error) {
     console.error("Error:", error);
-    return {
-      success: false,
-      status: 500,
-      err: "Internal Server Error",
-      msg: "An error occurred while retrieving posts.",
-    };
+    return generateResponse(false, 500, "Internal Server Error");
   }
 }
 
@@ -278,13 +269,15 @@ export async function getCommunities(request, communityType) {
       const moderatedCommunities = await getModeratedCommunitiesHelper(user);
       return {
         success: true,
+        status: 200,
         msg: "Your moderated communities are retrieved successfully",
-        moderatedCommunities: moderatedCommunities,
+        moderated_communities: moderatedCommunities,
       };
     } else {
       const communities = await getCommunitiesHelper(user);
       return {
         success: true,
+        status: 200,
         msg: "Your communities are retrieved successfully",
         communities: communities,
       };
