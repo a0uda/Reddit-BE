@@ -113,6 +113,7 @@ const deleteCommunityProfilePicture = async (requestBody) => {
 const addCommunityBannerPicture = async (requestBody) => {
     const { community_name, banner_picture } = requestBody;
     try {
+        if (!banner_picture) return { err: { status: 500, message: "banner picture is required" } };
         const community = await communityNameExists(community_name);
         if (!community) {
             return {

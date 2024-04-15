@@ -4,7 +4,7 @@ import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
-} from "../services/communitySettings.js";
+} from "../services/communitySettingsService.js";
 import { toggler } from "../utils/toggler.js";
 import {
   checkApprovedUser,
@@ -206,7 +206,7 @@ export async function sharePost(request) {
       if (!success) {
         return { success, error };
       }
-     
+
       const { err, posts_and_comments } = await getCommunityPostsAndComments(
         community_name
       );

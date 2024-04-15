@@ -4,7 +4,7 @@ import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
-} from "../services/communitySettings.js";
+} from "../services/communitySettingsService.js";
 export async function getCommentRepliesHelper(comment) {
   const replies = comment.replies_comments_ids;
   comment.replies_comments_ids = [];
@@ -308,9 +308,8 @@ export async function checkContentSettings(post, community_name) {
         success: false,
         error: {
           status: 400,
-          message: `Posts must have links from ${
-            restrictionType === "Required domains" ? "these" : "other"
-          } domains.`,
+          message: `Posts must have links from ${restrictionType === "Required domains" ? "these" : "other"
+            } domains.`,
         },
       };
     }
