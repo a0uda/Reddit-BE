@@ -65,7 +65,8 @@ export async function redirectToVerifyEmail(userId, userEmail) {
   const expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + 3); // Adding 3 days
   const token = await saveToken(userId, expirationDate);
-  const link = `http://localhost:3000/users/internal-verify-email/${token.token}`;
+  const link = `https://redditech.me/users/internal-verify-email/${token.token}`;
+  // DEVOPS
   let message = verifyEmailFormatEmail(link, userEmail);
   await sendEmail(message);
   console.log("email sent pt2");
@@ -81,7 +82,8 @@ export async function redirectToResetPassword(userId, userEmail) {
   const expirationDate = new Date();
   expirationDate.setHours(expirationDate.getHours() + 3); // Adding 3 hours
   const token = await saveToken(userId, expirationDate);
-  const link = `http://localhost:3000/users/internal-forget-password/${token.token}`;
+  const link = `https://redditech.me/users/internal-forget-password/${token.token}`;
+  // DEVOPS
   let message = forgetPasswordFormatEmail(link, userEmail);
   await sendEmail(message);
   console.log("email sent pt2");
@@ -94,7 +96,8 @@ export async function redirectToResetPassword(userId, userEmail) {
  * @param {string} username - The username of the user.
  */
 export async function redirectToForgetUsername(userId, userEmail, username) {
-  const link = `http://localhost:3000/userprofilepage/${username}`;
+  const link = `https://redditech.me/userprofilepage/${username}`;
+  // DEVOPS
   let message = forgetUsernameFormatEmail(link, userEmail, username);
   await sendEmail(message);
   console.log("email sent pt2");

@@ -7,11 +7,12 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "http://localhost:3000/users/signup-google/callback";
-
+const REDIRECT_URI = "https://redditech.me/users/signup-google/callback";
+// DEVOPS
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
-const REDIRECT_URI_fb = "http://localhost:3000/auth/facebook/callback";
+const REDIRECT_URI_fb = "https://redditech.me/auth/facebook/callback";
+// DEVOPS
 
 import {
   signupUser,
