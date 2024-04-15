@@ -160,24 +160,18 @@ export async function muteCommunity(request) {
       };
     }
     const userMutedList = user.safety_and_privacy_settings.muted_communities;
-    const existingIndex = userMutedList.findIndex(
-      (item) => String(item._id) === String(communityToMute._id)
-    );
 
+    const index = userMutedList.indexOf(communityToMute._id);
     let operation = "";
-    if (existingIndex !== -1) {
-      // Remove the community from the muted list
-      userMutedList.splice(existingIndex, 1);
+    if (index !== -1) {
+      userMutedList.splice(index, 1);
+      console.log("Community removed from muted communities.");
       operation = "unmuted";
     } else {
-      // Add the community to the muted list
-      userMutedList.push({
-        _id: communityToMute._id,
-        muted_date: new Date(),
-      });
+      userMutedList.push(communityToMute._id);
+      console.log("Community added to muted communities.");
       operation = "muted";
     }
-
     user.safety_and_privacy_settings.muted_communities = userMutedList;
     await user.save();
     return {
@@ -195,7 +189,6 @@ export async function muteCommunity(request) {
     };
   }
 }
-
 export async function favoriteCommunity(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
