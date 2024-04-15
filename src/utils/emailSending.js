@@ -65,7 +65,7 @@ export async function redirectToVerifyEmail(userId, userEmail) {
   const expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + 3); // Adding 3 days
   const token = await saveToken(userId, expirationDate);
-  const link = `https://redditech.me/users/internal-verify-email/${token.token}`;
+  const link = `https://redditech.me/backend/users/internal-verify-email/${token.token}`;
   // DEVOPS
   let message = verifyEmailFormatEmail(link, userEmail);
   await sendEmail(message);
@@ -82,7 +82,7 @@ export async function redirectToResetPassword(userId, userEmail) {
   const expirationDate = new Date();
   expirationDate.setHours(expirationDate.getHours() + 3); // Adding 3 hours
   const token = await saveToken(userId, expirationDate);
-  const link = `https://redditech.me/users/internal-forget-password/${token.token}`;
+  const link = `https://redditech.me/backend/users/internal-forget-password/${token.token}`;
   // DEVOPS
   let message = forgetPasswordFormatEmail(link, userEmail);
   await sendEmail(message);
