@@ -73,13 +73,14 @@ export async function getCommunitiesHelper(user) {
     user.communities.map(async (userCommunity) => {
       const community = await Community.findById(userCommunity.id);
       if (community) {
-        const { name, profile_picture } = community;
+        const { name, profile_picture, members_count } = community;
         return {
           id: userCommunity.id.toString(),
           name,
           profile_picture,
           favorite_flag: userCommunity.favorite_flag,
           disable_updates: userCommunity.disable_updates,
+          members_count,
         };
       }
     })
@@ -92,15 +93,16 @@ export async function getCommunitiesHelper(user) {
 
 export async function getModeratedCommunitiesHelper(user) {
   const moderatedCommunities = await Promise.all(
-    user.communities.map(async (userCommunity) => {
+    user.moderated_communities.map(async (userCommunity) => {
       const community = await Community.findById(userCommunity.id);
       if (community) {
-        const { name, profile_picture } = community;
+        const { name, profile_picture, members_count } = community;
         return {
           id: userCommunity.id.toString(),
           name,
           profile_picture,
           favorite_flag: userCommunity.favorite_flag,
+          members_count,
         };
       }
     })

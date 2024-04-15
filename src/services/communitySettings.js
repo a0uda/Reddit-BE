@@ -1,4 +1,6 @@
-import mongoose from "mongoose";
+// Mod Tools --> Settings --> General Settings
+// Mod Tools --> Settings --> Posts and Comments
+// Mod Tools --> Moderation --> Content Controls
 
 import { Community } from "../db/models/Community.js";
 import { CommunityContentControls } from "../db/models/communityContentControls.js";
@@ -86,6 +88,9 @@ const getCommunityPostsAndComments = async (community_name) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Change Settings //////////////////////////////////////////////////////////////
+// These functions can be optimised by populating the settings attribute (exactly like in the get functions above) then accessing the settings attribute directly of the returned community from the query.
+// TODO: Update these functions after finishing the Community Appearance feature.
+
 const changeCommunityGeneralSettings = async (
     community_name,
     general_settings

@@ -7,11 +7,12 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "http://localhost:3000/users/signup-google/callback";
-
+const REDIRECT_URI = "https://redditech.me/users/signup-google/callback";
+// DEVOPS
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
-const REDIRECT_URI_fb = "http://localhost:3000/auth/facebook/callback";
+const REDIRECT_URI_fb = "https://redditech.me/auth/facebook/callback";
+// DEVOPS
 
 import {
   signupUser,
@@ -67,42 +68,40 @@ export const usersRouter = express.Router();
 
 usersRouter.post("/users/signup", async (req, res) => {
   try {
-    const { success, err, user } = await signupUser(req.body);
-
+    const { success, error, message, user } = await signupUser(req.body);
     if (!success) {
-      res.status(400).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-
     res.header("Authorization", `Bearer ${user.token}`);
 
-    res.status(201).send({ username: user.username });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error." });
+    res.status(201).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
-  return;
 });
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, err, user, refreshToken } = await loginUser(req.body);
-
+    const { success, error, message, user, refreshToken } = await loginUser(
+      req.body
+    );
     if (!success) {
-      res.status(400).send({ err });
+      res.status(error.status).send({ error });
       return;
     }
-
     // Set the token in the response header
     res.header("Authorization", `Bearer ${user.token} `);
     res.setHeader("RefreshToken", refreshToken);
 
-    // Send a response without the token in the body
-    res.status(200).send({ username: user.username });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error." });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
-  return;
 });
 
 usersRouter.post("/users/logout", async (req, res) => {
@@ -120,17 +119,17 @@ usersRouter.post("/users/logout", async (req, res) => {
 
     const { username } = req.body;
 
-    const { success, msg, err } = await logoutUser({ token, username });
+    const { success, message, error } = await logoutUser({ token, username });
 
     if (!success) {
-      res.status(400).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-
-    res.status(200).send(msg);
+    res.status(200).send({ message });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Internal server error." });
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
@@ -245,33 +244,51 @@ usersRouter.get("/auth/facebook", (req, res) => {
 
 usersRouter.get("/available-username", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await isUsernameAvailable(
-      req.body.username
-    );
-    if (!success) {
-      res.status(status).send(err);
+    const username = req?.body?.username;
+    if (!username) {
+      res.status(400).send({
+        error: {
+          status: 400,
+          message: "Username is required",
+        },
+      });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    const { success, error, message } = await isUsernameAvailable(username);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/available-email", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await isEmailAvailable(
-      req.body.email
-    );
-    if (!success) {
-      res.status(status).send(err);
+    const email = req?.body?.email;
+    if (!email) {
+      res.status(400).send({
+        error: {
+          status: 400,
+          message: "Email is required",
+        },
+      });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    const { success, error, message } = await isEmailAvailable(email);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 //the front end does't directly access this api, i call it after the sign up route
@@ -302,7 +319,6 @@ usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
 // &v=QVFBQUZTcmdab09PRzBwblZUNzU2X2lkQ1ZyQ3J3V0dEME80cjFuc3A1VDV1RUJiWkRMTQ%3D%3D
 
 //the front end does't directly access this api, i call it after the forget password route
-
 usersRouter.get("/users/internal-forget-password/:token", async (req, res) => {
   console.log("TOKEN", req.params.token);
   try {
@@ -324,57 +340,61 @@ usersRouter.get("/users/internal-forget-password/:token", async (req, res) => {
 
 usersRouter.post("/users/forget-password", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await forgetPassword(req.body);
+    const { success, error, message } = await forgetPassword(req.body);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error." });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.post("/users/forget-username", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await forgetUsername(req.body);
+    const { success, error, message } = await forgetUsername(req.body);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error." });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.post("/users/reset-password", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await resetPassword(req);
+    const { success, error, message } = await resetPassword(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-email", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await changeEmail(req);
+    const { success, error, message } = await changeEmail(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
@@ -382,300 +402,334 @@ usersRouter.patch("/users/change-email", async (req, res) => {
 //can change the generated random username only once
 usersRouter.patch("/users/change-username", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await changeUsername(req);
+    const { success, error, message } = await changeUsername(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-password", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await changePassword(req);
+    const { success, error, message } = await changePassword(req);
     if (!success) {
-      console.log("status", status);
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    console.log(msg);
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/followers", async (req, res) => {
   try {
-    const { success, err, status, users, msg } = await getFollowers(req);
+    const { success, error, message, users } = await getFollowers(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(users);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, users });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/following", async (req, res) => {
   try {
-    const { success, err, status, users, msg } = await getFollowing(req);
+    const { success, error, message, users } = await getFollowing(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(users);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, users });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/followers-count", async (req, res) => {
   try {
-    const { success, err, status, count, msg } = await getFollowersCount(req);
-    console.log(success, err, status, count, msg);
+    const { success, error, message, count } = await getFollowersCount(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ "followers-count": count });
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, "followers-count": count });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/following-count", async (req, res) => {
   try {
-    const { success, err, status, count, msg } = await getFollowingCount(req);
+    const { success, error, message, count } = await getFollowingCount(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ "following-count": count });
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, "following-count": count });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
-usersRouter.get("/users/:username/about", async (req, res) => {
+usersRouter.get("/users/about/:username", async (req, res) => {
   try {
-    const { success, err, status, about, msg } = await getAbout(req);
+    const { success, error, message, about } = await getAbout(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(about);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, about });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/overview/:username", async (req, res) => {
   try {
-    const { success, err, status, overview, msg } = await getOverview(req);
+    const { success, error, message, overview } = await getOverview(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(overview);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, overview });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/account-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Account"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/profile-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Profile"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/feed-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Feed"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/notification-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Notification"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/email-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Email"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSettings(
+    const { success, error, message, settings } = await getSettings(
       req,
       "Chat"
     );
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.get("/users/safety-settings", async (req, res) => {
   try {
-    const { success, err, status, settings, msg } = await getSafetySettings(
-      req
-    );
+    const { success, error, message, settings } = await getSafetySettings(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(settings);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message, settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-account-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(req, "Account");
+    const { success, error, message } = await setSettings(req, "Account");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-profile-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(req, "Profile");
+    const { success, error, message } = await setSettings(req, "Profile");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-feed-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(req, "Feed");
+    const { success, error, message } = await setSettings(req, "Feed");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-notification-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(
-      req,
-      "Notification"
-    );
+    const { success, error, message } = await setSettings(req, "Notification");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-email-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(req, "Email");
+    const { success, error, message } = await setSettings(req, "Email");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
 usersRouter.patch("/users/change-chats-and-msgs-settings", async (req, res) => {
   try {
-    const { success, err, status, msg } = await setSettings(req, "Chat");
+    const { success, error, message } = await setSettings(req, "Chat");
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
@@ -779,14 +833,16 @@ usersRouter.post("/users/mute-unmute-community", async (req, res) => {
 
 usersRouter.patch("/users/favorite-unfavorite-community", async (req, res) => {
   try {
-    const { success, err, status, user, msg } = await favoriteCommunity(req);
+    const { success, error, message } = await favoriteCommunity(req);
     if (!success) {
-      res.status(status).send(err);
+      res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send(msg);
-  } catch (error) {
-    res.status(500).json({ error });
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
 
