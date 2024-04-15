@@ -7,8 +7,7 @@ import { User } from "../db/models/User.js"; //delete this line
 import {
     isUserAlreadyApproved,
     communityNameExists,
-    getUsersByIds,
-    getApprovedUserView,
+
 } from "../utils/communities.js";
 
 //////////////////////////////////////////////////////////////////////// Banned /////////////////////////////////////////////////////////////////////////
@@ -282,8 +281,6 @@ const getMutedUsers = async (community_name) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        console.log("this is muted users:")
-        console.log(community.muted_users)
         const muted_users = community.muted_users;
         const returned_muted_users = [];
         for (let i = 0; i < muted_users.length; i++) {
@@ -341,7 +338,9 @@ const approveUser = async (request) => {
             return { err: { status: 400, message: "Username not found." } };
         }
         console.log("community_name: ", community_name)
+
         const community = await communityNameExists(community_name);
+        console.log("community: ", community)
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
