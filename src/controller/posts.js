@@ -4,7 +4,7 @@ import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
-} from "../services/communitySettings.js";
+} from "../services/communitySettingsService.js";
 import { toggler } from "../utils/toggler.js";
 import {
   checkApprovedUser,

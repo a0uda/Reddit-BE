@@ -17,6 +17,7 @@ async function getRuleByTitle(communityName, ruleTitle) {
 
 const getRuleById = async (id) => {
   try {
+    console.log(id);
     return await Rule.findById(id);
   } catch (error) {
     return {
@@ -24,7 +25,19 @@ const getRuleById = async (id) => {
     };
   }
 };
+const getRemovalReasonById = async (id) => {
 
+  try {
+    const community = await Community.findOne({ "removal_reasons._id": id });
+    console.log("this one buddered");
+    return community.removal_reasons;
+  }
+  catch (error) {
+    return {
+      err: { status: 500, message: error.message },
+    };
+  }
+}
 const getUsersByIds = async (userIds) => {
   try {
     const users = await User.find({ _id: { $in: userIds } });
@@ -68,8 +81,13 @@ const getApprovedUserView = async ({ id, approved_at }) => {
   }
 };
 
-const isUserAlreadyApproved = (community, userId) => {
-  return community.approved_users.some((pair) => pair.id == userId);
+const isUserAlreadyApproved = (community, username) => {
+  // Check if the user is already approved where the community :{approved_users:{username,approved_at,picture}
+  const approvedUser = community.approved_users.find(
+    (user) => user.username === username
+  );
+  return approvedUser;
+
 };
 
 export {
@@ -80,4 +98,5 @@ export {
   getRuleById,
   deleteRule,
   getApprovedUserView,
+  getRemovalReasonById
 };

@@ -6,7 +6,7 @@ import { seedComments } from "./CommentSeed.js";
 import { seedGeneralSettings } from "./communityGeneralSettingsSeed.js";
 import { seedContentControls } from "./communityContentControlsSeed.js";
 import { seedPostsAndComments } from "./communityPostsAndCommentsSeed.js";
-import { seedAppearances } from "./communityAppearanceSeed.js";
+
 import { seedCommunities } from "./communitySeed.js";
 
 import { connect_to_db } from "../src/db/mongoose.js";
@@ -20,15 +20,19 @@ import { connect_to_db } from "../src/db/mongoose.js";
     console.log("Error, couldn't connect to database");
   }
 
-  // const users = await seedUsers();
-  // const posts = await seedPosts(users);
-  // const comments = await seedComments(posts, users);
+  
+  const users = await seedUsers();
+  
+  // Seeding the communities first.
+  const communities = await seedCommunities();
+
+  const posts = await seedPosts(users);
+  const comments = await seedComments(posts, users);
 
   // const communityGeneralSettings = await seedGeneralSettings();
   // const communityContentControls = await seedContentControls();
   // const communityPostsAndComments = await seedPostsAndComments();
   // const communityAppearance = await seedAppearances();
-  const communities = await seedCommunities();
 
 
   console.log("✅ Seeds executed successfully");
