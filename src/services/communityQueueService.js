@@ -30,9 +30,51 @@ const getRemovedItems = async (community_name, time_filter, posts_or_comments) =
   
       // Initialize the query object. This will be used to fetch the posts and comments.
       let query = {
+        // Approved, Removed, Spammed, Reported.
         $or: [
-          { 'moderator_details.removed_flag': true },
-          { 'moderator_details.spammed_flag': true }
+          {
+            // Cas 1: The item went from unmoderated to removed.
+            'moderator_details.removed_flag': true,
+
+            'moderator_details.approved_flag': false,
+            'moderator_details.spammed_flag': false,
+            'moderator_details.reported_flag': false
+          },
+          {
+            // Case 2: The item went from approved to removed.
+            'moderator_details.removed_flag': true,
+
+            'moderator_details.approved_flag': true,
+            'moderator_details.spammed_flag': false,
+            'moderator_details.reported_flag': false,
+            'moderator_details.approved_date': { $lt: 'moderator_details.removed_date' }
+          },
+          {
+            // Case 3: The item went from unmoderated to spammed.
+            'moderator_details.spammed_flag': true,
+
+            'moderator_details.approved_flag': false,
+            'moderator_details.removed_flag': false,
+            'moderator_details.reported_flag': false
+          },
+          {
+            // Case 4: The item went from approved to spammed.
+            'moderator_details.spammed_flag': true,
+
+            'moderator_details.approved_flag': true,
+            'moderator_details.removed_flag': false,
+            'moderator_details.reported_flag': false,
+            'moderator_details.approved_date': { $lt: 'moderator_details.spammed_date' }
+          },
+          {
+            // Case 5: The item went from reported to removed.
+            'moderator_details.removed_flag': true,
+
+            'moderator_details.approved_flag': false,
+            'moderator_details.spammed_flag': false,
+            'moderator_details.reported_flag': true,
+            'moderator_details.reported_date': { $lt: 'moderator_details.removed_date' }
+          }
         ]
       };
   
@@ -90,9 +132,23 @@ const getReportedItems = async (community_name, time_filter, posts_or_comments) 
 
     // Initialize the query object. This will be used to fetch the posts and comments.
     let query = {
-      $and: [
-        {'moderator_details.reported_flag': true},
-        {'moderator_details.removed_flag': false}
+      // No need to check for the spammed flag as a post could never be spammed and reported.
+      $or: [
+        {
+          // Case 1: The item went from unmoderated to reported.
+          'moderator_details.reported_flag': true,
+          
+          'moderator_details.approved_flag': false,
+          'moderator_details.removed_flag': false,
+        },
+        {
+          // Case 2: The item went from approved to reported.
+          'moderator_details.reported_flag': true,
+
+          'moderator_details.approved_flag': true,
+          'moderator_details.removed_flag': false,
+          'moderator_details.approved_date': { $lt: 'moderator_details.reported_date' }
+        }
       ]
     };
 
@@ -366,6 +422,58 @@ const reportItem = async (item_id, item_type, reported_by) => {
   }
 }
 
+const approveItem = async (item_id, item_type, approved_by) => {
+  try {    
+    // Validate the input parameters. They should be strings.
+    if (typeof item_id !== 'string' || typeof item_type !== 'string') {
+      return { err: { status: 400, message: 'Invalid input parameters' } };
+    }
+
+    // Validate that the input is either 'post' or 'comment'.
+    if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+      return { err: { status: 400, message: 'Invalid item type' } };
+    }
+
+    // Validate that the post or comment exists in the database.
+    if (item_type.toLowerCase() === 'post') {
+      const post = await Post.findById(item_id);
+      if (!post) {
+        return { err: { status: 404, message: 'Post not found' } };
+      }
+    }
+    if (item_type.toLowerCase() === 'comment') {
+      const comment = await Comment.findById(item_id);
+      if (!comment) {
+        return { err: { status: 404, message: 'Comment not found' } };
+      }
+    }
+
+    // If the item type is 'post', approve the post.
+    if (item_type.toLowerCase() === 'post') {
+      await Post.findByIdAndUpdate(item_id, { 
+        'moderator_details.approved_flag': true,
+        'moderator_details.approved_by': approved_by,
+        'moderator_details.approved_date': new Date()
+      });
+    }
+
+    // If the item type is 'comment', approve the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      await Comment.findByIdAndUpdate(item_id, { 
+        'moderator_details.approved_flag': true,
+        'moderator_details.approved_by': approved_by,
+        'moderator_details.approved_date': new Date()
+      });
+    }
+
+    // Return a success message.
+    return { message: 'Item approved successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
 
 export { 
   getRemovedItems, 
@@ -374,5 +482,6 @@ export {
 
   removeItem,
   spamItem,
-  reportItem
+  reportItem,
+  approveItem
 };

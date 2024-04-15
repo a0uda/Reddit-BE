@@ -74,7 +74,8 @@ import {
 
     removeItemController,
     spamItemController,
-    reportItemController
+    reportItemController,
+    approveItemController
 } from '../controller/communityQueueController.js';
 
 
@@ -102,6 +103,7 @@ communityRouter.get("/communities/about/unmoderated/:community_name", getUnmoder
 communityRouter.post("/communities/remove-item/:community_name", removeItemController);
 communityRouter.post("/communities/spam-item/:community_name", spamItemController);
 communityRouter.post("/communities/report-item/:community_name", reportItemController);
+communityRouter.post("/communities/approve-item/:community_name", approveItemController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
