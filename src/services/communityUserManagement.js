@@ -79,7 +79,7 @@ const banUser = async (request) => {
         //get the community.moderator object of the muting user
         const moderator = community.moderators.find(moderator => moderator.username === banningUser.username);
         //check if moderator object is allowed to mute
-        console.log(moderator.has_access.everything, moderator.has_access.manage_users)
+
         if (!moderator.has_access.everything || !moderator.has_access.manage_users) {
             return { err: { status: 400, message: "You are not allowed to ban/unban  users. permission denied" } };
         }
@@ -96,16 +96,15 @@ const banUser = async (request) => {
                     permanent_flag: permanent_flag,
                     banned_until: banned_until,
                     note_for_ban_message: note_for_ban_message,
-                    profile_picture: user.profile_picture
+
                 }
             );
             await community.save();
-            console.log("community banned: ", community.banned_users);
+
         }
         else if (action == "unban") {
             community.banned_users = community.banned_users.filter((bannedUser) => bannedUser.username !== user.username);
             await community.save();
-            console.log("community banned: ", community.banned_users);
         }
 
         return { success: true };
@@ -128,19 +127,33 @@ const banUser = async (request) => {
  */
 const getBannedUsers = async (community_name) => {
     try {
-
         const community = await communityNameExists(community_name);
 
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
+        const returned_banned_users = [];
+        for (let i = 0; i < community.banned_users.length; i++) {
+            const user = await User.findOne({ username: community.banned_users[i].username });
+            if (user) {
+                returned_banned_users.push({
+                    username: user.username,
+                    banned_date: community.banned_users[i].banned_date,
+                    reason_for_ban: community.banned_users[i].reason_for_ban,
+                    mod_note: community.banned_users[i].mod_note,
+                    permanent_flag: community.banned_users[i].permanent_flag,
+                    banned_until: community.banned_users[i].banned_until,
+                    note_for_ban_message: community.banned_users[i].note_for_ban_message,
+                    profile_picture: user.profile_picture
+                });
+            }
 
-        return { users: community.banned_users };
+        }
+        return { users: returned_banned_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 }
-
 //////////////////////////////////////////////////////////////////////// Muted /////////////////////////////////////////////////////////////////////////
 /**
  * 
@@ -217,7 +230,7 @@ const muteUser = async (request) => {
                     muted_by_username: mutingUser.username,
                     mute_date: new Date(),
                     mute_reason: reason,
-                    profile_picture: user.profile_picture || "none"
+
                 });
 
             } else if (action === "unmute") {
@@ -272,8 +285,19 @@ const getMutedUsers = async (community_name) => {
         console.log("this is muted users:")
         console.log(community.muted_users)
         const muted_users = community.muted_users;
+        const returned_muted_users = [];
+        for (let i = 0; i < muted_users.length; i++) {
+            const user = await User.findOne({ username: muted_users[i].username });
+            returned_muted_users.push({
+                username: user.username,
+                muted_by_username: muted_users[i].muted_by_username,
+                mute_date: muted_users[i].mute_date,
+                mute_reason: muted_users[i].mute_reason,
+                profile_picture: user.profile_picture
 
-        return { users: muted_users };
+            })
+        }
+        return { users: returned_muted_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -346,7 +370,7 @@ const approveUser = async (request) => {
                 },
             };
         }
-        community.approved_users.push({ username: user_to_be_approved.username, approved_at: new Date(), profile_picture: user_to_be_approved.profile_picture });
+        community.approved_users.push({ username: user_to_be_approved.username, approved_at: new Date() });
         await community.save();
         console.log(community.approved_users);
         return { success: true };
@@ -381,7 +405,19 @@ const getApprovedUsers = async (community_name) => {
             };
         }
         const approved_users = community.approved_users;
-        return { users: approved_users };
+        //loop through the approved_users array and get the user object of each user
+        const returned_approved_users = [];
+        for (let i = 0; i < approved_users.length; i++) {
+            const user = await User.findOne({ username: approved_users[i].username });
+            returned_approved_users.push({
+                username: user.username,
+                approved_at: approved_users[i].approved_at,
+                profile_picture: user.profile_picture
+            });
+
+
+        }
+        return { users: returned_approved_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -436,7 +472,6 @@ const addModerator = async (requestBody) => {
         // Add the user as a moderator to the community
         community.moderators.push({
             username: user.username,
-            profile_picture: user.profile_picture,
             moderator_since: new Date(),
             has_access: {
                 everything: has_access.everything,
@@ -477,7 +512,7 @@ const addModerator = async (requestBody) => {
  */
 //all moderators
 const getModerators = async (community_name) => {
-
+    console.log("getModerators start");
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
@@ -485,8 +520,24 @@ const getModerators = async (community_name) => {
                 err: { status: 500, message: "Community not found." },
             };
         }
-
-        return { moderators: community.moderators };
+        const moderators = community.moderators;
+        //console.log("community.moderators", moderators);
+        const returned_moderators = [];
+        console.log("length")
+        console.log(moderators.length)
+        for (let i = 0; i < moderators.length; i++) {
+            //get the user object from the user collection where username is the moderator's username
+            const user = await User.findOne({ username: moderators[i].username });
+            console.log("user", user);
+            returned_moderators.push({
+                username: moderators[i].username,
+                profile_picture: user.profile_picture,
+                moderator_since: moderators[i].moderator_since,
+                has_access: moderators[i].has_access,
+            })
+        }
+        console.log("getModerators end");
+        return { returned_moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -510,18 +561,21 @@ const getEditableModerators = async (request) => {
                 err: { status: 400, message: "User is not a moderator of the community." },
             };
         }
-        console.log(moderator.moderator_since);
-        console.log(moderator.moderator_since < community.moderators[4].moderator_since);
         const editableModerators = [];
 
         for (let i = 0; i < community.moderators.length; i++) {
+            //get the user object from the user collection where username is the moderator's username
+            const user = await User.findOne({ username: community.moderators[i].username });
             if (community.moderators[i].moderator_since > moderator.moderator_since) {
-                editableModerators.push(community.moderators[i]);
+                editableModerators.push({
+                    username: community.moderators[i].username,
+                    profile_picture: user.profile_picture,
+                    moderator_since: community.moderators[i].moderator_since,
+                    has_access: community.moderators[i].has_access,
+                });
             };
         }
-
         //remove has_access from each moderator
-
         return { editableModerators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -607,7 +661,7 @@ const deleteModerator = async (requestBody) => {
  * @example
  * Output:
  * {success: true}
-
+ 
  */
 const moderatorLeaveCommunity = async (request) => {
     //use verify token to get the username

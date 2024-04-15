@@ -11,7 +11,7 @@ async function generateRandomApprovedUsers() {
         const fakeApprovedUser = {
             username: faker.internet.userName(),
             approved_at: faker.date.recent(),
-            profile_picture: faker.image.avatar()
+
         };
         approved_users.push(fakeApprovedUser);
     }
