@@ -451,15 +451,15 @@ const addModerator = async (requestBody) => {
         const { community_name, username, has_access } = requestBody;
 
         // Find the community by name
-        const community = await Community.findOne({ name: community_name });
+        const community = await communityNameExists(community_name);
         if (!community) {
-            return { err: { status: 404, message: "Community not found." } };
+            return { err: { status: 400, message: "Community not found." } };
         }
 
         // Find the user by username
         const user = await User.findOne({ username });
         if (!user) {
-            return { err: { status: 404, message: "User not found." } };
+            return { err: { status: 400, message: "User not found." } };
         }
 
         // Check if the user is already a moderator of the community
@@ -516,7 +516,7 @@ const getModerators = async (community_name) => {
         const community = await communityNameExists(community_name);
         if (!community) {
             return {
-                err: { status: 500, message: "Community not found." },
+                err: { status: 400, message: "Community not found." },
             };
         }
         const moderators = community.moderators;
@@ -550,7 +550,7 @@ const getEditableModerators = async (request) => {
         const community = await communityNameExists(request.params.community_name);
         if (!community) {
             return {
-                err: { status: 500, message: "Community not found." },
+                err: { status: 400, message: "Community not found." },
             };
         }
         //get the moderator element from moderators array where username is the user's username
@@ -610,15 +610,15 @@ const deleteModerator = async (requestBody) => {
         const { community_name, username } = requestBody;
 
         // Find the community by name
-        const community = await Community.findOne({ name: community_name });
+        const community = await communityNameExists(community_name);
         if (!community) {
-            return { err: { status: 404, message: "Community not found." } };
+            return { err: { status: 400, message: "Community not found." } };
         }
 
         // Find the user by username
         const user = await User.findOne({ username });
         if (!user) {
-            return { err: { status: 404, message: "User not found." } };
+            return { err: { status: 400, message: "User not found." } };
         }
 
         // Check if the user is a moderator of the community
@@ -664,20 +664,19 @@ const deleteModerator = async (requestBody) => {
  */
 const moderatorLeaveCommunity = async (request) => {
     //use verify token to get the username
-    console.log(request)
+
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
         //return error in auth token
         return { err: { status: status, message: msg } };
     }
     const { community_name } = request.body;
-    console.log("community_name")
-    console.log(community_name);
+
     const { username } = user;
     try {
-        const community = await Community.findOne({ name: community_name });
+        const community = await communityNameExists(community_name);
         if (!community) {
-            return { err: { status: 404, message: "Community not found." } };
+            return { err: { status: 400, message: "Community not found." } };
         }
         const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (username));
         if (moderatorIndex === -1) {
