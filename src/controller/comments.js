@@ -120,7 +120,7 @@ export async function newComment(request) {
   return {
     success: true,
     error: {},
-    message: "Comment created sucessfully ",
+    message: "Comment created successfully",
   };
 }
 
