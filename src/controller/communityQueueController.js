@@ -15,6 +15,7 @@ import {
 
 export const getRemovedItemsController = async (req, res, next) => {
     try {
+        console.log("Entered the controller")
         const { time_filter, posts_or_comments } = req.body;
         
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);

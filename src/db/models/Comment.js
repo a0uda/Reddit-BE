@@ -110,29 +110,31 @@ const commentSchema = new mongoose.Schema({
 
   //if in my own profile then Im the moderator
   moderator_details: {
-    approved_flag: { type: Boolean, default: false },
+    approved_flag: {type: Boolean, default: false},
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
-
+   
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
     removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
-
+   
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String },
+    spammed_date: { type: Date },
     spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String },
+    reported_date: { type: Date },
   },
 });
 
 commentSchema.pre("find", function (next) {
-  this.find({ deleted: true }, "deleted deleted_at");
+  this.find({ deleted: false }, "deleted deleted_at");
   next();
 });
 

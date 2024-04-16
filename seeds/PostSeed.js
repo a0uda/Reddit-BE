@@ -72,6 +72,7 @@ async function generateRandomPosts(users) {
         approved_flag: faker.datatype.boolean(),
         approved_by: moderator._id,
         approved_date: faker.date.past(),
+        approved_count: 0,
        
         removed_flag: faker.datatype.boolean(),
         removed_by: moderator._id,
@@ -81,11 +82,13 @@ async function generateRandomPosts(users) {
         spammed_flag: faker.datatype.boolean(),
         spammed_by: moderator._id,
         spammed_type: faker.lorem.word(),
+        spammed_date: faker.date.past(),
         spammed_removal_reason: faker.lorem.sentence(),
        
         reported_flag: faker.datatype.boolean(),
         reported_by: moderator._id,
         reported_type: faker.lorem.word(),
+        reported_date: faker.date.past(),
       },
 
       user_details: {
