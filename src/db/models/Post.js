@@ -30,7 +30,7 @@ export const postSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["image_and_videos", "polls", "url", "text", "hybrid","reposted"],
+    enum: ["image_and_videos", "polls", "url", "text", "hybrid", "reposted"],
     default: "text",
   },
   link_url: {
@@ -94,21 +94,29 @@ export const postSchema = new mongoose.Schema({
     ],
   },
   scheduled_flag: { type: Boolean, default: false },
+
+  //if in my own profile then Im the moderator
   moderator_details: {
-    //if in my own profile then Im the moderator
+    approved_flag: {type: Boolean, default: false},
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
+   
+    removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
+    removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+   
+    spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String },
-    removed_flag: { type: Boolean, default: false },
-    spammed_flag: { type: Boolean, default: false },
-    approved_flag: {
-      type: Boolean,
-      default: false,
-    },
+    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+
+    // TODO: add reported_flag, reported_by, reported_type.
+    reported_flag: { type: Boolean, default: false },
+    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reported_type: { type: String },
   },
+
   user_details: {
     total_views: { type: Number, default: 0, min: 0 },
     upvote_rate: { type: Number, default: 0, min: 0 },
@@ -135,7 +143,12 @@ export const postSchema = new mongoose.Schema({
   ],
 });
 postSchema.pre("find", function (next) {
-  this.find({ deleted: true }, "deleted deleted_at title");
+  // Define the projection based on whether the post is deleted or not
+  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+
+  // Set the projection to the query
+  this.select(projection);
+
   next();
 });
 export const Post = mongoose.model("Post", postSchema);

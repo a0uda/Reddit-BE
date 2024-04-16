@@ -189,7 +189,6 @@ export async function muteCommunity(request) {
     };
   }
 }
-
 export async function favoriteCommunity(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);

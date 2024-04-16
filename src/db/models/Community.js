@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const communitySchema = new mongoose.Schema({
+  //////////////////////////////////////////////////// Attributes filled when creating a community ////////////////////////////////////////////////////
   created_at: {
     type: Date,
     required: true,
@@ -11,13 +12,11 @@ const communitySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  title: {
-    type: String,
-  },
-  type: {
-    type: String,
-    enum: ["public", "private", "restricted"],
-  },
+
+  // TODO: "title" is an attribute in the "general settings" subdocument that needs to be filled eith the "name" attribute of the community when creating it.
+  // TODO: "type" is an attribute in the "general settings" subdocument that needs to be filled with the "type" value provided by the user when creating the community.
+
+  // This is a costume attribute required in the project that does not exist in reddit itself.
   category: {
     type: String,
     enum: [
@@ -48,17 +47,23 @@ const communitySchema = new mongoose.Schema({
     ],
     default: "Personal",
   },
-  nsfw_flag: {
-    type: Boolean,
-    default: false,
-  },
+
+  // TODO: "nsfw_flag" is an attribute in the "general settings" subdocument that needs to be filled with the "nsfw_flag" value provided by the user when creating the community.
+
+  // Initialized to zero on creation and incremented when a user joins the community and decremented when a user leaves the community.
   members_count: {
     type: Number,
     min: 0,
     default: 0,
   },
-  // TODO: There are constraints related to the number of characters and the number of words in some of the fields in the following subdocuments. Am I supposed to do them or will the frontend handle them?
-  // TODO: Eng Loay said that we aren't expected to cover the advanced settings in any of these subdocuments.
+
+  // TODO: Should be set to the user who created the community.
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+
+  //////////////////////////////////////////////// Subdocuments for the community settings - Part 1////////////////////////////////////////////////////
   general_settings: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "CommunityGeneralSettings",
@@ -71,43 +76,38 @@ const communitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "CommunityPostsAndComments",
   },
-  appearance: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "CommunityAppearance",
-  },
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////// User Management //////////////////////////////////////////////////////
   approved_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
         ref: "User",
       },
       approved_at: {
         type: Date,
         default: Date.now,
       },
+
     },
   ],
   muted_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
+      username: {
+        type: String,
         ref: "User",
       },
-      muted_by_id: {
-        type: mongoose.Schema.Types.ObjectId,
+      muted_by_username: {
+        type: String,
         ref: "User",
       },
       mute_date: Date,
       mute_reason: String,
+
     },
   ],
   banned_users: [
     {
-      id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
       username: {
         type: mongoose.Schema.Types.String,
         ref: "User",
@@ -128,16 +128,46 @@ const communitySchema = new mongoose.Schema({
       note_for_ban_message: {
         type: String,
       },
+
     },
   ],
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  moderators: [{
+    username: {
+      type: String,
+    },
+
+    moderator_since: {
+      type: Date,
+      default: Date.now
+    },
+    has_access: {
+      everything: { type: Boolean, default: true },
+      manage_users: { type: Boolean, default: true },
+      manage_settings: { type: Boolean, default: true },
+      manage_posts_and_comments: { type: Boolean, default: true },
+    }
+  }],
+
+  ////////////////////////////////////////////////////// Rules & Removal Reasons //////////////////////////////////////////////////////
   rules_ids: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Rule",
     },
   ],
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  removal_reasons: [
+    {
+      removal_reason_title: {
+        type: String,
+        required: true,
+      },
+      reason_message: {
+        type: String,
+        required: false,
+      },
+    },
+  ],
+  ////////////////////////////////////////////////////// Profile & Banner Pictures //////////////////////////////////////////////////////
   profile_picture: {
     type: String,
     default: "",
@@ -146,7 +176,8 @@ const communitySchema = new mongoose.Schema({
     type: String,
     default: "",
   },
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////// Edit Community Details Widget //////////////////////////////////////////////////////
   members_nickname: {
     type: String,
     default: "Members",
@@ -155,42 +186,22 @@ const communitySchema = new mongoose.Schema({
     type: String,
     default: "Online",
   },
-  traffic: String,
-  topics: String,
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  views_count: {
-    type: Number,
-    min: 0,
-    default: 0,
-  },
-  moderators: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    moderator_since: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  invited_moderators: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
+
+  // TODO: "description" is an attribute in the "general settings" subdocument that needs to be filled with the "description" value provided by the user in the "edit community details widget".
+
+
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //TODO: These do not appear in the databse we are seeding.
-  // I will work on adding then once I understand what they are used for.
-  traffic: String,
-  topics: String,
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
+  // I will work on adding them once I understand what they are used for.
+  // traffic: String,
+  // topics: String,
+
+  // views_count: {
+  //   type: Number,
+  //   min: 0,
+  //   default: 0,
+  // },
 });
 
 export const Community = mongoose.model("Community", communitySchema);
