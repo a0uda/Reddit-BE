@@ -7,7 +7,8 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "https://redditech.me/users/signup-google/callback";
+const REDIRECT_URI =
+  "https://redditech.me/backend/users/signup-google/callback";
 // DEVOPS
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
