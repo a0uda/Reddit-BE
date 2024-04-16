@@ -473,9 +473,17 @@ userSchema.pre("find", function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
+  this.token = jwt.sign(
+    {
+      _id: user._id.toString(),
+      username: user.username,
+      profile_picture: user.profile_picture,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    }
+  );
   const refreshToken = jwt.sign(
     { _id: user._id.toString() },
     process.env.JWT_SECRET,
