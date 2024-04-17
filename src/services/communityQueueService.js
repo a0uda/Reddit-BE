@@ -332,6 +332,14 @@ const spamItem = async (item_id, item_type, spammed_by, spammed_removal_reason =
       }
     }
 
+    const flagsCount = ['reported_flag'].filter(flag => item.moderator_details[flag]).length;
+
+    // Check if the current approved_count is less than (n + 1).
+    if (item.moderator_details.approved_count >= flagsCount + 1) {
+      return { err: { status: 400, message: 'The item has been removed the maximum number of times. You can only approve posts that are in one of the Queues, removed, reported, and unmoderated.' } };
+    }
+
+
     // If the item type is 'post', remove the post.
     if (item_type.toLowerCase() === 'post') {
       await Post.findByIdAndUpdate(item_id, {

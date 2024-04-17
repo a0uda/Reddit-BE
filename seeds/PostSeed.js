@@ -84,6 +84,7 @@ async function generateRandomPosts(users) {
         spammed_type: faker.lorem.word(),
         spammed_date: faker.date.past(),
         spammed_removal_reason: faker.lorem.sentence(),
+        removed_count: 0,
        
         reported_flag: faker.datatype.boolean(),
         reported_by: moderator._id,

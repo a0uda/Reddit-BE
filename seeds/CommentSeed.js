@@ -54,6 +54,7 @@ async function generateRandomComments(posts, users) {
         removed_by: moderator._id,
         removed_date: faker.date.past(),
         removed_removal_reason: faker.lorem.sentence(),
+        removed_count: 0,
        
         spammed_flag: faker.datatype.boolean(),
         spammed_by: moderator._id,

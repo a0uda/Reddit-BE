@@ -107,6 +107,7 @@ export const postSchema = new mongoose.Schema({
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
     removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_count: { type: Number, default: 0, min: 0 },
    
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
