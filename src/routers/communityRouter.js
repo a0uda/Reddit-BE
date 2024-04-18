@@ -278,6 +278,7 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 
 })
 
+
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {

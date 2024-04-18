@@ -400,7 +400,7 @@ const getApprovedUsers = async (community_name) => {
         const community = await communityNameExists(community_name);
         if (!community) {
             return {
-                err: { status: 500, message: "Community not found." },
+                err: { status: 400, message: "Community not found." },
             };
         }
         const approved_users = community.approved_users;

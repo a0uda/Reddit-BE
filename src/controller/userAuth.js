@@ -41,6 +41,7 @@ export async function verifyAuthToken(request) {
   }
 
   const userToken = jwt.verify(token, process.env.JWT_SECRET);
+  console.log("debugging verifyAuthToken")
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {

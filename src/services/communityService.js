@@ -43,7 +43,7 @@ const addNewCommunity = async (requestBody, creator) => {
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
   });
-  
+
   try {
     const duplicate_community = await Community.findOne({ name: name });
 
@@ -59,7 +59,7 @@ const addNewCommunity = async (requestBody, creator) => {
 
     const savedCommunity = await community.save();
 
-    return {community: savedCommunity};
+    return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -312,7 +312,7 @@ const getMembersCount = async (community_name) => {
     const community = await communityNameExists(community_name);
     if (!community) {
       return {
-        err: { status: 500, message: "community name does not exist " },
+        err: { status: 400, message: "community name does not exist " },
       };
     }
     console.log(community.members_count);
