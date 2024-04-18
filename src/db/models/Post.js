@@ -100,21 +100,26 @@ export const postSchema = new mongoose.Schema({
     approved_flag: {type: Boolean, default: false},
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
+    // TODO: the post could be approved a maximum of (n + 1) times, where n is the number of flags (other tan approve) evaluating to true.
+    approved_count: { type: Number, default: 0, min: 0 },
    
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
     removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_count: { type: Number, default: 0, min: 0 },
    
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String },
+    spammed_date: { type: Date },
     spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String },
+    reported_date: { type: Date },
   },
 
   user_details: {
@@ -143,11 +148,11 @@ export const postSchema = new mongoose.Schema({
   ],
 });
 postSchema.pre("find", function (next) {
-  this.find({ deleted: true }, "deleted deleted_at title");
+  this.find({ deleted: false }, "deleted deleted_at title");
   next();
 });
 export const Post = mongoose.model("Post", postSchema);
 
-// postSchema.pre("find", function () {
-//   this.where({ deleted: false });
-// });
+postSchema.pre("find", function () {
+  this.where({ deleted: false });
+});
