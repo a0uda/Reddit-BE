@@ -321,7 +321,7 @@ const getMembersCount = async (community_name) => {
     return { err: { status: 500, message: error.message } };
   }
 };
-//get community function
+//get community function added
 const getCommunity = async (community_name) => {
   try {
     const community = await Community.findOne({ name: community_name });
