@@ -13,7 +13,8 @@ import {
 
 
     getComments,
-    addComment
+    addComment,
+    getCommunity
 } from "../services/communityService.js";
 
 import {
@@ -556,4 +557,15 @@ communityRouter.get("/communities/members-count/:community_name", async (req, re
     }
 
 })
+//get community view
+communityRouter.get("/communities/get-community-view/:community_name", async (req, res, next) => {
+    try {
+        const { err, community } = await getCommunity(req.params.community_name)
+        if (err) { return next(err) }
+        return res.status(200).send(community)
+    } catch (error) {
+        next(error)
+    }
+}
+)
 export { communityRouter }

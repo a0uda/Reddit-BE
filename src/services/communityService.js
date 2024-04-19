@@ -321,7 +321,36 @@ const getMembersCount = async (community_name) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+//get community function
+const getCommunity = async (community_name) => {
+  try {
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 400, message: "community does not exist " } };
+    }
+    const general_settings_id = community.general_settings;
+    const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
 
+
+
+
+    return {
+      community: {
+        description: general_settings.description,
+        welcome_message: general_settings.welcome_message,
+        type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
+        nsfw_flag: general_settings.nsfw_flag,
+        members_count: community.members_count,
+        profile_picture: community.profile_picture,
+        banner_picture: community.banner_picture,
+        created_at: community.created_at,
+        welcome_message: general_settings.welcome_message.message || "" // sometimes this is empty string
+      }
+    };
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
 
 const approveDiscussionItem = async (requestBody) => {
   const { isPost, id } = requestBody;
@@ -361,4 +390,5 @@ export {
 
   getComments,
   addComment,
+  getCommunity
 };
