@@ -110,15 +110,15 @@ const commentSchema = new mongoose.Schema({
 
   //if in my own profile then Im the moderator
   moderator_details: {
-    approved_flag: {type: Boolean, default: false},
+    approved_flag: { type: Boolean, default: false },
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
-   
+
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
     removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
-   
+
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String },
@@ -135,7 +135,12 @@ const commentSchema = new mongoose.Schema({
 });
 
 commentSchema.pre("find", function (next) {
-  this.find({ deleted: false }, "deleted deleted_at");
+  // Define the projection based on whether the post is deleted or not
+  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+
+  // Set the projection to the query
+  this.select(projection);
+
   next();
 });
 

@@ -116,7 +116,7 @@ export async function addOrRemovePicture(
       return { success, err, status, user, msg };
     }
     if (!remove) {
-      user.profile_settings[pictureField] = request.body[pictureField];
+      user[pictureField] = request.body[pictureField];
       await user.save();
       return {
         success: true,
@@ -124,7 +124,7 @@ export async function addOrRemovePicture(
         msg: `User ${pictureField} added successfully`,
       };
     } else {
-      user.profile_settings[pictureField] = "";
+      user[pictureField] = "";
       await user.save();
       return {
         success: true,
@@ -189,7 +189,6 @@ export async function muteCommunity(request) {
     };
   }
 }
-
 export async function favoriteCommunity(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);

@@ -7,7 +7,8 @@ import jwt from "jsonwebtoken";
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = "https://redditech.me/users/signup-google/callback";
+const REDIRECT_URI =
+  "https://redditech.me/backend/users/signup-google/callback";
 // DEVOPS
 const CLIENT_ID_fb = process.env.FACEBOOK_CLIENT_ID;
 const CLIENT_SECRET_fb = process.env.FACEBOOK_CLIENT_SECRET;
@@ -41,6 +42,8 @@ import {
   getCommunities,
   getUserPosts,
   getUserComments,
+  getBlockedUsers,
+  getMutedCommunities,
 } from "../controller/userInfo.js";
 
 import {
@@ -975,7 +978,12 @@ usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
   try {
     const rposts = await getPosts(req, "saved_posts_ids");
     const rcomments = await getComments(req, "saved_comments_ids");
-    const result = { posts: rposts.posts, comments: rcomments.comments };
+    const result = {
+      success: rposts.success,
+      status: rposts.status,
+      posts: rposts.posts,
+      comments: rcomments.comments,
+    };
 
     res.status(rposts.status).json(result);
   } catch (error) {
@@ -1067,5 +1075,33 @@ usersRouter.post("/users/hide-unhide-post", async (req, res) => {
     res.status(200).send({ message });
   } catch (e) {
     res.status(500).send({ error: e });
+  }
+});
+
+usersRouter.get("/users/blocked-users", async (req, res) => {
+  try {
+    const result = await getBlockedUsers(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/muted-communities", async (req, res) => {
+  try {
+    const result = await getMutedCommunities(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
   }
 });

@@ -193,7 +193,7 @@ postsOrCommentsRouter.post("/posts-or-comments/vote", async (req, res) => {
   }
 });
 
-postsOrCommentsRouter.post("/posts-or-comments/save", async (req, res) => {
+postsOrCommentsRouter.patch("/posts-or-comments/save", async (req, res) => {
   try {
     let saveFunction;
     let targetType;
