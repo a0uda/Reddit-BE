@@ -120,6 +120,7 @@ export async function createPost(request) {
   //upvote++
   //add it is user upvote posts
   post.user_id = user._id;
+  post.username = user.username;
   post.created_at = Date.now();
   post.upvotes_count++;
   user.upvotes_posts_ids.push(post._id);
@@ -152,6 +153,7 @@ export async function sharePost(request) {
     const shared_post = new Post({
       created_at: Date.now(),
       user_id: user._id,
+      username: user.username,
       type: "reposted",
       title: caption,
       post_in_community_flag,
