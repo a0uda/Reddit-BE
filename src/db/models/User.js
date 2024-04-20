@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   },
   deleted_at: {
     type: Date,
+    default: null,
   },
   deleted: {
     type: Boolean,
@@ -22,6 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   token: {
     type: String,
+    default: null,
   },
   password: {
     type: String,
@@ -57,11 +59,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
+    default: null,
   },
   facebook_email: {
     type: String,
     unique: true,
     sparse: true,
+    default: null,
   },
   display_name: {
     type: String,
@@ -82,6 +86,7 @@ const userSchema = new mongoose.Schema({
       },
       display_text: {
         type: String,
+        default: null,
       },
       type: {
         type: String,
@@ -141,6 +146,7 @@ const userSchema = new mongoose.Schema({
         },
         blocked_date: {
           type: Date,
+          default: null,
         },
       },
     },
@@ -152,6 +158,7 @@ const userSchema = new mongoose.Schema({
         },
         muted_date: {
           type: Date,
+          default: null,
         },
       },
     ],
@@ -344,10 +351,12 @@ const userSchema = new mongoose.Schema({
   },
   country: {
     type: String,
+    default: null,
   },
   gender: {
     type: String,
     enum: ["Male", "Female"],
+    default: "Male",
   },
   followers_ids: {
     type: Array,

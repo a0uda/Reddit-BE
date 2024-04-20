@@ -95,3 +95,67 @@ export async function setSettings(request, flag) {
     message: "Settings set successfully",
   };
 }
+
+export async function addSocialLink(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    const { username, display_text, type, custom_url } = request.body;
+    if (!username || !type || !custom_url) {
+      return generateResponse(false, 400, "Missing required field");
+    }
+
+    const validOptions = [
+      "instagram",
+      "facebook",
+      "custom_url",
+      "reddit",
+      "twitter",
+      "tiktok",
+      "twitch",
+      "youtube",
+      "spotify",
+      "soundcloud",
+      "discord",
+      "paypal",
+    ];
+
+    // Check if type is in enum
+    if (!validOptions.includes(type)) {
+      return {
+        result: false,
+        message: "Type must be in " + validOptions.join(", "),
+      };
+    }
+    user.social_links.push({
+      username: user.username,
+      display_text: display_text ? display_text : null,
+      custom_url,
+      type,
+    });
+
+    await user.save();
+    return generateResponse(true, null, "Added social link successfully");
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
+  }
+}
+
+export async function deleteSocialLink(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+
+    const blockedUsers = await getBlockedUserHelper(user);
+    const mutedCommunities = await getMutedCommunitiesHelper(user);
+
+    const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
+    return { success: true, settings };
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
+  }
+}
