@@ -162,7 +162,12 @@ export async function getPosts(request, postsType) {
   }
 }
 
-export async function getUserComments(request) {
+export async function getUserComments(
+  request,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   try {
     const { username } = request.params;
     const user = await User.findOne({ username });
@@ -174,8 +179,14 @@ export async function getUserComments(request) {
         msg: "User not found",
       };
     }
-
-    const comments = await getUserCommentsHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    const comments = await getUserCommentsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
     return {
       success: true,
       status: 200,

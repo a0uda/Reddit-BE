@@ -895,7 +895,7 @@ usersRouter.get("/users/posts/:username", async (req, res) => {
     const { page = 1, pageSize = 10, sortBy = "best" } = req.query;
     const pageNumber = parseInt(page);
     const pageSizee = parseInt(pageSize);
-   
+
     const result = await getUserPosts(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
@@ -966,7 +966,10 @@ usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
 
 usersRouter.get("/users/comments/:username", async (req, res) => {
   try {
-    const result = await getUserComments(req);
+    const { page = 1, pageSize = 10, sortBy = "best" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getUserComments(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

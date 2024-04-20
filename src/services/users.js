@@ -3,7 +3,7 @@ import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
 import { getSortCriteria } from "../utils/lisitng.js";
-import { paginateUserPosts } from "./lisitngs.js";
+import { paginateUserPosts, paginateUserComments } from "./lisitngs.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -95,10 +95,42 @@ export async function getCommentsHelper(user, commentsType) {
   return filteredComments;
 }
 
-export async function getUserCommentsHelper(user) {
-  const comments = await Comment.find({ user_id: user._id }).exec();
+export async function getUserCommentsHelper(
+  loggedInUser,
+  user,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let comments = [];
+    if (loggedInUser) {
+      let hidden_comments = loggedInUser.reported_comments_ids;
 
-  return comments;
+      comments = await paginateUserComments(
+        user._id,
+        hidden_comments,
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    } else {
+      comments = await paginateUserComments(
+        user._id,
+        [],
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    }
+    console.log(comments);
+    return comments;
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    throw error;
+  }
 }
 
 export async function getCommunitiesHelper(user) {

@@ -1,4 +1,5 @@
 import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
 import { getSortCriteria } from "../utils/lisitng.js";
 
 export async function paginateFollowingPosts(
@@ -57,8 +58,26 @@ export async function paginateUserPosts(
     .skip(offset)
     .limit(pageSize)
     .exec();
-  
+
   return userPosts;
+}
+export async function paginateUserComments(
+  userId,
+  reported_comments,
+  offset,
+  sortCriteria,
+  pageSize
+) {
+  const userComments = await Comment.find({
+    user_id: userId,
+    _id: { $nin: reported_comments },
+  })
+    .sort(sortCriteria)
+    .skip(offset)
+    .limit(pageSize)
+    .exec();
+
+  return userComments;
 }
 
 export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
