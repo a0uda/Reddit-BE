@@ -560,7 +560,7 @@ communityRouter.get("/communities/members-count/:community_name", async (req, re
 //get community view
 communityRouter.get("/communities/get-community-view/:community_name", async (req, res, next) => {
     try {
-        const { err, community } = await getCommunity(req.params.community_name)
+        const { err, community } = await getCommunity(req)
         if (err) { return next(err) }
         return res.status(200).send(community)
     } catch (error) {

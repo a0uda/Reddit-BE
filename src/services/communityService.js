@@ -5,6 +5,8 @@ import { CommunityContentControls } from "../db/models/communityContentControls.
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
 import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
 import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
+
+import { verifyAuthToken } from "../controller/userAuth.js";
 //import { CommunityAppearance } from "../db/models/communityAppearance.js";
 
 import { User } from "../db/models/User.js"; //delete this line
@@ -322,8 +324,17 @@ const getMembersCount = async (community_name) => {
   }
 };
 //get community function added
-const getCommunity = async (community_name) => {
+const getCommunity = async (request) => {
   try {
+    //use verifyAuth to check if the user is authenticated
+    const community_name = request.params.community_name;
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      //return error in auth token
+      return { err: { status: status, message: msg } };
+    }
+    //check if user username exist in the community.approved_users.username 
+    const joined_flag = await Community.findOne({ name: community_name, approved_users: { $elemMatch: { username: user.username } } });
     const community = await Community.findOne({ name: community_name });
     if (!community) {
       return { err: { status: 400, message: "community does not exist " } };
@@ -344,7 +355,8 @@ const getCommunity = async (community_name) => {
         profile_picture: community.profile_picture,
         banner_picture: community.banner_picture,
         created_at: community.created_at,
-        welcome_message: general_settings.welcome_message.message || "" // sometimes this is empty string
+        welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
+        joined_flag: joined_flag ? true : false
       }
     };
   } catch (error) {
