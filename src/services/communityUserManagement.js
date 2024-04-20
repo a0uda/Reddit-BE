@@ -94,7 +94,7 @@ const banUser = async (request) => {
         //check if moderator object is allowed to mute
 
         if (
-            !moderator.has_access.everything ||
+            !moderator.has_access.everything &&
             !moderator.has_access.manage_users
         ) {
             return {
@@ -236,6 +236,7 @@ const muteUser = async (request) => {
             const isModerator = moderators.some(
                 (moderator) => moderator.username === mutingUser.username
             );
+            console.log("isModerator: ", isModerator);
             if (!isModerator) {
                 return {
                     err: {
@@ -251,7 +252,7 @@ const muteUser = async (request) => {
             );
             //check if moderator object is allowed to mute
             if (
-                !moderator.has_access.everything ||
+                !moderator.has_access.everything && //modify permissions 
                 !moderator.has_access.manage_users
             ) {
                 return {
@@ -414,7 +415,7 @@ const approveUser = async (request) => {
         console.log("moderator: ", moderator);
         //check if moderator object is allowed to mute
         if (
-            !moderator.has_access.everything ||
+            !moderator.has_access.everything &&
             !moderator.has_access.manage_users
         ) {
             return {

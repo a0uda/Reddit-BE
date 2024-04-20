@@ -357,7 +357,7 @@ const getCommunity = async (request) => {
 
     return {
       community: {
-        title: community.title,
+
         description: general_settings.description,
         welcome_message: general_settings.welcome_message,
         type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
