@@ -354,10 +354,9 @@ const getCommunity = async (request) => {
 
 
 
-
+    //TODO : UPDATE TITLE IN SEEDINGS 
     return {
       community: {
-
         description: general_settings.description,
         welcome_message: general_settings.welcome_message,
         type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
@@ -368,7 +367,8 @@ const getCommunity = async (request) => {
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
         joined_flag: joined_flag ? true : false,
-        title
+        title: "community_title"
+        // title: community.general_settings.title,
       }
     };
   } catch (error) {
