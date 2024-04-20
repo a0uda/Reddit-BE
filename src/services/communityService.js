@@ -36,14 +36,15 @@ const addNewCommunity = async (requestBody, creator) => {
     name,
     category,
     owner: creator._id,
-    moderators: [{
-      username: creator.username
-    }],
+    moderators: [
+      {
+        username: creator.username,
+      },
+    ],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
   });
-  
   try {
     const duplicate_community = await Community.findOne({ name: name });
 
@@ -59,7 +60,14 @@ const addNewCommunity = async (requestBody, creator) => {
 
     const savedCommunity = await community.save();
 
-    return {community: savedCommunity};
+    //add community id to user moderated communities
+    creator.moderated_communities.push({
+      id: savedCommunity._id,
+      favorite_flag: false,
+    });
+    await creator.save();
+
+    return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
@@ -81,9 +89,9 @@ const addDiscussionItemToCommunity = async (community_name, requestBody) => {
 
     await discussionItemMinimal.save();
 
-    if (discussion_item_type === 'post') {
+    if (discussion_item_type === "post") {
       community.posts.push(discussionItemMinimal._id);
-    } else if (discussion_item_type === 'comment') {
+    } else if (discussion_item_type === "comment") {
       community.comments.push(discussionItemMinimal._id);
     }
 
@@ -95,7 +103,10 @@ const addDiscussionItemToCommunity = async (community_name, requestBody) => {
   }
 };
 
-const getDiscussionItemsByCommunityCategory = async (category, discussion_item_type) => {
+const getDiscussionItemsByCommunityCategory = async (
+  category,
+  discussion_item_type
+) => {
   try {
     const items = await Community.aggregate([
       {
@@ -104,7 +115,7 @@ const getDiscussionItemsByCommunityCategory = async (category, discussion_item_t
       {
         $lookup: {
           from: "discussionitemminimals",
-          localField: discussion_item_type === 'post' ? 'posts' : 'comments',
+          localField: discussion_item_type === "post" ? "posts" : "comments",
           foreignField: "_id",
           as: "mergedItems",
         },
@@ -116,21 +127,21 @@ const getDiscussionItemsByCommunityCategory = async (category, discussion_item_t
         $replaceRoot: { newRoot: "$mergedItems" },
       },
       {
-        $match: { discussion_item_type: { $in: ['post', 'comment'] } },
+        $match: { discussion_item_type: { $in: ["post", "comment"] } },
       },
     ]);
 
     return { items };
   } catch (error) {
-
     return { err: { status: 500, message: error.message } };
   }
 };
 
 const getDiscussionItemsByRandomCategory = async (discussion_item_type) => {
   try {
-
-    const categories = mongoose.model("Community").schema.path("category").enumValues;
+    const categories = mongoose
+      .model("Community")
+      .schema.path("category").enumValues;
 
     const category = categories[Math.floor(Math.random() * categories.length)];
 
@@ -141,7 +152,7 @@ const getDiscussionItemsByRandomCategory = async (discussion_item_type) => {
       {
         $lookup: {
           from: "discussionitemminimals",
-          localField: discussion_item_type === 'post' ? 'posts' : 'comments',
+          localField: discussion_item_type === "post" ? "posts" : "comments",
           foreignField: "_id",
           as: "mergedItems",
         },
@@ -153,13 +164,12 @@ const getDiscussionItemsByRandomCategory = async (discussion_item_type) => {
         $replaceRoot: { newRoot: "$mergedItems" },
       },
       {
-        $match: { discussion_item_type: { $in: ['post', 'comment'] } },
+        $match: { discussion_item_type: { $in: ["post", "comment"] } },
       },
     ]);
 
     return { items };
   } catch (error) {
-
     return { err: { status: 500, message: error.message } };
   }
 };
@@ -180,7 +190,6 @@ const getCommunityMembersCount = async (community_name) => {
 const addComment = async (requestBody) => {
   const { description } = requestBody;
   try {
-
     const comment = new TempComment({
       description,
     });
@@ -202,9 +211,9 @@ const getComments = async () => {
 
 //////////////////////////////////////////////////////////////////////// Details Widget //////////////////////////////////////////////////////////////
 /**
- * 
- * @param {String} community_name 
- * @returns {Object}  
+ *
+ * @param {String} community_name
+ * @returns {Object}
  * {
  * widget: {
  * members_nickname: String,
@@ -219,7 +228,7 @@ const getComments = async () => {
  * message: String
  * }
  * }
- * 
+ *
  * @example
  * input: "community_name"
  * output: {
@@ -251,13 +260,13 @@ const getDetailsWidget = async (community_name) => {
   }
 };
 /**
- * 
- * @param {object} requestBody 
+ *
+ * @param {object} requestBody
  * @property {String} community_name
  * @property {String} members_nickname
  * @property {String} currently_viewing_nickname
  * @property {String} description
- * 
+ *
  * @returns
  * {
  * success: true
@@ -322,7 +331,6 @@ const getMembersCount = async (community_name) => {
   }
 };
 
-
 const approveDiscussionItem = async (requestBody) => {
   const { isPost, id } = requestBody;
   try {
@@ -348,17 +356,13 @@ const approveDiscussionItem = async (requestBody) => {
 
 export {
   addNewCommunity,
-
   addDiscussionItemToCommunity,
   getDiscussionItemsByCommunityCategory,
   getDiscussionItemsByRandomCategory,
-
   getCommunityMembersCount,
-
   getDetailsWidget,
   editDetailsWidget,
   getMembersCount,
-
   getComments,
   addComment,
 };

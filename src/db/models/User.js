@@ -141,7 +141,6 @@ const userSchema = new mongoose.Schema({
         },
         blocked_date: {
           type: Date,
-          default: Date.now(),
         },
       },
     },
