@@ -784,28 +784,30 @@ const moderatorLeaveCommunity = async (request) => {
     catch (error) {
         return { err: { status: 500, message: error.message } };
     }
+}
 
-    //////////////////////////////////////////////////////////////////////// Get All Users //////////////////////////////////////////////////////////////
-    const getAllUsers = async () => {
-        try {
-            const users = await User.find({});
-            return { users: users };
-        } catch (error) {
-            return { err: { status: 500, message: error.message } };
-        }
-    };
+//////////////////////////////////////////////////////////////////////// Get All Users //////////////////////////////////////////////////////////////
+const getAllUsers = async () => {
+    try {
+        const users = await User.find({});
+        return { users: users };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
-    export {
-        banUser,
-        getBannedUsers,
-        muteUser,
-        getMutedUsers,
-        approveUser,
-        getApprovedUsers,
-        addModerator,
-        getModerators,
-        deleteModerator,
-        moderatorLeaveCommunity,
-        getEditableModerators,
-        getAllUsers,
-    };
+export {
+    banUser,
+    getBannedUsers,
+    muteUser,
+    getMutedUsers,
+    approveUser,
+    getApprovedUsers,
+    addModerator,
+    getModerators,
+    deleteModerator,
+    moderatorLeaveCommunity,
+    getEditableModerators,
+    getAllUsers
+};
+

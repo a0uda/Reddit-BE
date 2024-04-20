@@ -357,6 +357,7 @@ const getCommunity = async (request) => {
 
     return {
       community: {
+        title: community.title,
         description: general_settings.description,
         welcome_message: general_settings.welcome_message,
         type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
@@ -366,7 +367,8 @@ const getCommunity = async (request) => {
         banner_picture: community.banner_picture,
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
-        joined_flag: joined_flag ? true : false
+        joined_flag: joined_flag ? true : false,
+        title
       }
     };
   } catch (error) {
