@@ -6,6 +6,10 @@ export const postSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  username: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -100,14 +104,11 @@ export const postSchema = new mongoose.Schema({
     approved_flag: { type: Boolean, default: false },
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_date: { type: Date },
-    // TODO: the post could be approved a maximum of (n + 1) times, where n is the number of flags (other tan approve) evaluating to true.
-    approved_count: { type: Number, default: 0, min: 0 },
 
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     removed_date: { type: Date },
     removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
-    removed_count: { type: Number, default: 0, min: 0 },
 
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
