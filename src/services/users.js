@@ -97,12 +97,18 @@ export async function getModeratedCommunitiesHelper(user) {
       const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture, members_count } = community;
+        const joinedCommunity = user.communities.find(
+          (joinedCommunityObj) =>
+            joinedCommunityObj.id.toString() == community._id.toString()
+        );
+        const joined = !joinedCommunity ? false : true;
         return {
           id: userCommunity.id.toString(),
           name,
           profile_picture,
           favorite_flag: userCommunity.favorite_flag,
           members_count,
+          joined,
         };
       }
     })
