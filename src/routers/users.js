@@ -892,7 +892,11 @@ usersRouter.post("/users/leave-community", async (req, res) => {
 
 usersRouter.get("/users/posts/:username", async (req, res) => {
   try {
-    const result = await getUserPosts(req);
+    const { page = 1, pageSize = 10, sortBy = "best" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+   
+    const result = await getUserPosts(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);

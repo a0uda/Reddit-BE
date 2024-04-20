@@ -88,7 +88,12 @@ export async function getFollowingCount(request) {
   };
 }
 
-export async function getUserPosts(request, postType) {
+export async function getUserPosts(
+  request,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   try {
     const { username } = request.params;
     const user = await User.findOne({ username });
@@ -100,7 +105,14 @@ export async function getUserPosts(request, postType) {
         msg: "User not found",
       };
     }
-    const posts = await getUserPostsHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    const posts = await getUserPostsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
     return {
       success: true,
       status: 200,
@@ -118,7 +130,7 @@ export async function getUserPosts(request, postType) {
   }
 }
 
-export async function getPosts(request) {
+export async function getPosts(request, postsType) {
   let user = null;
   try {
     const {
@@ -132,7 +144,7 @@ export async function getPosts(request) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const posts = await getPostsHelper(user);
+    const posts = await getPostsHelper(user, postsType);
     return {
       success: true,
       status: 200,
@@ -181,7 +193,7 @@ export async function getUserComments(request) {
   }
 }
 
-export async function getComments(request) {
+export async function getComments(request, commentsType) {
   let user = null;
   try {
     const {
@@ -195,7 +207,7 @@ export async function getComments(request) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const comments = await getCommentsHelper(user);
+    const comments = await getCommentsHelper(user, commentsType);
     return {
       success: true,
       status: 200,

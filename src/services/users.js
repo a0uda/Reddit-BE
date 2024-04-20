@@ -2,6 +2,8 @@ import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
+import { getSortCriteria } from "../utils/lisitng.js";
+import { paginateUserPosts } from "./lisitngs.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -46,11 +48,42 @@ export async function getPostsHelper(user, postsType) {
 }
 
 //Posts written by certain user
-export async function getUserPostsHelper(user) {
-  console.log(user._id);
-  const posts = await Post.find({ user_id: user._id }).exec();
-  console.log(posts);
-  return posts;
+export async function getUserPostsHelper(
+  loggedInUser,
+  user,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let posts = [];
+    if (loggedInUser) {
+      let hidden_posts = loggedInUser.hidden_and_reported_posts_ids;
+
+      posts = await paginateUserPosts(
+        user._id,
+        hidden_posts,
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    } else {
+      posts = await paginateUserPosts(
+        user._id,
+        [],
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    }
+    console.log(posts);
+    return posts;
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
 }
 
 export async function getCommentsHelper(user, commentsType) {
