@@ -47,6 +47,9 @@ import {
 } from "../controller/userInfo.js";
 
 import {
+  addSocialLink,
+  deleteSocialLink,
+  editSocialLink,
   getSafetySettings,
   getSettings,
   setSettings,
@@ -550,6 +553,51 @@ usersRouter.get("/users/profile-settings", async (req, res) => {
       return;
     }
     res.status(200).send({ message, content: settings.profile_settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/add-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await addSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/delete-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await deleteSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.patch("/users/edit-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await editSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
   } catch (e) {
     res
       .status(500)

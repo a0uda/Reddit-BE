@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   },
   deleted_at: {
     type: Date,
+    default: null,
   },
   deleted: {
     type: Boolean,
@@ -22,6 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   token: {
     type: String,
+    default: null,
   },
   password: {
     type: String,
@@ -82,6 +84,7 @@ const userSchema = new mongoose.Schema({
       },
       display_text: {
         type: String,
+        default: null,
       },
       type: {
         type: String,
@@ -141,6 +144,7 @@ const userSchema = new mongoose.Schema({
         },
         blocked_date: {
           type: Date,
+          default: null,
         },
       },
     },
@@ -152,6 +156,7 @@ const userSchema = new mongoose.Schema({
         },
         muted_date: {
           type: Date,
+          default: null,
         },
       },
     ],
@@ -344,10 +349,12 @@ const userSchema = new mongoose.Schema({
   },
   country: {
     type: String,
+    default: null,
   },
   gender: {
     type: String,
     enum: ["Male", "Female"],
+    default: "Male",
   },
   followers_ids: {
     type: Array,
@@ -458,7 +465,9 @@ userSchema.pre("save", async function (next) {
 
   //set an id for social link
   user.social_links.forEach((link) => {
-    link._id = new mongoose.Types.ObjectId();
+    if (!link._id) {
+      link._id = new mongoose.Types.ObjectId();
+    }
   });
 
   next();

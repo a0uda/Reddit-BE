@@ -95,3 +95,121 @@ export async function setSettings(request, flag) {
     message: "Settings set successfully",
   };
 }
+
+export async function addSocialLink(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    const { username, display_text, type, custom_url } = request.body;
+    if (!username || !type || !custom_url) {
+      return generateResponse(false, 400, "Missing required field");
+    }
+
+    const validOptions = [
+      "instagram",
+      "facebook",
+      "custom_url",
+      "reddit",
+      "twitter",
+      "tiktok",
+      "twitch",
+      "youtube",
+      "spotify",
+      "soundcloud",
+      "discord",
+      "paypal",
+    ];
+
+    // Check if type is in enum
+    if (!validOptions.includes(type)) {
+      return generateResponse(
+        false,
+        400,
+        "Type must be in " + validOptions.join(", ")
+      );
+    }
+    console.log(username, display_text, custom_url, type);
+    user.social_links.push({
+      username: user.username,
+      display_text: display_text ? display_text : null,
+      custom_url,
+      type,
+    });
+
+    await user.save();
+    return generateResponse(true, null, "Added social link successfully");
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
+  }
+}
+
+export async function editSocialLink(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    const { id, username, display_text, custom_url } = request.body;
+    if (!id) {
+      return generateResponse(
+        false,
+        400,
+        "Missing social link id required field"
+      );
+    }
+
+    const index = user.social_links.findIndex(
+      (sociallink) => sociallink._id.toString() == id.toString()
+    );
+    const socialLink = user.social_links.find(
+      (sociallink) => sociallink._id.toString() == id.toString()
+    );
+    console.log(user.social_links, id, index);
+    if (index !== -1) {
+      socialLink.username = username ? username : socialLink.username;
+      socialLink.custom_url = custom_url ? custom_url : socialLink.custom_url;
+      socialLink.display_text = display_text
+        ? display_text
+        : socialLink.display_text;
+
+      await user.save();
+      return generateResponse(true, null, "Edited social link successfully");
+    } else {
+      return generateResponse(false, 400, "Social link id not found");
+    }
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
+  }
+}
+
+export async function deleteSocialLink(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    const { id } = request.body;
+    if (!id) {
+      return generateResponse(
+        false,
+        400,
+        "Missing social link id required field"
+      );
+    }
+    const index = user.social_links.findIndex(
+      (sociallink) => sociallink._id.toString() == id.toString()
+    );
+    console.log(user.social_links, id, index);
+    if (index !== -1) {
+      user.social_links.splice(index, 1)[0];
+      await user.save();
+      return generateResponse(true, null, "Deleted social link successfully");
+    } else {
+      return generateResponse(false, 400, "Social link id not found");
+    }
+  } catch (error) {
+    return generateResponse(false, 400, error.message);
+  }
+}
