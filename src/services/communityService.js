@@ -352,13 +352,9 @@ const getCommunity = async (request) => {
     const general_settings_id = community.general_settings;
     const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
 
-
-
-    //TODO : UPDATE TITLE IN SEEDINGS 
-    return {
+    const returned_community = {
       community: {
         description: general_settings.description,
-        welcome_message: general_settings.welcome_message,
         type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
         nsfw_flag: general_settings.nsfw_flag,
         members_count: community.members_count,
@@ -367,11 +363,14 @@ const getCommunity = async (request) => {
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
         joined_flag: joined_flag ? true : false,
-        title: "community_title"
-        // title: community.general_settings.title,
+
+        title: community.general_settings.title,
       }
-    };
-  } catch (error) {
+    }
+    console.log(returned_community)
+    return returned_community
+  }
+  catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 }

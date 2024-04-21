@@ -480,6 +480,7 @@ const getApprovedUsers = async (community_name) => {
         const returned_approved_users = [];
         for (let i = 0; i < approved_users.length; i++) {
             const user = await User.findOne({ username: approved_users[i].username });
+            console.log(user)
             returned_approved_users.push({
                 username: user.username,
                 approved_at: approved_users[i].approved_at,
@@ -546,8 +547,6 @@ const addModerator = async (requestBody) => {
                 },
             };
         }
-
-        // Add the user as a moderator to the community
         community.moderators.push({
             username: user.username,
             moderator_since: new Date(),
@@ -558,9 +557,11 @@ const addModerator = async (requestBody) => {
                 manage_posts_and_comments: has_access.manage_posts_and_comments,
             },
         });
-        // Save the updated community
-        await community.save();
 
+        // Save the updated community
+        console.log("saving community");
+        await community.save();
+        console.log("saved")
         //add community id to user moderated communities
         user.moderated_communities.push({
             id: community._id,
