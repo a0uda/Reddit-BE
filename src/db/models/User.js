@@ -59,13 +59,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
-    default: null,
   },
   facebook_email: {
     type: String,
     unique: true,
     sparse: true,
-    default: null,
   },
   display_name: {
     type: String,
