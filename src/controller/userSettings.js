@@ -124,11 +124,13 @@ export async function addSocialLink(request) {
 
     // Check if type is in enum
     if (!validOptions.includes(type)) {
-      return {
-        result: false,
-        message: "Type must be in " + validOptions.join(", "),
-      };
+      return generateResponse(
+        false,
+        400,
+        "Type must be in " + validOptions.join(", ")
+      );
     }
+    console.log(username, display_text, custom_url, type);
     user.social_links.push({
       username: user.username,
       display_text: display_text ? display_text : null,
@@ -149,11 +151,26 @@ export async function deleteSocialLink(request) {
     if (!user) {
       return generateResponse(success, status, err);
     }
+    const { id } = request.body;
+    if (!id) {
+      return generateResponse(
+        false,
+        400,
+        "Missing social link id required field"
+      );
+    }
+    const index = user.social_links.findIndex(
+      (sociallink) => sociallink._id.toString() == id.toString()
+    );
+    console.log(user.social_links, id, index);
+    if (index !== -1) {
+      user.social_links.splice(index, 1)[0];
+      await user.save();
+      return generateResponse(true, null, "Deleted social link successfully");
+    } else {
+      return generateResponse(false, 400, "Social link id not found");
+    }
 
-    const blockedUsers = await getBlockedUserHelper(user);
-    const mutedCommunities = await getMutedCommunitiesHelper(user);
-
-    const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
     return { success: true, settings };
   } catch (error) {
     return generateResponse(false, 400, error.message);
