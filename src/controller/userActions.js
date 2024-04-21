@@ -38,7 +38,11 @@ export async function blockUser(request) {
       console.log("User removed from blocked users.");
       operation = "unblocked";
     } else {
-      userBlockedList.push(userToBlock._id);
+      const newBlockedUser = {
+        _id: userToBlock._id,
+        blocked_date: new Date(),
+      };
+      userBlockedList.push(newBlockedUser);
       console.log("User added to blocked users.");
       operation = "blocked";
       await followUserHelper(user, userToBlock, false);
@@ -161,14 +165,21 @@ export async function muteCommunity(request) {
     }
     const userMutedList = user.safety_and_privacy_settings.muted_communities;
 
-    const index = userMutedList.indexOf(communityToMute._id);
+    const index = userMutedList.findIndex(
+      (mutedCommunity) =>
+        mutedCommunity._id.toString() === communityToMute._id.toString()
+    );
     let operation = "";
     if (index !== -1) {
       userMutedList.splice(index, 1);
       console.log("Community removed from muted communities.");
       operation = "unmuted";
     } else {
-      userMutedList.push(communityToMute._id);
+      const newMutedCommunity = {
+        _id: communityToMute._id,
+        muted_date: new Date(),
+      };
+      userMutedList.push(newMutedCommunity);
       console.log("Community added to muted communities.");
       operation = "muted";
     }
