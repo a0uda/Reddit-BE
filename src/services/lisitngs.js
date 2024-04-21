@@ -61,6 +61,27 @@ export async function paginateUserPosts(
 
   return userPosts;
 }
+
+export async function paginatePosts(
+  user,
+  postsType,
+  hidden_posts,
+  offset,
+  sortCriteria,
+  pageSize
+) {
+  const userPosts = await Post.find({
+    user_id: user._id,
+    _id: { $nin: hidden_posts, $in: user[postsType] },
+  })
+    .sort(sortCriteria)
+    .skip(offset)
+    .limit(pageSize)
+    .exec();
+
+  return userPosts;
+}
+
 export async function paginateUserComments(
   userId,
   reported_comments,

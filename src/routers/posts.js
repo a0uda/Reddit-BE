@@ -49,7 +49,7 @@ postsRouter.get("/posts/get-post", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, post });
+    res.status(200).send({ message, content: post });
   } catch (e) {
     res.status(500).send({ error: e });
   }
@@ -64,7 +64,7 @@ postsRouter.get("/posts/get-user-details", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, user_details });
+    res.status(200).send({ message, content: user_details });
   } catch (e) {
     res.status(500).send({ error: e });
   }
@@ -77,7 +77,7 @@ postsRouter.get("/posts/get-comments", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, comments });
+    res.status(200).send({ message, content: comments });
   } catch (e) {
     res.status(500).send({ error: e });
   }
@@ -90,7 +90,7 @@ postsRouter.get("/posts/views-count", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, views_count });
+    res.status(200).send({ message, content: views_count });
   } catch (e) {
     res.status(500).send({ error: e });
   }

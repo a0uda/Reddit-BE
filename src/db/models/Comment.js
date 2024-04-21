@@ -43,8 +43,14 @@ const commentSchema = new mongoose.Schema({
     required: false,
     default: Date.now(),
   },
-  edited_at: Date,
-  deleted_at: Date,
+  edited_at: {
+    type: Date,
+    default: null,
+  },
+  deleted_at: {
+    type: Date,
+    default: null,
+  },
 
   deleted: {
     type: Boolean,
@@ -53,6 +59,7 @@ const commentSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+    default: null,
   },
   //flag used to indicate if comment is in community if not then it is in user profile
   //must be the same as its own post
@@ -67,6 +74,7 @@ const commentSchema = new mongoose.Schema({
   },
   community_name: {
     type: String,
+    default: null,
   },
   //there is nothing as upvotes and downvotes count, it is votes count only
   upvotes_count: { type: Number, default: 0 },
@@ -111,24 +119,42 @@ const commentSchema = new mongoose.Schema({
   //if in my own profile then Im the moderator
   moderator_details: {
     approved_flag: { type: Boolean, default: false },
-    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    approved_date: { type: Date },
+    approved_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    approved_date: { type: Date, default: null },
 
     removed_flag: { type: Boolean, default: false },
-    removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    removed_date: { type: Date },
-    removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    removed_date: { type: Date, default: null },
+    removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     spammed_flag: { type: Boolean, default: false },
-    spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    spammed_type: { type: String },
-    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    spammed_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    spammed_type: { type: String, default: null },
+    spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
-    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    reported_type: { type: String },
+    reported_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    reported_type: { type: String, default: null },
   },
+  upvote_users: [{ type: String }], // Array of usernames who upvoted
+  downvote_users: [{ type: String }], // Array of usernames who downvoted
 });
 
 commentSchema.pre("find", function (next) {

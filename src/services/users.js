@@ -3,7 +3,11 @@ import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
 import { getSortCriteria } from "../utils/lisitng.js";
-import { paginateUserPosts, paginateUserComments } from "./lisitngs.js";
+import {
+  paginateUserPosts,
+  paginateUserComments,
+  paginatePosts,
+} from "./lisitngs.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -40,11 +44,37 @@ export async function followUserHelper(user1, user2, follow = true) {
 }
 
 //Posts saved in user arrays
-export async function getPostsHelper(user, postsType) {
-  const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
+export async function getPostsHelper(
+  user,
+  postsType,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let hidden_posts = user.hidden_and_reported_posts_ids;
+    if (postsType == "hidden_and_reported_posts_ids") hidden_posts = [];
+    let posts = await paginatePosts(
+      user,
+      postsType,
+      hidden_posts,
+      offset,
+      sortCriteria,
+      pageSize
+    );
 
-  const filteredPosts = posts.filter((post) => post != null);
-  return filteredPosts;
+    console.log(posts);
+    return posts;
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
+  // const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
+
+  // const filteredPosts = posts.filter((post) => post != null);
+  // return filteredPosts;
 }
 
 //Posts written by certain user

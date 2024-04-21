@@ -12,7 +12,8 @@ import {
   getBlockedUserHelper,
 } from "../services/users.js";
 import { generateResponse } from "../utils/generalUtils.js";
-
+import { checkVotesMiddleware } from "../services/posts.js";
+import { checkCommentVotesMiddleware } from "../services/comments.js";
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -106,13 +107,17 @@ export async function getUserPosts(
       };
     }
     const { user: loggedInUser } = await verifyAuthToken(request);
-    const posts = await getUserPostsHelper(
+    var posts;
+    posts = await getUserPostsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
+    if (loggedInUser) {
+      posts = await checkVotesMiddleware(loggedInUser, posts);
+    }
     return {
       success: true,
       status: 200,
@@ -130,7 +135,13 @@ export async function getUserPosts(
   }
 }
 
-export async function getPosts(request, postsType) {
+export async function getPosts(
+  request,
+  postsType,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   let user = null;
   try {
     const {
@@ -144,7 +155,14 @@ export async function getPosts(request, postsType) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const posts = await getPostsHelper(user, postsType);
+    var posts = await getPostsHelper(
+      user,
+      postsType,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
+    posts = await checkVotesMiddleware(user, posts);
     return {
       success: true,
       status: 200,
@@ -180,13 +198,16 @@ export async function getUserComments(
       };
     }
     const { user: loggedInUser } = await verifyAuthToken(request);
-    const comments = await getUserCommentsHelper(
+    var comments = await getUserCommentsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
+    if (loggedInUser) {
+      comments = await checkCommentVotesMiddleware(loggedInUser, comments);
+    }
     return {
       success: true,
       status: 200,

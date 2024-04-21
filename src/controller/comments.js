@@ -47,16 +47,14 @@ export async function getComment(request, verifyUser) {
   };
 }
 
-export async function getCommentWithReplies(request, verifyUser) {
-  const { success, error, comment, user, message } = await getComment(
-    request,
-    false
-  );
+export async function getCommentWithReplies(request) {
+  const { success, error, comment, message } = await getComment(request, false);
   console.log(comment);
   if (!success) {
     return { success, error };
   }
-  const commentWithReplies = await getCommentRepliesHelper(comment);
+  const { user } = await verifyAuthToken(request);
+  const commentWithReplies = await getCommentRepliesHelper(user, comment);
   return {
     success: true,
     comment: commentWithReplies,
@@ -310,11 +308,41 @@ export async function commentVote(request) {
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
+
+    const downvoteIndex = comment.downvote_users.indexOf(user.username);
+    const upvoteIndex = comment.upvote_users.indexOf(user.username);
     if (request.body.vote == "1") {
-      comment.upvotes_count = comment.upvotes_count + 1;
+      //upvote
+      if (upvoteIndex != -1) {
+        //kan amel upvote -> toggle ysheel upvote
+        comment.upvote_users.splice(upvoteIndex, 1);
+        comment.upvotes_count--;
+      } else if (downvoteIndex != -1) {
+        //kan amel downvote-> ashelo mn downvote w ahoto f upvote
+        comment.downvote_users.splice(downvoteIndex, 1);
+        comment.downvotes_count--;
+        comment.upvotes_count++;
+        comment.upvote_users.push(user.username);
+      } else {
+        comment.upvotes_count++;
+        comment.upvote_users.push(user.username);
+      }
       await comment.save();
+      await user.save();
     } else {
-      comment.downvotes_count = comment.downvotes_count + 1;
+      if (downvoteIndex != -1) {
+        comment.downvote_users.splice(downvoteIndex, 1);
+        comment.downvotes_count--;
+      } else if (upvoteIndex != -1) {
+        comment.upvote_users.splice(upvoteIndex, 1);
+        comment.upvotes_count--;
+        comment.downvotes_count++;
+        comment.downvote_users.push(user.username);
+      } else {
+        comment.downvotes_count++;
+        comment.downvote_users.push(user.username);
+      }
+      await user.save();
       await comment.save();
     }
 
