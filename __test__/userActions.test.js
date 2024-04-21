@@ -376,7 +376,7 @@ describe("Community Muting", () => {
     const mockUser = {
       _id: "userId",
       safety_and_privacy_settings: {
-        muted_communities: [{ _id: "communityId" }],
+        muted_communities: [{ id: "communityId" }],
       },
       save: jest.fn(), // Mock the save function
     };

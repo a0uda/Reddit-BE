@@ -29,7 +29,7 @@ export async function blockUser(request) {
     const userBlockedList = user.safety_and_privacy_settings.blocked_users;
 
     const index = user.safety_and_privacy_settings.blocked_users.findIndex(
-      (blockedUser) => blockedUser._id.toString() == userToBlock._id.toString()
+      (blockedUser) => blockedUser.id.toString() == userToBlock._id.toString()
     );
     console.log(index);
     let operation = "";
@@ -39,7 +39,7 @@ export async function blockUser(request) {
       operation = "unblocked";
     } else {
       const newBlockedUser = {
-        _id: userToBlock._id,
+        id: userToBlock._id,
         blocked_date: new Date(),
       };
       userBlockedList.push(newBlockedUser);
@@ -167,7 +167,7 @@ export async function muteCommunity(request) {
 
     const index = userMutedList.findIndex(
       (mutedCommunity) =>
-        mutedCommunity._id.toString() === communityToMute._id.toString()
+        mutedCommunity.id.toString() === communityToMute._id.toString()
     );
     let operation = "";
     if (index !== -1) {
@@ -176,7 +176,7 @@ export async function muteCommunity(request) {
       operation = "unmuted";
     } else {
       const newMutedCommunity = {
-        _id: communityToMute._id,
+        id: communityToMute._id,
         muted_date: new Date(),
       };
       userMutedList.push(newMutedCommunity);
