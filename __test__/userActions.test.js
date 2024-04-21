@@ -376,7 +376,7 @@ describe("Community Muting", () => {
     const mockUser = {
       _id: "userId",
       safety_and_privacy_settings: {
-        muted_communities: ["communityId"],
+        muted_communities: [{ _id: "communityId" }],
       },
       save: jest.fn(), // Mock the save function
     };
@@ -389,7 +389,7 @@ describe("Community Muting", () => {
     Community.findOne = jest.fn().mockReturnValueOnce(mockCommunity);
 
     const result = await muteCommunity(requestBody);
-
+    console.log(result);
     expect(result.success).toBe(true);
     expect(result.status).toBe(200);
     expect(result.msg).toBe("Community unmuted successfully.");
