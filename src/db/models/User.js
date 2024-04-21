@@ -59,13 +59,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
-    default: null,
   },
   facebook_email: {
     type: String,
     unique: true,
     sparse: true,
-    default: null,
   },
   display_name: {
     type: String,
@@ -467,7 +465,9 @@ userSchema.pre("save", async function (next) {
 
   //set an id for social link
   user.social_links.forEach((link) => {
-    link._id = new mongoose.Types.ObjectId();
+    if (!link._id) {
+      link._id = new mongoose.Types.ObjectId();
+    }
   });
 
   next();
