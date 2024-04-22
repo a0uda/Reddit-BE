@@ -5,6 +5,8 @@ import { CommunityContentControls } from "../db/models/communityContentControls.
 import { CommunityPostsAndComments } from "../db/models/communityPostsAndComments.js";
 import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.js";
 import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
+
+import { verifyAuthToken } from "../controller/userAuth.js";
 //import { CommunityAppearance } from "../db/models/communityAppearance.js";
 
 import { User } from "../db/models/User.js"; //delete this line
@@ -45,6 +47,7 @@ const addNewCommunity = async (requestBody, creator) => {
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
   });
+
   try {
     const duplicate_community = await Community.findOne({ name: name });
 
@@ -321,7 +324,7 @@ const getMembersCount = async (community_name) => {
     const community = await communityNameExists(community_name);
     if (!community) {
       return {
-        err: { status: 500, message: "community name does not exist " },
+        err: { status: 400, message: "community name does not exist " },
       };
     }
     console.log(community.members_count);
@@ -330,6 +333,47 @@ const getMembersCount = async (community_name) => {
     return { err: { status: 500, message: error.message } };
   }
 };
+//get community function added
+const getCommunity = async (request) => {
+  try {
+    //use verifyAuth to check if the user is authenticated
+    const community_name = request.params.community_name;
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      //return error in auth token
+      return { err: { status: status, message: msg } };
+    }
+    //check if user username exist in the community.approved_users.username 
+    const joined_flag = await Community.findOne({ name: community_name, approved_users: { $elemMatch: { username: user.username } } });
+    const community = await Community.findOne({ name: community_name });
+    if (!community) {
+      return { err: { status: 400, message: "community does not exist " } };
+    }
+    const general_settings_id = community.general_settings;
+    const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
+
+    const returned_community = {
+      community: {
+        description: general_settings.description,
+        type: general_settings.type, //enum: ["Public", "Private", "Restricted"],
+        nsfw_flag: general_settings.nsfw_flag,
+        members_count: community.members_count,
+        profile_picture: community.profile_picture,
+        banner_picture: community.banner_picture,
+        created_at: community.created_at,
+        welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
+        joined_flag: joined_flag ? true : false,
+
+        title: community.general_settings.title,
+      }
+    }
+    console.log(returned_community)
+    return returned_community
+  }
+  catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+}
 
 const approveDiscussionItem = async (requestBody) => {
   const { isPost, id } = requestBody;
@@ -365,4 +409,5 @@ export {
   getMembersCount,
   getComments,
   addComment,
+  getCommunity
 };

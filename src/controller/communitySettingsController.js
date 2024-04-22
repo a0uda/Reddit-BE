@@ -22,9 +22,16 @@ async function getCommunityGeneralSettingsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
             const err = { status: 403, message: "Access denied. You must be a moderator to view this community's General Settings." };
             return next(err);
         }
@@ -50,9 +57,16 @@ async function getCommunityContentControlsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
             const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Content Controls." };
             return next(err);
         }
@@ -78,10 +92,17 @@ async function getCommunityPostsAndCommentsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Posts And Comments Settings." };
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
+            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Posts and Comments Settings." };
             return next(err);
         }
 
@@ -106,9 +127,16 @@ async function changeCommunityGeneralSettingsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
             const err = { status: 403, message: "Access denied. You must be a moderator to change this community's General Settings." };
             return next(err);
         }
@@ -136,10 +164,17 @@ async function changeCommunityContentControlsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Content Controls." };
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
+            const err = { status: 403, message: "Access denied. You must be a moderator to change this community's Content Controls." };
             return next(err);
         }
            
@@ -166,10 +201,17 @@ async function changeCommunityPostsAndCommentsController(req, res, next) {
 
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
+        const community = await Community.findOne({ name: community_name });
+
         if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Posts And Comments Settings." };
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+
+        if (!isModerator) {
+            const err = { status: 403, message: "Access denied. You must be a moderator to change this community's Posts and Comments Settings." };
             return next(err);
         }
         

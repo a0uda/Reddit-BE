@@ -13,7 +13,8 @@ import {
 
 
     getComments,
-    addComment
+    addComment,
+    getCommunity
 } from "../services/communityService.js";
 
 import {
@@ -74,7 +75,8 @@ import {
 
     removeItemController,
     spamItemController,
-    reportItemController
+    reportItemController,
+    approveItemController
 } from '../controller/communityQueueController.js';
 
 
@@ -102,6 +104,7 @@ communityRouter.get("/communities/about/unmoderated/:community_name", getUnmoder
 communityRouter.post("/communities/remove-item/:community_name", removeItemController);
 communityRouter.post("/communities/spam-item/:community_name", spamItemController);
 communityRouter.post("/communities/report-item/:community_name", reportItemController);
+communityRouter.post("/communities/approve-item/:community_name", approveItemController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
@@ -277,6 +280,7 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
     }
 
 })
+
 
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
@@ -553,4 +557,15 @@ communityRouter.get("/communities/members-count/:community_name", async (req, re
     }
 
 })
+//get community view
+communityRouter.get("/communities/get-community-view/:community_name", async (req, res, next) => {
+    try {
+        const { err, community } = await getCommunity(req)
+        if (err) { return next(err) }
+        return res.status(200).send(community)
+    } catch (error) {
+        next(error)
+    }
+}
+)
 export { communityRouter }
