@@ -32,6 +32,8 @@ import {
     deleteModerator,
     moderatorLeaveCommunity,
     getEditableModerators,
+    getModeratorsSortedByDate,
+    unapproveUser,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -295,6 +297,7 @@ communityRouter.get("/communities/about/approved/:community_name", async (req, r
         next(error)
     }
 })
+//unapprove user
 
 //i use this api just for testing because i cant open the database :) , it has nothing todo with community endpoints 
 communityRouter.get("/all-users", async (req, res, next) => {
@@ -320,6 +323,16 @@ communityRouter.post("/communities/approve-user", async (req, res, next) => {
 
         res.status(200).json({ message: 'OK' });
 
+    } catch (error) {
+        next(error)
+    }
+})
+//un approve user
+communityRouter.post("/communities/unapprove-user", async (req, res, next) => {
+    try {
+        const { err, success } = await unapproveUser(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
     } catch (error) {
         next(error)
     }
@@ -524,7 +537,16 @@ communityRouter.get("/communities/about/editable-moderators/:community_name", as
         next(error)
     }
 })
-
+//get moderators sorted by date
+communityRouter.get("/communities/about/moderators-sorted/:community_name", async (req, res, next) => {
+    try {
+        const { err, returned_moderators } = await getModeratorsSortedByDate(req)
+        if (err) { return next(err) }
+        return res.status(200).send(returned_moderators)
+    } catch (error) {
+        next(error)
+    }
+})
 //remove moderator
 communityRouter.post("/communities/remove-moderator", async (req, res, next) => {
     try {
