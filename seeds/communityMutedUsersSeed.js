@@ -9,7 +9,7 @@ async function generateRandomMutedUsers() {
     for (let i = 0; i < MUTED_USERS_COUNT; i++) {
         const fakeMutedUser = {
             username: getRandomElement(users).username,
-            muted_by_username: getRandomElement(users),
+            muted_by_username: getRandomElement(users).username,
             mute_date: faker.date.recent(),
             mute_reason: faker.lorem.sentence(),
         };
