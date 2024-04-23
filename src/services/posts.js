@@ -5,7 +5,8 @@ import {
   getCommunityPostsAndComments,
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
-export async function getCommentRepliesHelper(comment) {
+import { checkCommentVotesMiddleware } from "./comments.js";
+export async function getCommentRepliesHelper(user, comment) {
   const replies = comment.replies_comments_ids;
   comment.replies_comments_ids = [];
   for (const reply of replies) {
@@ -13,14 +14,29 @@ export async function getCommentRepliesHelper(comment) {
     comment.replies_comments_ids.push(replyObject);
   }
   return comment;
+
+  // const replies = comment.replies_comments_ids;
+  // comment.replies_comments_ids = [];
+  // for (const reply of replies) {
+  //   const replyObject = await Comment.findById(reply);
+  //   comment.replies_comments_ids.push(replyObject);
+  // }
+  // console.log(user);
+  // let x = comment.replies_comments_ids;
+  // if (user) {
+  //   x = await checkCommentVotesMiddleware(user, comment.replies_comments_ids);
+  // }
+  // comment.replies_comments_ids = x;
+  // console.log(comment.replies_comments_ids);
+  // return comment;
 }
 
-export async function getPostCommentsHelper(postId) {
+export async function getPostCommentsHelper(user, postId) {
   const comments = await Comment.find({ post_id: postId }).exec();
   if (!comments || comments.length === 0) return [];
   const commentsWithReplies = [];
   for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
+    const commentResult = await getCommentRepliesHelper(user, comment);
     console.log(commentResult);
     commentsWithReplies.push(commentResult);
   }
@@ -308,8 +324,9 @@ export async function checkContentSettings(post, community_name) {
         success: false,
         error: {
           status: 400,
-          message: `Posts must have links from ${restrictionType === "Required domains" ? "these" : "other"
-            } domains.`,
+          message: `Posts must have links from ${
+            restrictionType === "Required domains" ? "these" : "other"
+          } domains.`,
         },
       };
     }
@@ -345,4 +362,25 @@ export async function checkContentSettings(post, community_name) {
   return {
     success: true,
   };
+}
+
+export async function checkVotesMiddleware(currentUser, posts) {
+  // Assume currentUser is the authenticated user
+  const currentUserId = currentUser._id; // Assuming userId is used for comparison
+  // Fetch and populate posts with upvote/downvote status for the current user
+  posts = posts.map((post) => {
+    const isUpvoted =
+      currentUserId &&
+      currentUser.upvotes_posts_ids.includes(post._id.toString());
+    const isDownvoted =
+      currentUserId &&
+      currentUser.downvotes_posts_ids.includes(post._id.toString());
+    var vote = 0;
+    if (isUpvoted) vote = 1;
+    else if (isDownvoted) vote = -1;
+    // Add isUpvoted and isDownvoted as temporary fields
+    return { ...post.toObject(), vote };
+  });
+  // console.log("JI", posts);
+  return posts;
 }

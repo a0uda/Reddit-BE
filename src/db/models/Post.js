@@ -16,7 +16,7 @@ export const postSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    // required: true,
+    default: null,
   },
   created_at: {
     type: Date,
@@ -24,9 +24,11 @@ export const postSchema = new mongoose.Schema({
   },
   edited_at: {
     type: Date,
+    default: null,
   },
   deleted_at: {
     type: Date,
+    default: null,
   },
   deleted: {
     type: Boolean,
@@ -39,6 +41,7 @@ export const postSchema = new mongoose.Schema({
   },
   link_url: {
     type: String,
+    default: null,
   },
   images: [
     {
@@ -71,6 +74,7 @@ export const postSchema = new mongoose.Schema({
   },
   community_name: {
     type: String,
+    default: null,
   },
   //removed followers users id as already each user has his followed posts
   comments_count: { type: Number, default: 0, min: 0 },
@@ -96,6 +100,7 @@ export const postSchema = new mongoose.Schema({
       "Controversial",
       "New",
     ],
+    default: "None (Recommended)",
   },
   scheduled_flag: { type: Boolean, default: false },
 
@@ -103,23 +108,23 @@ export const postSchema = new mongoose.Schema({
   moderator_details: {
     approved_flag: { type: Boolean, default: false },
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    approved_date: { type: Date },
+    approved_date: { type: Date, default: null },
 
     removed_flag: { type: Boolean, default: false },
     removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    removed_date: { type: Date },
-    removed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_date: { type: Date, default: null },
+    removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    spammed_type: { type: String },
+    spammed_type: { type: String, default: null },
     spammed_date: { type: Date },
-    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    reported_type: { type: String },
+    reported_type: { type: String, default: null },
     reported_date: { type: Date },
   },
 

@@ -309,8 +309,8 @@ export async function getPostComments(request) {
   if (!success) {
     return { success, error };
   }
-
-  const comments = await getPostCommentsHelper(post._id);
+  const { user } = await verifyAuthToken(request);
+  const comments = await getPostCommentsHelper(user, post._id);
   return {
     success: true,
     comments,
@@ -543,10 +543,13 @@ export async function postVote(request) {
     const downvoteIndex = user.downvotes_posts_ids.indexOf(post._id);
     const upvoteIndex = user.upvotes_posts_ids.indexOf(post._id);
     if (request.body.vote == "1") {
+      //upvote
       if (upvoteIndex != -1) {
+        //kan amel upvote -> toggle ysheel upvote
         user.upvotes_posts_ids.splice(upvoteIndex, 1);
         post.upvotes_count--;
       } else if (downvoteIndex != -1) {
+        //kan amel downvote-> ashelo mn downvote w ahoto f upvote
         user.downvotes_posts_ids.splice(downvoteIndex, 1);
         post.downvotes_count--;
         post.upvotes_count = post.upvotes_count + 1;

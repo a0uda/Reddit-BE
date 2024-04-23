@@ -942,7 +942,11 @@ usersRouter.post("/users/leave-community", async (req, res) => {
 
 usersRouter.get("/users/posts/:username", async (req, res) => {
   try {
-    const result = await getUserPosts(req);
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+
+    const result = await getUserPosts(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -956,7 +960,16 @@ usersRouter.get("/users/posts/:username", async (req, res) => {
 
 usersRouter.get("/users/upvoted-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "upvotes_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "upvotes_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -970,7 +983,16 @@ usersRouter.get("/users/upvoted-posts", async (req, res) => {
 
 usersRouter.get("/users/downvoted-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "downvotes_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "downvotes_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -984,7 +1006,16 @@ usersRouter.get("/users/downvoted-posts", async (req, res) => {
 
 usersRouter.get("/users/history-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "history_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "history_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -998,7 +1029,16 @@ usersRouter.get("/users/history-posts", async (req, res) => {
 
 usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "hidden_and_reported_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "hidden_and_reported_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -1012,7 +1052,10 @@ usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
 
 usersRouter.get("/users/comments/:username", async (req, res) => {
   try {
-    const result = await getUserComments(req);
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getUserComments(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
     console.error("Error:", error);
@@ -1026,8 +1069,17 @@ usersRouter.get("/users/comments/:username", async (req, res) => {
 
 usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
   try {
+    const { page = 1, pageSize = 10, sortBy = "best" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
     const rposts = await getPosts(req, "saved_posts_ids");
-    const rcomments = await getComments(req, "saved_comments_ids");
+    const rcomments = await getComments(
+      req,
+      "saved_comments_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     const result = {
       success: rposts.success,
       status: rposts.status,

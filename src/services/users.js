@@ -2,6 +2,12 @@ import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
+import { getSortCriteria } from "../utils/lisitng.js";
+import {
+  paginateUserPosts,
+  paginateUserComments,
+  paginatePosts,
+} from "./lisitngs.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -38,19 +44,76 @@ export async function followUserHelper(user1, user2, follow = true) {
 }
 
 //Posts saved in user arrays
-export async function getPostsHelper(user, postsType) {
-  const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
+export async function getPostsHelper(
+  user,
+  postsType,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let hidden_posts = user.hidden_and_reported_posts_ids;
+    if (postsType == "hidden_and_reported_posts_ids") hidden_posts = [];
+    let posts = await paginatePosts(
+      user,
+      postsType,
+      hidden_posts,
+      offset,
+      sortCriteria,
+      pageSize
+    );
 
-  const filteredPosts = posts.filter((post) => post != null);
-  return filteredPosts;
+    console.log(posts);
+    return posts;
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
+  // const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
+
+  // const filteredPosts = posts.filter((post) => post != null);
+  // return filteredPosts;
 }
 
 //Posts written by certain user
-export async function getUserPostsHelper(user) {
-  console.log(user._id);
-  const posts = await Post.find({ user_id: user._id }).exec();
-  console.log(posts);
-  return posts;
+export async function getUserPostsHelper(
+  loggedInUser,
+  user,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let posts = [];
+    if (loggedInUser) {
+      let hidden_posts = loggedInUser.hidden_and_reported_posts_ids;
+
+      posts = await paginateUserPosts(
+        user._id,
+        hidden_posts,
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    } else {
+      posts = await paginateUserPosts(
+        user._id,
+        [],
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    }
+    console.log(posts);
+    return posts;
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
 }
 
 export async function getCommentsHelper(user, commentsType) {
@@ -62,10 +125,42 @@ export async function getCommentsHelper(user, commentsType) {
   return filteredComments;
 }
 
-export async function getUserCommentsHelper(user) {
-  const comments = await Comment.find({ user_id: user._id }).exec();
+export async function getUserCommentsHelper(
+  loggedInUser,
+  user,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let comments = [];
+    if (loggedInUser) {
+      let hidden_comments = loggedInUser.reported_comments_ids;
 
-  return comments;
+      comments = await paginateUserComments(
+        user._id,
+        hidden_comments,
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    } else {
+      comments = await paginateUserComments(
+        user._id,
+        [],
+        offset,
+        sortCriteria,
+        pageSize
+      );
+    }
+    console.log(comments);
+    return comments;
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    throw error;
+  }
 }
 
 export async function getCommunitiesHelper(user) {

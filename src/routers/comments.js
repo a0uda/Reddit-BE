@@ -19,7 +19,7 @@ commentsRouter.get("/comments/get-comment", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, comment });
+    res.status(200).send({ message, content: comment });
   } catch (e) {
     res.status(500).send({ error: e });
   }

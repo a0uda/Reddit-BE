@@ -12,7 +12,8 @@ import {
   getBlockedUserHelper,
 } from "../services/users.js";
 import { generateResponse } from "../utils/generalUtils.js";
-
+import { checkVotesMiddleware } from "../services/posts.js";
+import { checkCommentVotesMiddleware } from "../services/comments.js";
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -88,7 +89,12 @@ export async function getFollowingCount(request) {
   };
 }
 
-export async function getUserPosts(request, postType) {
+export async function getUserPosts(
+  request,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   try {
     const { username } = request.params;
     const user = await User.findOne({ username });
@@ -100,7 +106,18 @@ export async function getUserPosts(request, postType) {
         msg: "User not found",
       };
     }
-    const posts = await getUserPostsHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    var posts;
+    posts = await getUserPostsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
+    if (loggedInUser) {
+      posts = await checkVotesMiddleware(loggedInUser, posts);
+    }
     return {
       success: true,
       status: 200,
@@ -118,7 +135,13 @@ export async function getUserPosts(request, postType) {
   }
 }
 
-export async function getPosts(request) {
+export async function getPosts(
+  request,
+  postsType,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   let user = null;
   try {
     const {
@@ -132,7 +155,14 @@ export async function getPosts(request) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const posts = await getPostsHelper(user);
+    var posts = await getPostsHelper(
+      user,
+      postsType,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
+    posts = await checkVotesMiddleware(user, posts);
     return {
       success: true,
       status: 200,
@@ -150,7 +180,12 @@ export async function getPosts(request) {
   }
 }
 
-export async function getUserComments(request) {
+export async function getUserComments(
+  request,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   try {
     const { username } = request.params;
     const user = await User.findOne({ username });
@@ -162,8 +197,17 @@ export async function getUserComments(request) {
         msg: "User not found",
       };
     }
-
-    const comments = await getUserCommentsHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    var comments = await getUserCommentsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
+    if (loggedInUser) {
+      comments = await checkCommentVotesMiddleware(loggedInUser, comments);
+    }
     return {
       success: true,
       status: 200,
@@ -181,7 +225,7 @@ export async function getUserComments(request) {
   }
 }
 
-export async function getComments(request) {
+export async function getComments(request, commentsType) {
   let user = null;
   try {
     const {
@@ -195,7 +239,7 @@ export async function getComments(request) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const comments = await getCommentsHelper(user);
+    const comments = await getCommentsHelper(user, commentsType);
     return {
       success: true,
       status: 200,
