@@ -48,12 +48,11 @@ async function generateRandomCommunities() {
         const muted_users = await generateRandomMutedUsers();
         const banned_users = await generateRandomBannedUsers();
         const approved_users = await generateRandomApprovedUsers();
-        const moderators = users.slice(0, 3); // Select first 3 users as moderators
-        const invitedModerators = users.slice(3, 6);
-
+        const moderators = users.slice(0, 3); // Select first 3 users as moderators      
         const fakeCommunity = {
             // Basic Attributes.
             created_at: Date.now(),
+            title: faker.company.catchPhrase(),
             name: faker.company.name().replace(/[^a-zA-Z0-9]/g, '_'),
             category: getRandomElement([
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
@@ -80,7 +79,8 @@ async function generateRandomCommunities() {
                     manage_posts_and_comments: faker.datatype.boolean(),
                 },
             })),
-            invited_moderators: invitedModerators.map(user => user._id),
+
+
 
             rules_ids: selectedRules,
             removal_reasons: [

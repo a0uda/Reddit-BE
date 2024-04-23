@@ -121,7 +121,7 @@ export async function getUserPosts(
     return {
       success: true,
       status: 200,
-      posts,
+      content: posts,
       msg: "Posts retrieved successfully.",
     };
   } catch (error) {
@@ -166,8 +166,8 @@ export async function getPosts(
     return {
       success: true,
       status: 200,
-      posts,
-      msg: "Posts retrieved successfully.",
+      content: posts,
+      message: "Posts retrieved successfully.",
     };
   } catch (error) {
     console.error("Error:", error);
@@ -211,8 +211,8 @@ export async function getUserComments(
     return {
       success: true,
       status: 200,
-      comments,
-      msg: "  Comments retrieved successfully.",
+      content: comments,
+      message: "  Comments retrieved successfully.",
     };
   } catch (error) {
     console.error("Error:", error);
@@ -269,11 +269,13 @@ export async function getOverview(request) {
     }
     const posts = await getUserPostsHelper(user);
     const comments = await getUserCommentsHelper(user);
+    //concat 2 arrays
+    const overview = posts.concat(comments);
 
     return {
       success: true,
       message: "Comments and posts retrieved successfully",
-      overview: { posts: posts, comments: comments },
+      content: overview,
     };
   } catch (error) {
     console.error("Error:", error);
@@ -292,11 +294,11 @@ export async function getAbout(request) {
       return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
-
+    const moderatedCommunities = await getModeratedCommunitiesHelper(user);
     return {
       success: true,
       message: "About retrieved successfully",
-      about: about,
+      about: { ...about, moderatedCommunities },
     };
   } catch (error) {
     console.error("Error:", error);
@@ -317,7 +319,7 @@ export async function getCommunities(request, communityType) {
         success: true,
         status: 200,
         msg: "Your moderated communities are retrieved successfully",
-        moderated_communities: moderatedCommunities,
+        content: moderatedCommunities,
       };
     } else {
       const communities = await getCommunitiesHelper(user);
@@ -325,7 +327,7 @@ export async function getCommunities(request, communityType) {
         success: true,
         status: 200,
         msg: "Your communities are retrieved successfully",
-        communities: communities,
+        content: communities,
       };
     }
   } catch (error) {
@@ -347,12 +349,13 @@ export async function getBlockedUsers(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    const blocked_users = getBlockedUserHelper(user);
+    const blocked_users = await getBlockedUserHelper(user);
+    // console.log(blocked_users);
     return {
       success: true,
-      msg: "Your blocked users list is retrieved successfully",
+      message: "Your blocked users list is retrieved successfully",
       status: 200,
-      blocked_users: blocked_users,
+      content: blocked_users,
     };
   } catch (error) {
     console.error("Error:", error);
@@ -373,12 +376,12 @@ export async function getMutedCommunities(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    const muted_communities = getMutedCommunitiesHelper(user);
+    const muted_communities = await getMutedCommunitiesHelper(user);
     return {
       success: true,
-      msg: "Your muted communities list is retrieved successfully",
+      message: "Your muted communities list is retrieved successfully",
       status: 200,
-      muted_communities: muted_communities,
+      content: muted_communities,
     };
   } catch (error) {
     console.error("Error:", error);

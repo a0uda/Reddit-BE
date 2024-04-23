@@ -118,12 +118,14 @@ export const postSchema = new mongoose.Schema({
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String, default: null },
+    spammed_date: { type: Date },
     spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String, default: null },
+    reported_date: { type: Date },
   },
 
   user_details: {
@@ -162,6 +164,6 @@ postSchema.pre("find", function (next) {
 });
 export const Post = mongoose.model("Post", postSchema);
 
-// postSchema.pre("find", function () {
-//   this.where({ deleted: false });
-// });
+postSchema.pre("find", function () {
+  this.where({ deleted: false });
+});

@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-// community_name Howe_and_Sons
-
 const url = "mongodb+srv://ahmedabdelgawad011:BackendReddit@cluster0.workift.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 async function dropCollections() {
@@ -15,8 +13,8 @@ async function dropCollections() {
         console.log(collections);
 
         for (const { name } of collections) {
-            if (name === 'tokens') {
-                console.log('Skipping tokens collection');
+            if (name === 'users' || name === 'tokens') {
+                console.log(`Skipping ${name} collection`);
                 continue;
             }
 

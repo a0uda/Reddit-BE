@@ -47,6 +47,9 @@ import {
 } from "../controller/userInfo.js";
 
 import {
+  addSocialLink,
+  deleteSocialLink,
+  editSocialLink,
   getSafetySettings,
   getSettings,
   setSettings,
@@ -438,7 +441,7 @@ usersRouter.get("/users/followers", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, users });
+    res.status(200).send({ message, content: users });
   } catch (e) {
     res
       .status(500)
@@ -453,7 +456,7 @@ usersRouter.get("/users/following", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, users });
+    res.status(200).send({ message, content: users });
   } catch (e) {
     res
       .status(500)
@@ -468,7 +471,7 @@ usersRouter.get("/users/followers-count", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, "followers-count": count });
+    res.status(200).send({ message, content: count });
   } catch (e) {
     res
       .status(500)
@@ -483,7 +486,7 @@ usersRouter.get("/users/following-count", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, "following-count": count });
+    res.status(200).send({ message, content: count });
   } catch (e) {
     res
       .status(500)
@@ -498,7 +501,7 @@ usersRouter.get("/users/about/:username", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, about });
+    res.status(200).send({ message, content: about });
   } catch (e) {
     res
       .status(500)
@@ -508,12 +511,12 @@ usersRouter.get("/users/about/:username", async (req, res) => {
 
 usersRouter.get("/users/overview/:username", async (req, res) => {
   try {
-    const { success, error, message, overview } = await getOverview(req);
+    const { success, error, message, content } = await getOverview(req);
     if (!success) {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, overview });
+    res.status(200).send({ message, content });
   } catch (e) {
     res
       .status(500)
@@ -531,7 +534,7 @@ usersRouter.get("/users/account-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings.account_settings });
   } catch (e) {
     res
       .status(500)
@@ -549,7 +552,52 @@ usersRouter.get("/users/profile-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings.profile_settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/add-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await addSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/delete-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await deleteSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.patch("/users/edit-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await editSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
   } catch (e) {
     res
       .status(500)
@@ -567,7 +615,7 @@ usersRouter.get("/users/feed-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings.feed_settings });
   } catch (e) {
     res
       .status(500)
@@ -585,7 +633,7 @@ usersRouter.get("/users/notification-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings.notifications_settings });
   } catch (e) {
     res
       .status(500)
@@ -603,7 +651,7 @@ usersRouter.get("/users/email-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings.email_settings });
   } catch (e) {
     res
       .status(500)
@@ -621,7 +669,9 @@ usersRouter.get("/users/chats-and-msgs-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res
+      .status(200)
+      .send({ message, content: settings.chat_and_messaging_settings });
   } catch (e) {
     res
       .status(500)
@@ -636,7 +686,7 @@ usersRouter.get("/users/safety-settings", async (req, res) => {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message, settings });
+    res.status(200).send({ message, content: settings });
   } catch (e) {
     res
       .status(500)
@@ -1033,8 +1083,7 @@ usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
     const result = {
       success: rposts.success,
       status: rposts.status,
-      posts: rposts.posts,
-      comments: rcomments.comments,
+      content: rposts.posts.concat(rcomments.comments),
     };
 
     res.status(rposts.status).json(result);
