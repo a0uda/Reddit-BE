@@ -70,7 +70,7 @@ describe("User Blocking", () => {
       _id: "userId",
       username: "unblockingUser",
       safety_and_privacy_settings: {
-        blocked_users: [{ _id: 1234 }],
+        blocked_users: [{ id: 1234 }],
       },
       save: jest.fn(),
     };
