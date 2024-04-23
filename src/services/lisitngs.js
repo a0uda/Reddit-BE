@@ -111,7 +111,10 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
     if (currentUser) {
       let followedUsers = currentUser.following_ids; // Assuming following_ids contains user IDs of followed users
       let hidden_posts = currentUser.hidden_and_reported_posts_ids;
-      let blocked_users = currentUser.safety_and_privacy_settings.blocked_users;
+      let blocked_users =
+        currentUser.safety_and_privacy_settings.blocked_users.map(
+          (user) => user.id
+        );
       // Check if the user follows anyone
       if (followedUsers.length > 0) {
         // Fetch posts from followed users
@@ -128,7 +131,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
         posts = await Post.aggregate([
           {
             $match: {
-              user_id: { $nin: blockedUserIds },
+              user_id: { $nin: blocked_users },
               _id: { $nin: hidden_posts },
             },
           },
