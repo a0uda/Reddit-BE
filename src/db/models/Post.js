@@ -139,19 +139,17 @@ export const postSchema = new mongoose.Schema({
     default: false,
   },
   //if true fill in this object
-  reposted: [
-    {
-      //don't need it as user id is the one who reposted
-      // shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      //don't need it as title is the caption
-      // caption: { type: String, default: null },
-      //shared to-> community name aady
-      original_post_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
-      },
+  reposted: {
+    //don't need it as user id is the one who reposted
+    // shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    //don't need it as title is the caption
+    // caption: { type: String, default: null },
+    //shared to-> community name aady
+    original_post_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
     },
-  ],
+  },
 });
 postSchema.pre("find", function (next) {
   // Define the projection based on whether the post is deleted or not

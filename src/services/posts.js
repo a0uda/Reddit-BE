@@ -6,7 +6,9 @@ import {
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
 import { checkCommentVotesMiddleware } from "./comments.js";
-export async function getCommentRepliesHelper(user, comment) {
+import mongoose from "mongoose";
+
+export async function getCommentRepliesHelper(comment) {
   const replies = comment.replies_comments_ids;
   comment.replies_comments_ids = [];
   for (const reply of replies) {
@@ -31,12 +33,12 @@ export async function getCommentRepliesHelper(user, comment) {
   // return comment;
 }
 
-export async function getPostCommentsHelper(user, postId) {
+export async function getPostCommentsHelper(postId) {
   const comments = await Comment.find({ post_id: postId }).exec();
   if (!comments || comments.length === 0) return [];
   const commentsWithReplies = [];
   for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(user, comment);
+    const commentResult = await getCommentRepliesHelper(comment);
     console.log(commentResult);
     commentsWithReplies.push(commentResult);
   }
@@ -366,21 +368,27 @@ export async function checkContentSettings(post, community_name) {
 
 export async function checkVotesMiddleware(currentUser, posts) {
   // Assume currentUser is the authenticated user
-  const currentUserId = currentUser._id; // Assuming userId is used for comparison
-  // Fetch and populate posts with upvote/downvote status for the current user
-  posts = posts.map((post) => {
-    const isUpvoted =
-      currentUserId &&
-      currentUser.upvotes_posts_ids.includes(post._id.toString());
-    const isDownvoted =
-      currentUserId &&
-      currentUser.downvotes_posts_ids.includes(post._id.toString());
-    var vote = 0;
-    if (isUpvoted) vote = 1;
-    else if (isDownvoted) vote = -1;
-    // Add isUpvoted and isDownvoted as temporary fields
-    return { ...post.toObject(), vote };
-  });
-  // console.log("JI", posts);
-  return posts;
+  if (currentUser) {
+    console.log(currentUser, posts);
+    const currentUserId = currentUser._id; // Assuming userId is used for comparison
+    // Fetch and populate posts with upvote/downvote status for the current user
+    posts = posts.map((post) => {
+      const isUpvoted =
+        currentUserId &&
+        currentUser.upvotes_posts_ids.includes(post._id.toString());
+      const isDownvoted =
+        currentUserId &&
+        currentUser.downvotes_posts_ids.includes(post._id.toString());
+      var vote = 0;
+      if (isUpvoted) vote = 1;
+      else if (isDownvoted) vote = -1;
+      // Add isUpvoted and isDownvoted as temporary fields
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), vote };
+      else return { ...post, vote };
+    });
+    console.log(posts);
+    return posts;
+  }
+  return null;
 }

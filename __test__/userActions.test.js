@@ -50,7 +50,7 @@ describe("User Blocking", () => {
     User.findOne = jest.fn().mockReturnValueOnce(mockUserToBlock);
 
     const result = await blockUser(requestBody);
-    console.log(result);
+    // console.log(result);
     expect(result.success).toBe(true);
     expect(result.status).toBe(200);
     expect(result.msg).toBe("User blocked successfully.");
@@ -389,7 +389,7 @@ describe("Community Muting", () => {
     Community.findOne = jest.fn().mockReturnValueOnce(mockCommunity);
 
     const result = await muteCommunity(requestBody);
-    console.log(result);
+    // console.log(result);
     expect(result.success).toBe(true);
     expect(result.status).toBe(200);
     expect(result.msg).toBe("Community unmuted successfully.");

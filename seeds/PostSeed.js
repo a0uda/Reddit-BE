@@ -97,7 +97,6 @@ async function generateRandomPosts(users) {
         upvote_rate: getRandomNumber(0, 10),
         total_shares: getRandomNumber(0, 10),
       },
-      reposted: [],
     };
 
     posts.push(fakePost);

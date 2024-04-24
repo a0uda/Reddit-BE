@@ -3,7 +3,7 @@ import { verifyAuthToken } from "./userAuth.js";
 import { User } from "../db/models/User.js";
 import { getSortCriteria } from "../utils/lisitng.js";
 import { getPostsHelper } from "../services/lisitngs.js";
-
+import { checkVotesMiddleware } from "../services/posts.js";
 export async function getPostsPaginated(
   request,
   pageNumber = 1,
@@ -32,16 +32,17 @@ export async function getPostsPaginated(
     const offset = (pageNumber - 1) * pageSize;
 
     // Fetch posts with pagination and sorting
-    const { posts } = await getPostsHelper(user, offset, pageSize, sortBy);
-
+    var posts = await getPostsHelper(user, offset, pageSize, sortBy);
+    // console.log(posts);
+    if (user) posts = await checkVotesMiddleware(user, posts);
     return {
       success: true,
       status: 200,
-      posts,
+      content: posts,
       msg: "Posts retrieved successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,

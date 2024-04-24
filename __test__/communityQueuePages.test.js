@@ -108,7 +108,7 @@ describe('getRemovedItems', () => {
         const result = await getRemovedItems(communityName, timeFilter, postsOrComments);
 
         // Check if Comment.find was called with the correct arguments
-        console.log(Comment.find.mock.calls);
+        // console.log(Comment.find.mock.calls);
         expect(Comment.find).toHaveBeenCalledWith({
             ...expectedQuery,
             community_name: communityName
@@ -321,7 +321,7 @@ describe('getReportedItems', () => {
         const result = await getReportedItems(communityName, timeFilter, postsOrComments);
 
         // Check if Comment.find was called with the correct arguments
-        console.log(Comment.find.mock.calls);
+        // console.log(Comment.find.mock.calls);
         expect(Comment.find).toHaveBeenCalledWith({
             ...expectedQuery,
             community_name: communityName
@@ -522,7 +522,7 @@ describe('getUnmoderatedItems', () => {
         const result = await getUnmoderatedItems(communityName, timeFilter, postsOrComments);
 
         // Check if Comment.find was called with the correct arguments
-        console.log(Comment.find.mock.calls);
+        // console.log(Comment.find.mock.calls);
         // Here we're asserting that Post.find was called with the expected query object.
         expect(Post.find).toHaveBeenCalledWith({
             ...expectedQuery,

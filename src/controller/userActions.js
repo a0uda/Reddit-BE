@@ -15,7 +15,6 @@ export async function blockUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.blocked_username);
     const userToBlock = await User.findOne({
       username: request.body.blocked_username,
     });
@@ -31,7 +30,6 @@ export async function blockUser(request) {
     const index = user.safety_and_privacy_settings.blocked_users.findIndex(
       (blockedUser) => blockedUser.id.toString() == userToBlock._id.toString()
     );
-    console.log(index);
     let operation = "";
     if (index !== -1) {
       userBlockedList.splice(index, 1);
@@ -56,7 +54,7 @@ export async function blockUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -72,7 +70,6 @@ export async function reportUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.reported_username);
     const userToReport = await User.findOne({
       username: request.body.reported_username,
     });
@@ -99,7 +96,7 @@ export async function reportUser(request) {
       msg: "User reported successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -137,7 +134,7 @@ export async function addOrRemovePicture(
       };
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -191,7 +188,7 @@ export async function muteCommunity(request) {
       msg: `Community ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -218,8 +215,6 @@ export async function favoriteCommunity(request) {
     }
     const userCommunities = user.communities;
 
-    console.log(communityToFav._id);
-    console.log(userCommunities);
     const index = userCommunities.findIndex(
       (community) => community.id.toString() === communityToFav._id.toString()
     );
@@ -321,7 +316,7 @@ export async function followUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -404,7 +399,7 @@ export async function joinCommunity(request, leave = false) {
       }
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -431,7 +426,7 @@ export async function clearHistory(request) {
       msg: "History cleared successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -479,7 +474,7 @@ export async function deleteAccount(request) {
       msg: "Account deleted successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
