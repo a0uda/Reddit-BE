@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { Post } from "../db/models/Post.js";
 import { getPost } from "./posts.js";
 import { generateResponse } from "../utils/generalUtils.js";
+import { pushNotification } from "./notifications.js";
 
 export async function blockUser(request) {
   try {
@@ -305,6 +306,18 @@ export async function followUser(request) {
       //   userToFollow.followers_ids.push(user._id);
       //   await userToFollow.save();
       // }
+
+      //send notif
+      console.log(userToFollow);
+      const { success: succesNotif, error: errorNotif } =
+        await pushNotification(
+          userToFollow,
+          user.username,
+          null,
+          null,
+          "new_followers"
+        );
+      if (!succesNotif) console.log(errorNotif);
     }
 
     // user.following_ids = userFollowingList;

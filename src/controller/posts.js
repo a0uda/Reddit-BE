@@ -1,4 +1,5 @@
 import { Post } from "../db/models/Post.js";
+import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
   getCommunityGeneralSettings,
@@ -19,6 +20,7 @@ import {
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import mongoose from "mongoose";
 import { generateResponse } from "../utils/generalUtils.js";
+import { pushNotification } from "./notifications.js";
 
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -583,9 +585,22 @@ export async function postVote(request) {
       } else {
         post.upvotes_count = post.upvotes_count + 1;
         user.upvotes_posts_ids.push(post._id);
+
+        //send notif
+        const userOfPost = await User.findById(post.user_id);
+      
+        const { success } = await pushNotification(
+          userOfPost,
+          user.username,
+          post,
+          null,
+          "upvotes_posts"
+        );
+        if (!success) console.log("Error in sending notification");
       }
       await post.save();
       await user.save();
+
     } else {
       if (downvoteIndex != -1) {
         user.downvotes_posts_ids.splice(downvoteIndex, 1);

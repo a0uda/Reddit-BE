@@ -10,7 +10,7 @@ import {
   getCommunity,
 } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
-
+import { pushNotification } from "./notifications.js";
 export async function getComment(request, verifyUser) {
   let user;
   if (verifyUser) {
@@ -127,6 +127,18 @@ export async function newComment(request) {
 
   await comment.save();
 
+  //send notif
+  const userOfPost = await User.findById(post.user_id);
+  console.log(userOfPost);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfPost,
+    user.username,
+    post,
+    comment,
+    "comments"
+  );
+  if (!succesNotif) console.log(errorNotif);
+
   return {
     success: true,
     error: {},
@@ -199,6 +211,18 @@ export async function replyToComment(request) {
 
   await comment.save();
   await reply.save();
+
+  //send notif
+  const userOfComment = await User.findById(comment.user_id);
+  console.log(userOfComment);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfComment,
+    user.username,
+    null,
+    comment,
+    "replies"
+  );
+  if (!succesNotif) console.log(errorNotif);
 
   return {
     success: true,
@@ -338,6 +362,17 @@ export async function commentVote(request) {
       } else {
         comment.upvotes_count++;
         comment.upvote_users.push(user.username);
+        //send notif
+        const userOfComment = await User.findById(comment.user_id);
+        console.log(userOfComment);
+        const { success } = await pushNotification(
+          userOfComment,
+          user.username,
+          null,
+          comment,
+          "upvotes_comments"
+        );
+        if (!success) console.log("Error in sending notification");
       }
       await comment.save();
       await user.save();
