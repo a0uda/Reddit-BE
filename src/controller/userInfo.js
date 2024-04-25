@@ -10,12 +10,14 @@ import {
   getUserCommentsHelper,
   getMutedCommunitiesHelper,
   getBlockedUserHelper,
+  getActiveCommunitiesHelper,
 } from "../services/users.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { checkVotesMiddleware } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
+import { Community } from "../db/models/Community.js";
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -481,6 +483,72 @@ export async function getMutedCommunities(request) {
       message: "Your muted communities list is retrieved successfully",
       status: 200,
       content: muted_communities,
+    };
+  } catch (error) {
+    //console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getActiveCommunities(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // console.log(success, err, status, user, msg);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const communityIds = user.communities.map((community) => community.id);
+    // console.log(communityIds);
+    // Combine the conditions for finding posts and comments in communities
+    const postsAndCommentsQuery = {
+      $or: [
+        {
+          post_in_community_flag: true,
+          community_id: { $in: communityIds },
+          user_id: user._id,
+        },
+        {
+          comment_in_community_flag: true,
+          community_id: { $in: communityIds },
+          user_id: user._id,
+        },
+      ],
+    };
+
+    // Execute the combined query to fetch both posts and comments
+    const [posts, comments] = await Promise.all([
+      Post.find(postsAndCommentsQuery).exec(),
+      Comment.find(postsAndCommentsQuery).exec(),
+    ]);
+    
+    // Extract unique community IDs from posts and comments
+    const activeCommunityIds = [
+      ...new Set([
+        ...posts.map((post) => post.community_id),
+        ...comments.map((comment) => comment.community_id),
+      ]),
+    ];
+
+    // Fetch active communities using the unique community IDs
+    const activeCommunities = await Community.find({
+      _id: { $in: activeCommunityIds },
+    }).exec();
+
+    const active_communities = await getActiveCommunitiesHelper(
+      activeCommunities
+    );
+    // console.log(active_communities);
+    return {
+      success: true,
+      message: "Your active communities list is retrieved successfully",
+      status: 200,
+      content: active_communities,
     };
   } catch (error) {
     //console.error("Error:", error);

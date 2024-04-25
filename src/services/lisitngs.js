@@ -154,7 +154,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
           { $sample: { size: pageSize } }, // Randomly select posts
           { $sort: sortCriteria }, // Sort the random posts based on the same criteria
         ]);
-        console.log("HII", posts[0] instanceof mongoose.Document);
+        
       }
     }
     // If no authenticated user or user doesn't follow anyone, fetch random posts

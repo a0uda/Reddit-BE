@@ -11,6 +11,7 @@ import {
 } from "./lisitngs.js";
 import { checkVotesMiddleware } from "./posts.js";
 import { checkCommentVotesMiddleware } from "./comments.js";
+import { getCommunityGeneralSettings } from "../services/communitySettingsService.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -270,4 +271,26 @@ export async function getMutedCommunitiesHelper(user) {
     (community) => community != null
   );
   return filteredMutedCommunities;
+}
+
+export async function getActiveCommunitiesHelper(communities) {
+  const activeCommunities = await Promise.all(
+    communities.map(async (community) => {
+      const { err, general_settings } = await getCommunityGeneralSettings(
+        community.name
+      );
+      if (!err) {
+        return {
+          id: community.id.toString(),
+          name: community.name,
+          description: general_settings.description,
+          title: general_settings.title,
+          profile_picture: community.profile_picture,
+          banner_picture: community.banner_picture,
+          members_count: community.members_count,
+        };
+      }
+    })
+  );
+  return activeCommunities.filter((community) => community); 
 }

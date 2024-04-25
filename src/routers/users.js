@@ -46,6 +46,7 @@ import {
   getUserComments,
   getBlockedUsers,
   getMutedCommunities,
+  getActiveCommunities,
 } from "../controller/userInfo.js";
 
 import {
@@ -166,7 +167,7 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         },
       }
     );
-    console.log(userData);
+    // console.log(userData);
     let user = await User.findOne({ gmail: userData.email });
 
     if (!user) {
@@ -1244,6 +1245,20 @@ usersRouter.get("/users/blocked-users", async (req, res) => {
 usersRouter.get("/users/muted-communities", async (req, res) => {
   try {
     const result = await getMutedCommunities(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    //console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/active-communities", async (req, res) => {
+  try {
+    const result = await getActiveCommunities(req);
     res.status(result.status).json(result);
   } catch (error) {
     //console.error("Error:", error);

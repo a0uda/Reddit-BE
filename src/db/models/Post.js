@@ -58,7 +58,13 @@ export const postSchema = new mongoose.Schema({
     },
   ],
   //changed name from poll to polls
-  polls: [{ options: { type: String }, votes: { type: Number, default: 0 } }],
+  polls: [
+    {
+      options: { type: String },
+      votes: { type: Number, default: 0 },
+      users_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    },
+  ],
   //voting length in days if the type is polls
   polls_voting_length: { type: Number, default: 3 },
   polls_voting_is_expired_flag: { type: Boolean, default: false },
@@ -164,4 +170,21 @@ export const Post = mongoose.model("Post", postSchema);
 
 postSchema.pre("find", function () {
   this.where({ deleted: false });
+
+  const query = this.getQuery();
+
+  // Check if the query is for posts of type "poll" and if it includes the creation date and voting length
+  if (query.type == "polls" && query.created_at && query.polls_voting_length) {
+    // Calculate the expiration date based on creation date and voting length
+    const expirationDate = new Date(query.created_at);
+    expirationDate.setDate(
+      expirationDate.getDate() + query.polls_voting_length
+    );
+    // Check if the current date is greater than the expiration date
+    const currentDate = new Date();
+    if (currentDate > expirationDate) {
+      // Update the query to set is_expired_flag to true
+      this.update({}, { $set: { polls_voting_is_expired_flag: true } });
+    }
+  }
 });

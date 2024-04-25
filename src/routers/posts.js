@@ -10,6 +10,7 @@ import {
   getUserPostDetails,
   createPost,
   sharePost,
+  pollVote,
 } from "../controller/posts.js";
 
 dotenv.config();
@@ -125,6 +126,19 @@ postsRouter.patch("/posts/allow-replies", async (req, res) => {
 postsRouter.patch("/posts/set-suggested-sort", async (req, res) => {
   try {
     const { success, error, message } = await setSuggestedSort(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+postsRouter.post("/posts/poll-vote", async (req, res) => {
+  try {
+    const { success, error, message } = await pollVote(req);
     if (!success) {
       res.status(error.status).send({ error });
       return;

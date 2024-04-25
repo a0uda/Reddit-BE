@@ -18,6 +18,7 @@ import {
 } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import mongoose from "mongoose";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -879,6 +880,57 @@ export async function postDelete(request) {
       status: 500,
       err: "Internal Server Error",
       msg: "An error occurred.",
+    };
+  }
+}
+
+export async function pollVote(request) {
+  try {
+    const { success, error, post, user, message } = await getPost(
+      request,
+      true
+    );
+    if (!success) {
+      return { success, error };
+    }
+    const { id, option_id } = request.body;
+    if (!id || !option_id) {
+      return generateResponse(false, 400, "Required post id and option id");
+    }
+    if (post.type != "polls")
+      return generateResponse(false, 400, "Post is not of type polls");
+
+    if (post.polls_voting_is_expired_flag)
+      return generateResponse(false, 400, "Post poll vote is expired");
+
+    const expirationDate = new Date(post.created_at);
+    expirationDate.setDate(expirationDate.getDate() + post.polls_voting_length);
+    const currentDate = new Date();
+    if (currentDate > expirationDate) {
+      post.polls_voting_is_expired_flag = true;
+      await post.save();
+      return generateResponse(false, 400, "Post poll vote is expired");
+    }
+
+    const index = post.polls.findIndex(
+      (option) => option._id.toString() == option_id.toString()
+    );
+    if (index == -1)
+      return generateResponse(false, 400, "Option not found in post poll");
+
+    post.polls[index].votes++;
+    post.polls[index].users_ids.push(user._id);
+
+    await post.save();
+    return {
+      success: true,
+      error: {},
+      message: "Voted to option " + post.polls[index].options + " sucessfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
     };
   }
 }
