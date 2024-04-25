@@ -6,7 +6,9 @@ import {
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
 import { checkCommentVotesMiddleware } from "./comments.js";
-export async function getCommentRepliesHelper(user, comment) {
+import mongoose from "mongoose";
+
+export async function getCommentRepliesHelper(comment) {
   const replies = comment.replies_comments_ids;
   comment.replies_comments_ids = [];
   for (const reply of replies) {
@@ -31,13 +33,12 @@ export async function getCommentRepliesHelper(user, comment) {
   // return comment;
 }
 
-export async function getPostCommentsHelper(user, postId) {
+export async function getPostCommentsHelper(postId) {
   const comments = await Comment.find({ post_id: postId }).exec();
   if (!comments || comments.length === 0) return [];
   const commentsWithReplies = [];
   for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(user, comment);
-    console.log(commentResult);
+    const commentResult = await getCommentRepliesHelper(comment);
     commentsWithReplies.push(commentResult);
   }
   return commentsWithReplies;
@@ -193,7 +194,6 @@ export async function checkPostSettings(post, community_name) {
   if (err2) {
     return next(err2);
   }
-  console.log(community_name);
   const type = post.type;
   const allowType = posts_and_comments.posts.post_type_options;
   const allowPolls = posts_and_comments.posts.allow_polls_posts;
@@ -313,7 +313,6 @@ export async function checkContentSettings(post, community_name) {
         ","
       );
     const postDomain = new URL(post.link_url).hostname;
-    console.log(postDomain);
     if (
       (restrictionType === "Required domains" &&
         !requiredOrBlockedDomains.includes(postDomain)) ||
@@ -366,21 +365,37 @@ export async function checkContentSettings(post, community_name) {
 
 export async function checkVotesMiddleware(currentUser, posts) {
   // Assume currentUser is the authenticated user
-  const currentUserId = currentUser._id; // Assuming userId is used for comparison
-  // Fetch and populate posts with upvote/downvote status for the current user
-  posts = posts.map((post) => {
-    const isUpvoted =
-      currentUserId &&
-      currentUser.upvotes_posts_ids.includes(post._id.toString());
-    const isDownvoted =
-      currentUserId &&
-      currentUser.downvotes_posts_ids.includes(post._id.toString());
-    var vote = 0;
-    if (isUpvoted) vote = 1;
-    else if (isDownvoted) vote = -1;
-    // Add isUpvoted and isDownvoted as temporary fields
-    return { ...post.toObject(), vote };
-  });
-  // console.log("JI", posts);
-  return posts;
+  if (currentUser) {
+    const currentUserId = currentUser._id; // Assuming userId is used for comparison
+    // Fetch and populate posts with upvote/downvote status for the current user
+    posts = posts.map((post) => {
+      // Add isUpvoted and isDownvoted as temporary fields
+      const isUpvoted =
+        currentUserId &&
+        currentUser.upvotes_posts_ids.includes(post._id.toString());
+      const isDownvoted =
+        currentUserId &&
+        currentUser.downvotes_posts_ids.includes(post._id.toString());
+      var vote = 0;
+      if (isUpvoted) vote = 1;
+      else if (isDownvoted) vote = -1;
+      //add atribute for poll_vote
+      var poll_vote = null;
+      if (post.type == "polls") {
+        const option = post.polls.find((op) =>
+          op.users_ids.find(
+            (user) => user.toString() == currentUserId.toString()
+          )
+        );
+        if (option) {
+          poll_vote = option.id;
+        }
+      }
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), vote, poll_vote };
+      else return { ...post, vote, poll_vote };
+    });
+    return posts;
+  }
+  return null;
 }

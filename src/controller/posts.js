@@ -14,7 +14,11 @@ import {
   getCommunity,
   checkPostSettings,
   checkContentSettings,
+  checkVotesMiddleware,
 } from "../services/posts.js";
+import { checkCommentVotesMiddleware } from "../services/comments.js";
+import mongoose from "mongoose";
+import { generateResponse } from "../utils/generalUtils.js";
 
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -69,7 +73,7 @@ export async function createPost(request) {
   if (post_in_community_flag) {
     //1.community must exist
     const { success, community, error } = await getCommunity(community_name);
-    console.log(success, community, error);
+    // console.log(success, community, error);
     if (!success) {
       return { success, error };
     }
@@ -80,7 +84,7 @@ export async function createPost(request) {
     if (err) {
       return next(err);
     }
-    if (general_settings.visibility != "Public") {
+    if (general_settings.type != "Public") {
       const result = await checkApprovedUser(community, user._id);
       if (!result.success) {
         return result;
@@ -98,7 +102,7 @@ export async function createPost(request) {
     //5.check allowed type post url,poll,image
     //allow_multiple_images_per_post
     const resultType = await checkPostSettings(post, community_name);
-    console.log(resultType);
+    // console.log(resultType);
     if (!resultType.success) {
       return resultType;
     }
@@ -139,9 +143,13 @@ export async function sharePost(request) {
       request,
       true
     );
+
+    // console.log("LL", success);
     if (!success) {
       return { success, error };
     }
+    // post = await Post.findById(post._id);
+    // console.log("SSSS", post instanceof mongoose.Document);
     const {
       post_in_community_flag,
       community_name,
@@ -150,6 +158,7 @@ export async function sharePost(request) {
       spoiler_flag,
       nsfw_flag,
     } = request.body;
+
     const shared_post = new Post({
       created_at: Date.now(),
       user_id: user._id,
@@ -232,7 +241,8 @@ export async function sharePost(request) {
       if (err2) {
         return next(err2);
       }
-      if (general_settings.visibility != "Public") {
+
+      if (general_settings.type != "Public") {
         const result = await checkApprovedUser(community, user._id);
         if (!result.success) {
           return result;
@@ -252,7 +262,16 @@ export async function sharePost(request) {
     post.shares_count++;
     post.user_details.total_shares++;
     await shared_post.save();
-    await post.save();
+    try {
+      const post = await post.save();
+      // console.log("SSSS", post);
+    } catch (err) {
+      return {
+        success: false,
+        error: { status: 500, message: err },
+      };
+    }
+    // console.log("Case");
 
     return {
       success: true,
@@ -289,13 +308,19 @@ export async function getPost(request, verifyUser) {
       error: { status: 400, message: "Post id is required" },
     };
   }
-  const post = await Post.findById(postId);
+  var post = await Post.findById(postId);
+
   if (!post) {
     return {
       success: false,
       error: { status: 404, message: "Post Not found" },
     };
   }
+  // if (user) {
+  //   var result = await checkVotesMiddleware(user, [post]);
+
+  //   post = result[0];
+  // }
   return {
     success: true,
     post,
@@ -310,7 +335,8 @@ export async function getPostComments(request) {
     return { success, error };
   }
   const { user } = await verifyAuthToken(request);
-  const comments = await getPostCommentsHelper(user, post._id);
+  var comments = await getPostCommentsHelper(post._id);
+  if (user) comments = await checkCommentVotesMiddleware(user, comments);
   return {
     success: true,
     comments,
@@ -462,7 +488,7 @@ export async function postToggler(request, toToggle) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -507,7 +533,7 @@ export async function editPostDescription(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -584,7 +610,7 @@ export async function postVote(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -625,7 +651,7 @@ export async function postSave(request) {
       user.saved_posts_ids.splice(index, 1);
     } else {
       // If not found, add it to the array
-      user.saved_posts_ids.push(postId);
+      user.saved_posts_ids.push(post._id);
     }
 
     await user.save();
@@ -637,7 +663,7 @@ export async function postSave(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -686,7 +712,7 @@ export async function postApprove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -735,7 +761,7 @@ export async function postRemove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -777,7 +803,7 @@ export async function postReport(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -848,12 +874,63 @@ export async function postDelete(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
       err: "Internal Server Error",
       msg: "An error occurred.",
+    };
+  }
+}
+
+export async function pollVote(request) {
+  try {
+    const { success, error, post, user, message } = await getPost(
+      request,
+      true
+    );
+    if (!success) {
+      return { success, error };
+    }
+    const { id, option_id } = request.body;
+    if (!id || !option_id) {
+      return generateResponse(false, 400, "Required post id and option id");
+    }
+    if (post.type != "polls")
+      return generateResponse(false, 400, "Post is not of type polls");
+
+    if (post.polls_voting_is_expired_flag)
+      return generateResponse(false, 400, "Post poll vote is expired");
+
+    const expirationDate = new Date(post.created_at);
+    expirationDate.setDate(expirationDate.getDate() + post.polls_voting_length);
+    const currentDate = new Date();
+    if (currentDate > expirationDate) {
+      post.polls_voting_is_expired_flag = true;
+      await post.save();
+      return generateResponse(false, 400, "Post poll vote is expired");
+    }
+
+    const index = post.polls.findIndex(
+      (option) => option._id.toString() == option_id.toString()
+    );
+    if (index == -1)
+      return generateResponse(false, 400, "Option not found in post poll");
+
+    post.polls[index].votes++;
+    post.polls[index].users_ids.push(user._id);
+
+    await post.save();
+    return {
+      success: true,
+      error: {},
+      message: "Voted to option " + post.polls[index].options + " sucessfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
     };
   }
 }

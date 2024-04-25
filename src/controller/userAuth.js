@@ -13,7 +13,6 @@ import validator from "validator";
 import { generateResponse } from "../utils/generalUtils.js";
 
 export async function isUsernameAvailable(username) {
-  console.log(username);
   const user = await User.findOne({ username });
   if (user)
     return generateResponse(
@@ -41,7 +40,6 @@ export async function verifyAuthToken(request) {
   }
 
   const userToken = jwt.verify(token, process.env.JWT_SECRET);
-  console.log("debugging verifyAuthToken")
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {
@@ -79,13 +77,10 @@ export async function signupUser(requestBody) {
 
 export async function loginUser(requestBody) {
   const { username, password } = requestBody;
-  console.log("request body is ", requestBody);
   if (!username || !password) {
     return generateResponse(false, 400, "Missing required field");
   }
   const user = await User.findOne({ username });
-  console.log("username is ", username);
-  console.log("password is ", password);
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return generateResponse(false, 400, "Username or password are incorrect");
   }
@@ -106,7 +101,6 @@ export async function logoutUser(requestBody) {
   if (!username || !token) {
     return generateResponse(false, 400, "Missing required field");
   }
-  console.log(username, token);
   const user = await User.findOne({ username });
   if (!user || user.token != token) {
     return generateResponse(
@@ -305,7 +299,6 @@ export async function changePassword(request) {
     return generateResponse(false, 400, "Min length is 8");
   }
 
-  console.log(user.password);
   const result = await bcrypt.compare(current_password, user.password);
   if (!result) {
     return generateResponse(false, 400, "Current password is wrong");

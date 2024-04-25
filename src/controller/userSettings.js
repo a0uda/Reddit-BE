@@ -69,7 +69,6 @@ export async function setSettings(request, flag) {
   }
 
   const settings = request.body;
-  console.log(settings);
   var updatedUser;
   if (flag == "Account")
     updatedUser = setAccountSettings(user, settings.account_settings);
@@ -130,7 +129,6 @@ export async function addSocialLink(request) {
         "Type must be in " + validOptions.join(", ")
       );
     }
-    console.log(username, display_text, custom_url, type);
     user.social_links.push({
       username: user.username,
       display_text: display_text ? display_text : null,
@@ -166,7 +164,6 @@ export async function editSocialLink(request) {
     const socialLink = user.social_links.find(
       (sociallink) => sociallink._id.toString() == id.toString()
     );
-    console.log(user.social_links, id, index);
     if (index !== -1) {
       socialLink.username = username ? username : socialLink.username;
       socialLink.custom_url = custom_url ? custom_url : socialLink.custom_url;
@@ -201,7 +198,6 @@ export async function deleteSocialLink(request) {
     const index = user.social_links.findIndex(
       (sociallink) => sociallink._id.toString() == id.toString()
     );
-    console.log(user.social_links, id, index);
     if (index !== -1) {
       user.social_links.splice(index, 1)[0];
       await user.save();

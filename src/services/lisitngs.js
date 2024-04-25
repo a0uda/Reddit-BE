@@ -1,7 +1,7 @@
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 import { getSortCriteria } from "../utils/lisitng.js";
-
+import mongoose from "mongoose";
 export async function paginateFollowingPosts(
   followedUsers,
   hidden_posts,
@@ -11,10 +11,9 @@ export async function paginateFollowingPosts(
   pageSize
 ) {
   // Extract blocked user IDs from blockedUsers array
-  const blockedUserIds = blockedUsers.map((user) => user.id);
 
   const userPosts = await Post.find({
-    user_id: { $in: followedUsers, $nin: blockedUserIds },
+    user_id: { $in: followedUsers, $nin: blockedUsers },
     _id: { $nin: hidden_posts },
   })
     .sort(sortCriteria)
@@ -30,7 +29,7 @@ export async function paginateFollowingPosts(
     const randomPosts = await Post.aggregate([
       {
         $match: {
-          user_id: { $nin: followedUsers, $nin: blockedUserIds },
+          user_id: { $nin: followedUsers, $nin: blockedUsers },
           _id: { $nin: hidden_posts },
         },
       },
@@ -71,7 +70,6 @@ export async function paginatePosts(
   pageSize
 ) {
   const userPosts = await Post.find({
-    user_id: user._id,
     _id: { $nin: hidden_posts, $in: user[postsType] },
   })
     .sort(sortCriteria)
@@ -80,6 +78,24 @@ export async function paginatePosts(
     .exec();
 
   return userPosts;
+}
+
+export async function paginateComments(
+  user,
+  commentsType,
+  offset,
+  sortCriteria,
+  pageSize
+) {
+  const userComments = await Comment.find({
+    _id: { $in: user[commentsType] },
+  })
+    .sort(sortCriteria)
+    .skip(offset)
+    .limit(pageSize)
+    .exec();
+
+  return userComments;
 }
 
 export async function paginateUserComments(
@@ -107,9 +123,9 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
 
     // Apply sorting based on the sortBy parameter
     let posts = [];
-
     if (currentUser) {
       let followedUsers = currentUser.following_ids; // Assuming following_ids contains user IDs of followed users
+
       let hidden_posts = currentUser.hidden_and_reported_posts_ids;
       let blocked_users =
         currentUser.safety_and_privacy_settings.blocked_users.map(
@@ -138,6 +154,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
           { $sample: { size: pageSize } }, // Randomly select posts
           { $sort: sortCriteria }, // Sort the random posts based on the same criteria
         ]);
+        
       }
     }
     // If no authenticated user or user doesn't follow anyone, fetch random posts
@@ -147,11 +164,8 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
         { $sort: sortCriteria }, // Sort the random posts based on the same criteria
       ]);
     }
-    return {
-      posts,
-    };
+    return posts;
   } catch (error) {
     console.error("Error fetching posts:", error);
-    throw error;
   }
 }

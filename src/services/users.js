@@ -7,7 +7,11 @@ import {
   paginateUserPosts,
   paginateUserComments,
   paginatePosts,
+  paginateComments,
 } from "./lisitngs.js";
+import { checkVotesMiddleware } from "./posts.js";
+import { checkCommentVotesMiddleware } from "./comments.js";
+import { getCommunityGeneralSettings } from "../services/communitySettingsService.js";
 
 export async function followUserHelper(user1, user2, follow = true) {
   try {
@@ -39,7 +43,7 @@ export async function followUserHelper(user1, user2, follow = true) {
       console.log(`User ${user1.username} unfollows user ${user2.username}.`);
     }
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
   }
 }
 
@@ -56,6 +60,7 @@ export async function getPostsHelper(
     let sortCriteria = getSortCriteria(sortBy);
     let hidden_posts = user.hidden_and_reported_posts_ids;
     if (postsType == "hidden_and_reported_posts_ids") hidden_posts = [];
+
     let posts = await paginatePosts(
       user,
       postsType,
@@ -64,17 +69,12 @@ export async function getPostsHelper(
       sortCriteria,
       pageSize
     );
-
-    console.log(posts);
+    if (user) posts = await checkVotesMiddleware(user, posts);
     return posts;
   } catch (error) {
     console.error("Error fetching posts:", error);
-    throw error;
+    // throw error;
   }
-  // const posts = await Post.find({ _id: { $in: user[postsType] } }).exec();
-
-  // const filteredPosts = posts.filter((post) => post != null);
-  // return filteredPosts;
 }
 
 //Posts written by certain user
@@ -99,6 +99,8 @@ export async function getUserPostsHelper(
         sortCriteria,
         pageSize
       );
+
+      posts = await checkVotesMiddleware(loggedInUser, posts);
     } else {
       posts = await paginateUserPosts(
         user._id,
@@ -112,17 +114,33 @@ export async function getUserPostsHelper(
     return posts;
   } catch (error) {
     console.error("Error fetching posts:", error);
-    throw error;
+    // throw error;
   }
 }
 
-export async function getCommentsHelper(user, commentsType) {
-  const comments = await Comment.find({
-    _id: { $in: user[commentsType] },
-  }).exec();
-
-  const filteredComments = comments.filter((comment) => comment != null);
-  return filteredComments;
+export async function getCommentsHelper(
+  user,
+  commentsType,
+  pageNumber,
+  pageSize,
+  sortBy
+) {
+  try {
+    console.log(commentsType);
+    const offset = (pageNumber - 1) * pageSize;
+    let sortCriteria = getSortCriteria(sortBy);
+    let comments = await paginateComments(
+      user,
+      commentsType,
+      offset,
+      sortCriteria,
+      pageSize
+    );
+    if (user) comments = await checkCommentVotesMiddleware(user, comments);
+    return comments;
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+  }
 }
 
 export async function getUserCommentsHelper(
@@ -146,6 +164,7 @@ export async function getUserCommentsHelper(
         sortCriteria,
         pageSize
       );
+      comments = await checkCommentVotesMiddleware(loggedInUser, comments);
     } else {
       comments = await paginateUserComments(
         user._id,
@@ -159,7 +178,7 @@ export async function getUserCommentsHelper(
     return comments;
   } catch (error) {
     console.error("Error fetching comments:", error);
-    throw error;
+    // throw error;
   }
 }
 
@@ -252,4 +271,26 @@ export async function getMutedCommunitiesHelper(user) {
     (community) => community != null
   );
   return filteredMutedCommunities;
+}
+
+export async function getActiveCommunitiesHelper(communities) {
+  const activeCommunities = await Promise.all(
+    communities.map(async (community) => {
+      const { err, general_settings } = await getCommunityGeneralSettings(
+        community.name
+      );
+      if (!err) {
+        return {
+          id: community.id.toString(),
+          name: community.name,
+          description: general_settings.description,
+          title: general_settings.title,
+          profile_picture: community.profile_picture,
+          banner_picture: community.banner_picture,
+          members_count: community.members_count,
+        };
+      }
+    })
+  );
+  return activeCommunities.filter((community) => community); 
 }

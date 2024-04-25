@@ -10,10 +10,14 @@ import {
   getUserCommentsHelper,
   getMutedCommunitiesHelper,
   getBlockedUserHelper,
+  getActiveCommunitiesHelper,
 } from "../services/users.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { checkVotesMiddleware } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
+import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
+import { Community } from "../db/models/Community.js";
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -42,7 +46,6 @@ export async function getFollowing(request) {
   if (!user) {
     return generateResponse(success, status, err);
   }
-  console.log(user);
   const followingDetails = await Promise.all(
     user.following_ids.map(async (followingId) => {
       const following = await User.findById(followingId);
@@ -107,17 +110,14 @@ export async function getUserPosts(
       };
     }
     const { user: loggedInUser } = await verifyAuthToken(request);
-    var posts;
-    posts = await getUserPostsHelper(
+    const posts = await getUserPostsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
-    if (loggedInUser) {
-      posts = await checkVotesMiddleware(loggedInUser, posts);
-    }
+
     return {
       success: true,
       status: 200,
@@ -125,7 +125,7 @@ export async function getUserPosts(
       msg: "Posts retrieved successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -155,14 +155,15 @@ export async function getPosts(
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    var posts = await getPostsHelper(
+
+    const posts = await getPostsHelper(
       user,
       postsType,
       pageNumber,
       pageSize,
       sortBy
     );
-    posts = await checkVotesMiddleware(user, posts);
+
     return {
       success: true,
       status: 200,
@@ -170,7 +171,7 @@ export async function getPosts(
       message: "Posts retrieved successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -198,16 +199,14 @@ export async function getUserComments(
       };
     }
     const { user: loggedInUser } = await verifyAuthToken(request);
-    var comments = await getUserCommentsHelper(
+    const comments = await getUserCommentsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
-    if (loggedInUser) {
-      comments = await checkCommentVotesMiddleware(loggedInUser, comments);
-    }
+
     return {
       success: true,
       status: 200,
@@ -215,7 +214,7 @@ export async function getUserComments(
       message: "  Comments retrieved successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -225,7 +224,13 @@ export async function getUserComments(
   }
 }
 
-export async function getComments(request, commentsType) {
+export async function getComments(
+  request,
+  commentsType,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy
+) {
   let user = null;
   try {
     const {
@@ -239,15 +244,22 @@ export async function getComments(request, commentsType) {
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-    const comments = await getCommentsHelper(user, commentsType);
+
+    const comments = await getCommentsHelper(
+      user,
+      commentsType,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
     return {
       success: true,
       status: 200,
-      comments,
+      content: comments,
       msg: "Comments retrieved successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -257,7 +269,83 @@ export async function getComments(request, commentsType) {
   }
 }
 
-export async function getOverview(request) {
+export async function getAllSavedComments(request) {
+  let user = null;
+  try {
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    var comments = await Comment.find({
+      _id: { $in: user.saved_comments_ids },
+    }).exec();
+
+    comments = comments.filter((comment) => comment != null);
+
+    comments = await checkCommentVotesMiddleware(user, comments);
+    return {
+      success: true,
+      status: 200,
+      content: comments,
+      msg: "Saved Comments retrieved successfully.",
+    };
+  } catch (error) {
+    //console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getAllSavedPosts(request) {
+  let user = null;
+  try {
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    var posts = await Post.find({
+      _id: { $in: user["saved_posts_ids"] },
+    }).exec();
+
+    posts = posts.filter((post) => post != null);
+
+    posts = await checkVotesMiddleware(user, posts);
+    return {
+      success: true,
+      status: 200,
+      content: posts,
+      msg: "Saved Posts retrieved successfully.",
+    };
+  } catch (error) {
+    //console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving comments.",
+    };
+  }
+}
+
+export async function getOverview(request, pageNumber, pageSize, sortBy) {
   try {
     const { username } = request.params;
     if (!username) {
@@ -267,8 +355,21 @@ export async function getOverview(request) {
     if (!user) {
       return generateResponse(false, 404, "No user found with username");
     }
-    const posts = await getUserPostsHelper(user);
-    const comments = await getUserCommentsHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    const posts = await getUserPostsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
+    const comments = await getUserCommentsHelper(
+      loggedInUser,
+      user,
+      pageNumber,
+      pageSize,
+      sortBy
+    );
     //concat 2 arrays
     const overview = posts.concat(comments);
 
@@ -278,7 +379,7 @@ export async function getOverview(request) {
       content: overview,
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -301,7 +402,7 @@ export async function getAbout(request) {
       about: { ...about, moderatedCommunities },
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -331,7 +432,7 @@ export async function getCommunities(request, communityType) {
       };
     }
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -358,7 +459,7 @@ export async function getBlockedUsers(request) {
       content: blocked_users,
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -384,7 +485,73 @@ export async function getMutedCommunities(request) {
       content: muted_communities,
     };
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
+    return {
+      success: false,
+      status: 500,
+      err: "Internal Server Error",
+      msg: "An error occurred while retrieving posts.",
+    };
+  }
+}
+
+export async function getActiveCommunities(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+    // console.log(success, err, status, user, msg);
+    if (!user) {
+      return { success, err, status, user, msg };
+    }
+    const communityIds = user.communities.map((community) => community.id);
+    // console.log(communityIds);
+    // Combine the conditions for finding posts and comments in communities
+    const postsAndCommentsQuery = {
+      $or: [
+        {
+          post_in_community_flag: true,
+          community_id: { $in: communityIds },
+          user_id: user._id,
+        },
+        {
+          comment_in_community_flag: true,
+          community_id: { $in: communityIds },
+          user_id: user._id,
+        },
+      ],
+    };
+
+    // Execute the combined query to fetch both posts and comments
+    const [posts, comments] = await Promise.all([
+      Post.find(postsAndCommentsQuery).exec(),
+      Comment.find(postsAndCommentsQuery).exec(),
+    ]);
+    
+    // Extract unique community IDs from posts and comments
+    const activeCommunityIds = [
+      ...new Set([
+        ...posts.map((post) => post.community_id),
+        ...comments.map((comment) => comment.community_id),
+      ]),
+    ];
+
+    // Fetch active communities using the unique community IDs
+    const activeCommunities = await Community.find({
+      _id: { $in: activeCommunityIds },
+    }).exec();
+
+    const active_communities = await getActiveCommunitiesHelper(
+      activeCommunities
+    );
+    // console.log(active_communities);
+    return {
+      success: true,
+      message: "Your active communities list is retrieved successfully",
+      status: 200,
+      content: active_communities,
+    };
+  } catch (error) {
+    //console.error("Error:", error);
     return {
       success: false,
       status: 500,
