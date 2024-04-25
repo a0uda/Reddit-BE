@@ -130,7 +130,8 @@ const communitySchema = new mongoose.Schema({
       banned_date: Date,
       reason_for_ban: {
         type: String,
-        enum: ["none", "rule", "spam", "personal", "threat", "others"],
+        // enum: ["none", "rule", "spam", "personal", "threat", "others"],
+        default: "spam"
       },
       mod_note: {
         type: String,

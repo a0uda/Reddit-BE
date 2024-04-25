@@ -105,6 +105,19 @@ const banUser = async (request) => {
             };
         }
         if (action == "ban") {
+            //check if user is already banned
+            const isUserAlreadyBanned = community.banned_users.some(
+                (bannedUser) => bannedUser.username === user.username
+            );
+            if (isUserAlreadyBanned) {
+                return {
+                    err: {
+                        status: 400,
+                        message: "User is already banned in this community",
+                    },
+                };
+            }
+
             if (!community.banned_users) {
                 community.banned_users = [];
             }
