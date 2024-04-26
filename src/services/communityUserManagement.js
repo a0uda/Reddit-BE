@@ -143,6 +143,91 @@ const banUser = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+const editBannedUser = async (request) => {
+    try {
+        const {
+            username,
+            community_name,
+            newDetails,
+        } = request.body;
+
+        const {
+            success,
+            err,
+            status,
+            user: editingUser,
+            msg,
+        } = await verifyAuthToken(request);
+
+        if (!editingUser) {
+            return { success, err, status, editingUser, msg };
+        }
+
+        const community = await communityNameExists(community_name);
+
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+
+        const moderators = community.moderators;
+
+        const isModerator = moderators.some(
+            (moderator) => moderator.username === editingUser.username
+        );
+
+        if (!isModerator) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not a moderator in this community",
+                },
+            };
+        }
+
+        const moderator = community.moderators.find(
+            (moderator) => moderator.username === editingUser.username
+        );
+
+        if (
+            !moderator.has_access.everything &&
+            !moderator.has_access.manage_users
+        ) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not allowed to edit banned users. Permission denied",
+                },
+            };
+        }
+
+        const user = await User.findOne({ username: username });
+
+        if (!user) {
+            return { err: { status: 400, message: "Username not found." } };
+        }
+
+        const bannedUserIndex = community.banned_users.findIndex(
+            (bannedUser) => bannedUser.username === user.username
+        );
+
+        if (bannedUserIndex === -1) {
+            return {
+                err: {
+                    status: 400,
+                    message: "User is not banned in this community",
+                },
+            };
+        }
+
+        // Update the banned user details
+        Object.assign(community.banned_users[bannedUserIndex], newDetails);
+        await community.save();
+
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
 /**
  * @param {String} community_name
@@ -656,6 +741,7 @@ const addModerator = async (requestBody) => {
                 manage_posts_and_comments: has_access.manage_posts_and_comments,
             },
         });
+        community.joined_users.push({ _id: user._id })
 
         // Save the updated community
         console.log("saving community");
@@ -957,6 +1043,7 @@ export {
     getEditableModerators,
     getModeratorsSortedByDate,
     unapproveUser,
-    getAllUsers
+    getAllUsers,
+    editBannedUser,
 };
 
