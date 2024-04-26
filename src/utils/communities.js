@@ -3,7 +3,11 @@ import { User } from "../db/models/User.js";
 import { Rule } from "../db/models/Rule.js";
 
 async function communityNameExists(communityName) {
-  return await Community.findOne({ name: communityName });
+  console.log("debugging communityNameExists function");
+  console.log(communityName);
+  const returned = await Community.findOne({ name: communityName });
+  console.log("returned", returned);
+  return returned;
 }
 
 async function getRuleByTitle(communityName, ruleTitle) {

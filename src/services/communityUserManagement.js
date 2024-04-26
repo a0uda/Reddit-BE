@@ -656,6 +656,7 @@ const addModerator = async (requestBody) => {
                 manage_posts_and_comments: has_access.manage_posts_and_comments,
             },
         });
+        community.joined_users.push({ _id: user._id })
 
         // Save the updated community
         console.log("saving community");
