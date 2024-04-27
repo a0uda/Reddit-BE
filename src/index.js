@@ -8,18 +8,18 @@ import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-import cors from "cors";
+// import cors from "cors";
 // const connect_to_db = require("./db/mongoose")
 
 const app = express();
 
 app.use(express.json());
 
-var corsOptions = {
-  origin: "http://localhost:5173",
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
-app.use(cors(corsOptions));
+// var corsOptions = {
+//   origin: "http://localhost:5173",
+//   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+// };
+// app.use(cors(corsOptions));
 
 //Connect to database
 console.log("port");
