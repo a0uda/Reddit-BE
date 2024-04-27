@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { usersRouter } from "./routers/users.js";
 import { communityRouter } from "./routers/communityRouter.js";
+import { messageRouter } from "./routers/messageRouter.js";
 import { listingPostsRouter } from "./routers/lisitng.js";
 import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
@@ -40,6 +41,7 @@ app.listen(port, () => {
 app.use([
   usersRouter,
   communityRouter,
+  messageRouter,
   listingPostsRouter,
   postsOrCommentsRouter,
   postsRouter,
