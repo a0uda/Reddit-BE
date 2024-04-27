@@ -43,6 +43,11 @@ const addNewCommunity = async (requestBody, creator) => {
         username: creator.username,
       },
     ],
+    joined_users: [
+      {
+        username: creator.username,
+      },
+    ],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,

@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { Post } from "../db/models/Post.js";
 import { getPost } from "./posts.js";
 import { generateResponse } from "../utils/generalUtils.js";
+import { communityNameExists } from "../utils/communities.js";
 import { pushNotification } from "./notifications.js";
 
 export async function blockUser(request) {
@@ -338,17 +339,22 @@ export async function followUser(request) {
     };
   }
 }
+/*
+ joined_users: {
+    type: mongoose.Schema.Types.String,
+    ref: "User",
 
+  },
+ */
 export async function joinCommunity(request, leave = false) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
       return { success, err, status, user, msg };
     }
+    console.log("debugging join community :", request.body.community_name)
+    const community = await communityNameExists(request.body.community_name);
 
-    const community = await Community.findOne({
-      name: request.body.community_name,
-    });
     if (!community) {
       return {
         success: false,
@@ -358,12 +364,11 @@ export async function joinCommunity(request, leave = false) {
     }
 
     if (leave) {
-      const index = community.approved_users.indexOf(user._id);
+      const index = community.joined_users.indexOf(user._id);
       if (index !== -1) {
-        community.approved_users.splice(index, 1);
+        community.joined_users.splice(index, 1);
         await community.save();
       }
-
       const communityIndex = user.communities.findIndex(
         (c) => c.id.toString() === community._id.toString()
       );
@@ -371,7 +376,6 @@ export async function joinCommunity(request, leave = false) {
         user.communities.splice(communityIndex, 1);
         await user.save();
       }
-
       return {
         success: true,
         status: 200,
@@ -379,37 +383,43 @@ export async function joinCommunity(request, leave = false) {
       };
     } else {
       // Join the community
-      if (!community.banned_users.includes(user._id)) {
-        if (!community.approved_users.includes(user._id)) {
-          community.approved_users.push(user._id);
-          await community.save();
-        }
 
-        if (
-          !user.communities.some(
-            (c) => c.id.toString() === community._id.toString()
-          )
-        ) {
-          user.communities.push({
-            id: community._id,
-            favorite_flag: false,
-            disable_updates: false,
-          });
-          await user.save();
-        }
-
-        return {
-          success: true,
-          status: 200,
-          msg: `User ${user.username} joined community ${community.name} successfully.`,
-        };
-      } else {
+      if (community.banned_users.includes(user._id)) {
         return {
           success: false,
           status: 400,
           msg: `User ${user.username} is banned from community ${community.name} .`,
         };
       }
+
+      console.log(community.joined_users.some(userObj => userObj._id.toString() === user._id.toString()))
+      if (community.joined_users.some(userObj => userObj._id.toString() === user._id.toString())) {
+        return {
+          success: false,
+          status: 400,
+          msg: `User ${user.username} already joined community ${community.name} .`,
+        };
+      }
+      community.joined_users.push(user._id);
+      await community.save();
+      if (
+        !user.communities.some(
+          (c) => c.id.toString() === community._id.toString()
+        )
+      ) {
+        user.communities.push({
+          id: community._id,
+          favorite_flag: false,
+          disable_updates: false,
+        });
+        await user.save();
+      }
+
+      return {
+        success: true,
+        status: 200,
+        msg: `User ${user.username} joined community ${community.name} successfully.`,
+      };
     }
   } catch (error) {
     // //console.error("Error:", error);

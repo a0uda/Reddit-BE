@@ -14,13 +14,14 @@ import {
 
     getComments,
     addComment,
-    getCommunity
+    getCommunity,
+
 } from "../services/communityService.js";
 
 import {
     banUser,
     getBannedUsers,
-
+    editBannedUser,
     muteUser,
     getMutedUsers,
 
@@ -486,6 +487,16 @@ communityRouter.get("/communities/about/muted/:community_name", async (req, res,
 communityRouter.post("/communities/ban-user", async (req, res, next) => {
     try {
         const { err, success } = await banUser(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//edit banned user details 
+communityRouter.post("/communities/edit-banned-user", async (req, res, next) => {
+    try {
+        const { err, success } = await editBannedUser(req)
         if (err) { return next(err) }
         res.status(200).json({ message: 'OK' });
     } catch (error) {

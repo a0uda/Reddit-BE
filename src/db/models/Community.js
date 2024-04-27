@@ -122,6 +122,15 @@ const communitySchema = new mongoose.Schema({
 
     },
   ],
+  joined_users: [
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+      }
+
+    }
+
+  ],
   banned_users: [
     {
       username: {
