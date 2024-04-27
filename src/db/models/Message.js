@@ -1,86 +1,72 @@
-//create the message model of reddit 
+// Import mongoose
 import mongoose from "mongoose";
 
-
-// const ruleSchema = new mongoose.Schema({
-//     rule_title: {
-//         type: String,
-//         required: true,
-//         unique: true,
-//     },
-//     rule_order: {
-//         // => determined by db
-//         type: Number,
-//         min: 1,
-//     },
-//     applies_to: {
-//         // => chosen by default
-//         type: String,
-//         enum: ["posts_and_comments", "posts_only", "comments_only"],
-//     },
-//     report_reason: String, // => if not provided, use rule_title
-//     full_description: String, // => optional
-// });
-
-// export const Rule = mongoose.model("Rule", ruleSchema);
-/* _id: "5da456f4307b0a8b308384k53831",
-        sender_username: "reem",
-        sender_type: "user",
-        senderVia: "subreddit",
-        receiver_username: "subreddit",
-        receiver_type: "moderator",
-        message: "content 4",
-        created_at: "01/01/2024",
-        deleted_at: "15/10/2024",
-        unread_flag: false,
-        isSent: false,
-        isReply: true,
-        parentMessageId: "5da454f4307b0a8b30838831",
-        subject: "header 3", */
+// Define the message schema
 const messageSchema = new mongoose.Schema({
     sender_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        required: true
+    },
+    sender_via_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Community",
+        required: false
     },
     sender_type: {
         type: String,
         enum: ["user", "moderator"],
+        required: true
     },
     receiver_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        refPath: "receiver_type", // Dynamically set based on receiver_type
+        required: true
     },
     receiver_type: {
         type: String,
         enum: ["user", "moderator"],
+        required: true
     },
     message: {
         type: String,
-        required: true,
+        required: true
     },
     created_at: {
         type: Date,
-        default: Date.now,
+        default: Date.now
     },
     subject: {
         type: String,
-        required: true,
+        required: true
     },
     deleted_at: {
-        type: Date,
+        type: Date
     },
     unread_flag: {
         type: Boolean,
-        default: true,
+        default: true
     },
-    parentMessageId: {
+    parent_message_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Message",
-        required: false,
-    },
-
-
-
-
+        ref: "Message"
+    }
 });
+
+// Export the Message model
 export const Message = mongoose.model("Message", messageSchema);
+
+// Function to set the refPath dynamically
+function setRefPath(receiverType) {
+    // Define the path based on receiverType
+    if (receiverType === "user") {
+        return "User";
+    } else if (receiverType === "moderator") {
+        return "Community";
+    } else {
+        throw new Error("Invalid receiver type");
+    }
+}
+
+// Export the function
+export { setRefPath };
