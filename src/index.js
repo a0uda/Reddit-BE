@@ -6,28 +6,29 @@ import { messageRouter } from "./routers/messageRouter.js";
 import { listingPostsRouter } from "./routers/lisitng.js";
 import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
+import { notificationsRouter } from "./routers/notifications.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-import cors from "cors";
+// import cors from "cors";
 // const connect_to_db = require("./db/mongoose")
 
 const app = express();
 
 app.use(express.json());
 
-const whitelist = ['http://localhost:5174', 'http://localhost:5173'];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-};
+// const whitelist = ['http://localhost:5174', 'http://localhost:5173'];
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (whitelist.indexOf(origin) !== -1) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   }
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 //Connect to database
 console.log("port");
@@ -59,6 +60,7 @@ app.use([
   postsOrCommentsRouter,
   postsRouter,
   commentsRouter,
+  notificationsRouter
 ]);
 
 // Error handling middleware
