@@ -1,10 +1,14 @@
-
+//todos :
+//1) /messages/inbox
+//2)messages/get-post-replies
+//3)/messages/reply
+//5)report msg de bt3ml eh 
+//8) get all messages btraga3  duplicates 
 import { Message, setRefPath } from "../db/models/Message.js";
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "../controller/userAuth.js";
-import { mapMessageToFormat } from "../utils/messages.js";
-
+import { mapMessageToFormat, mapUserMentionsToFormat } from "../utils/messages.js";
 const composeNewMessage = async (request) => {
     try {
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
@@ -12,7 +16,6 @@ const composeNewMessage = async (request) => {
         if (!sender) {
             return { success, err, status, banningUser, msg };
         }
-
         const { sender_username, sender_type, receiver_username, receiver_type, subject, message, senderVia } = request.body.data;
         if (!sender_username || !receiver_username || !subject || !message) {
             return { status: 400, message: "Please provide all the required fields" };
@@ -20,7 +23,6 @@ const composeNewMessage = async (request) => {
         if (sender_username === receiver_username) {
             return { status: 400, message: "Sender and receiver cannot be the same" };
         }
-
 
         const sender_id = sender._id;
         let sender_via_id = null;
@@ -188,4 +190,75 @@ const getAllMessages = async (request) => {
     }
 
 };
-export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages };
+//////////////////////DELETE MESSAGE //////////////////////////
+const deleteMessage = async (request) => {
+    console.log("debugging delete message")
+    try {
+
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+
+        if (!user) {
+            return { success, err, status, user, msg };
+        }
+
+        const { message_id } = request.body;
+        const message = await Message.findById(message_id);
+        console.log("messages :")
+        console.log(message)
+        if (!message) {
+            return { err: 404, message: "Message not found" };
+        }
+        if (message.sender_id.toString() !== user._id.toString()) {
+            return { status: 401, message: "You are not authorized to delete this message" };
+        }
+        message.deleted_at = Date.now();
+        await message.save();
+
+
+        return { status: 200, message: "Message deleted successfully" };
+    } catch (error) {
+        return { status: 500, message: error.message };
+    }
+};
+//////////////////////////////REPORT MESSAGE///////////////////////////////////// 
+const reportMessage = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user) {
+            return { success, err, status, user, msg };
+        }
+        const { message_id } = request.body;
+        const message = await Message.findById(message_id);
+        if (!message) {
+            return { status: 404, message: "Message not found" };
+        }
+
+
+        return { status: 200, message: "Message reported successfully" };
+    } catch (error) {
+        return { status: 500, message: error.message };
+    }
+}
+//////////////////////////////GET USER MENTIONS///////////////////////////////////// 
+const getUserMentions = async (request) => {
+
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user) {
+            return { success, err, status, user, msg };
+        }
+        // Map the messages to the desired format
+        const mentions = user.user_mentions;
+        const mappedMentions = await Promise.all(mentions.map(async (mention) => {
+            return await mapUserMentionsToFormat(mention, user);
+        }));
+        return { status: 200, mentions: mappedMentions };
+    }
+    catch (error) {
+        return { status: 500, message: error.message };
+    }
+
+
+}
+
+export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions };

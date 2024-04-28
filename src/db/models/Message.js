@@ -41,7 +41,8 @@ const messageSchema = new mongoose.Schema({
         required: true
     },
     deleted_at: {
-        type: Date
+        type: Date,
+        default: null
     },
     unread_flag: {
         type: Boolean,

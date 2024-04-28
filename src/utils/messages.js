@@ -1,5 +1,7 @@
 import { User } from '../db/models/User.js';
 import { Community } from '../db/models/Community.js';
+import { Comment } from '../db/models/Comment.js';
+import { Post } from '../db/models/Post.js';
 
 const mapMessageToFormat = async (message) => {
     let receiver_username = null;
@@ -32,4 +34,55 @@ const mapMessageToFormat = async (message) => {
         subject: message.subject
     };
 };
-export { mapMessageToFormat };
+const mapUserMentionsToFormat = async (userMentions, user) => {
+
+    const post = await Post.findOne({ _id: userMentions.post_id });
+
+    const comment = await Comment.findOne({ _id: userMentions.comment_id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
+
+    const postCreator = await User.findOne({ _id: post.user_id }).select('username');
+
+
+    let postCreatorType = null;
+    let rank;
+    //check if user._id some of comment.upvoted_users 
+    const upvoted = comment.upvote_users.includes(user._id);
+    const downvoted = comment.downvote_users.includes(user._id);
+    if (upvoted)
+        rank = 1;
+    else if (downvoted)
+        rank = 0;
+    else
+        rank = -1;
+
+
+    if (post.post_in_community_flag) {
+        const community = await Community.findOne({ _id: post.community_id }).select('moderators');
+        //check if post creator is in moderators 
+        postCreatorType = community.moderators.includes(postCreator.username) ? "moderator" : "user";
+
+    } else {
+        postCreatorType = "user";
+    }
+
+    const mappedMessages = {
+        created_at: comment.created_at,
+        senderUsername: userMentions.sender_username,
+        postCreator: postCreator.username,
+        postCreatorType: postCreatorType,
+        postSubject: post.title,
+        replyContent: comment.description,
+        id: comment._id,
+        unread: "true",
+        commentsCount: post.comments_count,
+        rank: rank,
+        upvotes_count: comment.upvotes_count,
+        downvotes_count: comment.downvotes_count,
+
+    };
+
+    return mappedMessages;
+
+}
+
+export { mapMessageToFormat, mapUserMentionsToFormat };
