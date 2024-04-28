@@ -1,5 +1,5 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, reportMessage } from "../services/messageService.js";
+import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -57,25 +57,8 @@ messageRouter.get("/messages/read-all-messages", async (req, res, next) => {
 messageRouter.post("/messages/del-msg", async (req, res, next) => {
     try {
 
-        console.log("debugging deleteMessage")
-        const { err, messages } = await deleteMessage(req)
 
-        if (err) { return next(err) }
-
-        res.status(200).json({ message: 'OK' });
-
-    } catch (error) {
-        next(error)
-    }
-})
-
-
-
-messageRouter.post("/messages/report", async (req, res, next) => {
-    try {
-
-        console.log("debugging deleteMessage")
-        const { err, messages } = await reportMessage(req)
+        const { err, message } = await deleteMessage(req)
 
         if (err) { return next(err) }
 
@@ -94,6 +77,47 @@ messageRouter.get("/messages/get-user-mentions", async (req, res, next) => {
         if (err) { return next(err) }
 
         res.status(200).json({ mentions });
+
+    } catch (error) {
+        next(error)
+    }
+})
+messageRouter.get("/messages/get-user-post-replies", async (req, res, next) => {
+    try {
+
+        const { err, replies } = await getUserPostReplies(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ replies });
+
+    } catch (error) {
+        next(error)
+    }
+})
+messageRouter.get("/messages/inbox", async (req, res, next) => {
+    try {
+
+        const { err, messages } = await getMessagesInbox(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ messages });
+
+    } catch (error) {
+        next(error)
+    }
+
+}
+)
+messageRouter.post("/messages/reply", async (req, res, next) => {
+    try {
+
+        const { err, message } = await composeNewMessage(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
 
     } catch (error) {
         next(error)
