@@ -48,6 +48,10 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    reported_flag: {
+        type: Boolean,
+        default: false
+    },
     parent_message_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Message"

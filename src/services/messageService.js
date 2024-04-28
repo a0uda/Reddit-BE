@@ -220,25 +220,7 @@ const deleteMessage = async (request) => {
         return { status: 500, message: error.message };
     }
 };
-//////////////////////////////REPORT MESSAGE///////////////////////////////////// 
-const reportMessage = async (request) => {
-    try {
-        const { success, err, status, user, msg } = await verifyAuthToken(request);
-        if (!user) {
-            return { success, err, status, user, msg };
-        }
-        const { message_id } = request.body;
-        const message = await Message.findById(message_id);
-        if (!message) {
-            return { status: 404, message: "Message not found" };
-        }
 
-
-        return { status: 200, message: "Message reported successfully" };
-    } catch (error) {
-        return { status: 500, message: error.message };
-    }
-}
 //////////////////////////////GET USER MENTIONS///////////////////////////////////// 
 const getUserMentions = async (request) => {
 
@@ -259,6 +241,26 @@ const getUserMentions = async (request) => {
     }
 
 
+};
+//////////////report message///////////////////// 
+const reportMessage = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user) {
+            return { success, err, status, user, msg };
+        }
+        const { message_id } = request.body;
+        const message = await Message.findById(message_id);
+        if (!message) {
+            return { status: 404, message: "Message not found" };
+        }
+        message.reported_flag = true;
+        await message.save();
+        return { status: 200, message: "Message reported successfully" };
+    } catch (error) {
+        return { status: 500, message: error.message };
+    }
 }
 
-export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions };
+
+export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, reportMessage };

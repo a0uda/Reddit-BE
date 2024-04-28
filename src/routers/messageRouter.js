@@ -1,5 +1,5 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions } from "../services/messageService.js";
+import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, reportMessage } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -59,6 +59,23 @@ messageRouter.post("/messages/del-msg", async (req, res, next) => {
 
         console.log("debugging deleteMessage")
         const { err, messages } = await deleteMessage(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+
+
+
+messageRouter.post("/messages/report", async (req, res, next) => {
+    try {
+
+        console.log("debugging deleteMessage")
+        const { err, messages } = await reportMessage(req)
 
         if (err) { return next(err) }
 
