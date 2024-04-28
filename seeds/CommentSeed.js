@@ -23,7 +23,7 @@ async function generateRandomComments(posts, users) {
 
     const fakeComment = {
       post_id: randomPost._id,
-      post_title: randomPost.title,
+      post_title: randomPost.post_title,
       user_id: randomUser._id,
       username: randomUser.username,
       parent_id: null,
