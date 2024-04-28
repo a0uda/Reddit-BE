@@ -41,11 +41,16 @@ const messageSchema = new mongoose.Schema({
         required: true
     },
     deleted_at: {
-        type: Date
+        type: Date,
+        default: null
     },
     unread_flag: {
         type: Boolean,
         default: true
+    },
+    reported_flag: {
+        type: Boolean,
+        default: false
     },
     parent_message_id: {
         type: mongoose.Schema.Types.ObjectId,
