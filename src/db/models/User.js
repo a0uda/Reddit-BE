@@ -452,12 +452,7 @@ const userSchema = new mongoose.Schema({
       ref: "Ticket",
     },
   },
-  messages: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-    },
-  ],
+
 
 
 
