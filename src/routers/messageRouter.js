@@ -1,5 +1,5 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages } from "../services/messageService.js";
+import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -41,4 +41,18 @@ messageRouter.get("/messages/unread", async (req, res, next) => {
         next(error)
     }
 })
+messageRouter.get("/messages/read-all-messages", async (req, res, next) => {
+    try {
+        console.log("debugging getUserUnreadMessages")
+        const { err, messages } = await getAllMessages(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ messages });
+
+    } catch (error) {
+        next(error)
+    }
+})
+
 export { messageRouter };
