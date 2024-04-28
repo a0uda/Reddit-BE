@@ -10,7 +10,7 @@ import { notificationsRouter } from "./routers/notifications.js";
 dotenv.config();
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-// import cors from "cors";
+import cors from "cors";
 // const connect_to_db = require("./db/mongoose")
 
 const app = express();
