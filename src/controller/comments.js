@@ -131,8 +131,8 @@ export async function newComment(request) {
   await post.save();
 
   //send notif
+  
   const userOfPost = await User.findById(post.user_id);
-  console.log(userOfPost);
   const { success: succesNotif, error: errorNotif } = await pushNotification(
     userOfPost,
     user.username,
@@ -214,6 +214,11 @@ export async function replyToComment(request) {
 
   await comment.save();
   await reply.save();
+
+  const post=await Post.findById(comment.post_id);
+  
+  post.comments_count++;
+  await post.save();
 
   //send notif
   const userOfComment = await User.findById(comment.user_id);
