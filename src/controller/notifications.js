@@ -2,6 +2,7 @@ import { Notification } from "../db/models/Notification.js";
 import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { generateResponse } from "../utils/generalUtils.js";
+import { Community } from "../db/models/Community.js";
 
 export async function pushNotification(
   user,
@@ -44,7 +45,6 @@ export async function getNotifications(request) {
     }
 
     const notifications = await Notification.find({ user_id: user._id }).exec();
-
     const communityNames = new Set();
     const sendingUserUsernames = new Set();
 
@@ -60,6 +60,8 @@ export async function getNotifications(request) {
     const communityProfiles = await Community.find({
       name: { $in: Array.from(communityNames) },
     }).exec();
+
+    // console.log(sendingUserUsernames);
     const communityProfilesMap = new Map(
       communityProfiles.map((community) => [
         community.name,
@@ -75,6 +77,8 @@ export async function getNotifications(request) {
       sendingUserProfiles.map((user) => [user.username, user.profile_picture])
     );
 
+    console.log("HI", communityNames);
+    console.log("HI", communityProfilesMap);
     return {
       success: true,
       message: "Notifications retrieved successfully",
@@ -88,7 +92,7 @@ export async function getNotifications(request) {
         unread_flag: notification.unread_flag,
         hidden_flag: notification.hidden_flag,
         type: notification.type,
-        profile_picture: notification.community_name
+        profile_picture: !!notification.community_name
           ? communityProfilesMap.get(notification.community_name)
           : sendingUserProfilesMap.get(notification.sending_user_username),
         is_in_community: !!notification.community_name,
@@ -96,5 +100,66 @@ export async function getNotifications(request) {
     };
   } catch (e) {
     generateResponse(false, 500, "Internal Server error");
+  }
+}
+
+export async function markAsRead(request, markAllFlag) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    if (markAllFlag) {
+      const notifications = await Notification.find({
+        user_id: user._id,
+      }).exec();
+      await Promise.all(
+        notifications.map(async (notification) => {
+          notification.unread_flag = false;
+          await notification.save();
+        })
+      );
+
+      return generateResponse(
+        true,
+        200,
+        "All Notifications are read successfully"
+      );
+    } else {
+      const _id = request.body.id;
+      if (!_id) {
+        return generateResponse(false, 400, "Notification id is required");
+      }
+      const notification = await Notification.findById({ _id });
+      if (!notification) {
+        return generateResponse(false, 400, "Notification is not found");
+      }
+      notification.unread_flag = false;
+      await notification.save();
+      return generateResponse(true, 200, "Notification read successfully");
+    }
+  } catch (e) {
+    return generateResponse(false, 500, "Internal Server error");
+  }
+}
+
+export async function hideNotification(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) return generateResponse(success, status, err);
+
+    const _id = request.body.id;
+    if (!_id) {
+      return generateResponse(false, 400, "Notification id is required");
+    }
+    const notification = await Notification.findById({ _id });
+    if (!notification) {
+      return generateResponse(false, 400, "Notification is not found");
+    }
+    notification.hidden_flag = true;
+    await notification.save();
+    return generateResponse(true, 200, "Notification hidden successfully");
+  } catch (e) {
+    return generateResponse(false, 500, "Internal Server error");
   }
 }
