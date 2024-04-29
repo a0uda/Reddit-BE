@@ -111,6 +111,7 @@ export async function newComment(request) {
   }
   const comment = new Comment({
     post_id: post._id,
+    post_title: post.post_title,
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
