@@ -110,7 +110,7 @@ export async function getUserPostsHelper(
         pageSize
       );
     }
-    console.log(posts);
+    // console.log(posts);
     return posts;
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -174,7 +174,7 @@ export async function getUserCommentsHelper(
         pageSize
       );
     }
-    console.log(comments);
+    // console.log(comments);
     return comments;
   } catch (error) {
     console.error("Error fetching comments:", error);
