@@ -1,6 +1,6 @@
-// import ChatModel from "../db/models/ChatModel.js"
-// import MessageModel from "../db/models/MessageModel.js"
-// import { User } from "../db/models/User.js";
+import ChatModel from "../db/models/ChatModel.js"
+import MessageModel from "../db/models/MessageModel.js"
+import { User } from "../db/models/User.js";
 
 /// TODO: Uncomment.
 // import { getReceiverSocketId, io } from "../socket/socket.js";
@@ -226,7 +226,7 @@ export const reportMessage = async (req, res) => {
 		}
 
 		// Check if the reason is valid
-		const validReasons = MessageModel.schema.path('report.reason').enumValues.map(value => value.toLowerCase());
+		const validReasons = MessageModel.schema.path('reported.reason').enumValues.map(value => value.toLowerCase());
 
 		if (!validReasons.includes(reason.toLowerCase())) {
 			return res.status(400).json({ err: { status: 400, message: 'Invalid report reason' } });
@@ -252,8 +252,8 @@ export const reportMessage = async (req, res) => {
 		}
 
 		// Update the report flag and reason
-		message.report.flag = true;
-		message.report.reason = reason;
+		message.reported.flag = true;
+		message.reported.reason = reason;
 
 		// Save the message
 		await message.save();
@@ -297,7 +297,7 @@ export const removeMessage = async (req, res) => {
 	}
 
 	// Set the remove flag to true
-	message.remove.flag = true;
+	message.removed.flag = true;
 
 	res.status(200).json({ message: 'Message removed successfully' });
   } catch (error) {

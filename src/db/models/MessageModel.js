@@ -1,4 +1,3 @@
-import e from "cors";
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
@@ -17,7 +16,7 @@ const messageSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
-		report: {
+		reported: {
 			flag: {
 				type: Boolean,
 				default: false
@@ -28,7 +27,7 @@ const messageSchema = new mongoose.Schema(
 				default: null
 			}
 		},
-		remove: {
+		removed: {
 			flag: {
 				type: Boolean,
 				default: false

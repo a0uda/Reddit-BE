@@ -2,7 +2,7 @@ import express from "express";
 import { getMessages, sendMessage, getUsersForSidebar, reportMessage, removeMessage } from "../controller/chatController.js";
 import protectRoute from "../middleware/protectRoutes.js";
 
-// const chatRouter = express.Router();
+const chatRouter = express.Router();
 
 // The receiver's username is passed in the URL.
 chatRouter.post("/chats/send/:username", protectRoute, sendMessage);
@@ -18,4 +18,4 @@ chatRouter.post("/chats/report/:id", protectRoute, reportMessage);
 // The receiver of the message is the logged in user.
 chatRouter.post("/chats/remove/:id", protectRoute, removeMessage);
 
-// export default chatRouter;
+export default chatRouter;
