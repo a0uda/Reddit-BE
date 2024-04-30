@@ -1,6 +1,6 @@
-// import ChatModel from "../db/models/ChatModel.js"
-// import MessageModel from "../db/models/MessageModel.js"
-// import { User } from "../db/models/User.js";
+import ChatModel from "../db/models/ChatModel.js"
+import MessageModel from "../db/models/MessageModel.js"
+import { User } from "../db/models/User.js";
 
 /// TODO: Uncomment.
 // import { getReceiverSocketId, io } from "../socket/socket.js";
