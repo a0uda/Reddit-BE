@@ -11,46 +11,49 @@ import { notificationsRouter } from "./routers/notifications.js";
 
 import { communityRouter } from "./routers/communityRouter.js";
 import { messageRouter } from "./routers/messageRouter.js";
-import chatRouter from "./routers/chatRouter.js"
+import chatRouter from "./routers/chatRouter.js";
 
 import { connect_to_db } from "./db/mongoose.js";
 import { app, server } from "./socket/socket.js";
 
 dotenv.config();
+const cors = require("cors");
 
-// PORT should be assigned after calling dotenv.config() because we need to access the env variables. 
+// PORT should be assigned after calling dotenv.config() because we need to access the env variables.
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json()); // to parse the incoming requests with JSON payloads (from req.body)
 
+app.use(cors());
+
 // The Routes could user some cleaning up, for example, base URLs could be writtern here instead of inside every endpoint.
 // It should look something like this app.use("/api/messages", messageRoutes);
 app.use([
-    usersRouter,
-    postsRouter,
-    commentsRouter,
-    postsOrCommentsRouter,
-    listingPostsRouter,
-    notificationsRouter,
-    communityRouter,
-    messageRouter,
-    chatRouter,
+  usersRouter,
+  postsRouter,
+  commentsRouter,
+  postsOrCommentsRouter,
+  listingPostsRouter,
+  notificationsRouter,
+  communityRouter,
+  messageRouter,
+  chatRouter,
 ]);
 
 try {
-    connect_to_db();
+  connect_to_db();
 } catch (err) {
-    console.log("Error, Couldn't connect to the database.");
+  console.log("Error, Couldn't connect to the database.");
 }
 
 server.listen(PORT, () => {
-    console.log(`Server Running on port ${PORT}`);
+  console.log(`Server Running on port ${PORT}`);
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    res.status(err.status || 500);
-    res.send({ err });
+  res.status(err.status || 500);
+  res.send({ err });
 });
 
 // import cors from "cors";
