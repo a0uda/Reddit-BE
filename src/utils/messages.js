@@ -7,7 +7,7 @@ const mapMessageToFormat = async (message) => {
     let receiver_username = null;
     if (message.receiver_type === "user")
         receiver_username = await User.findOne({ _id: message.receiver_id }).select('username');
-    else
+    else //reciever type is moderator 
         receiver_username = await Community.findOne({ _id: message.receiver_id }).select('name');
 
     let senderVia_name = null;
@@ -21,7 +21,7 @@ const mapMessageToFormat = async (message) => {
         _id: message._id,
         sender_username: sender_username.username,
         sender_type: message.sender_type,
-        receiver_username: receiver_username.username,
+        receiver_username: receiver_username.name,
         receiver_type: message.receiver_type,
         senderVia: senderVia_name,
         message: message.message,
