@@ -55,6 +55,10 @@ const messageSchema = new mongoose.Schema({
     parent_message_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Message"
+    },
+    is_invitation: {
+        type: Boolean,
+        default: false
     }
 });
 

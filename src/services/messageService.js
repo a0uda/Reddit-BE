@@ -168,18 +168,15 @@ const getAllMessages = async (request) => {
         // Combine the results from both queries
         const messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
         //remove duplicates 
-        const uniqueMessages = messages.filter((message, index, self) =>
-            index === self.findIndex(m => m._id == message._id)
-        );
-        console.log(messages.length);
-        console.log(uniqueMessages.length);
-        // Sort the messages by created_at in descending order
-        // uniqueMessages.sort((a, b) => b.created_at - a.created_at);
-
-
-
-        // Map the messages to the desired format
+        const seen = new Set();
+        const uniqueMessages = messages.filter(message => {
+            if (message === null) return false;
+            const isDuplicate = seen.has(message._id.toString());
+            seen.add(message._id.toString());
+            return !isDuplicate;
+        });
         const messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
+
             return await mapMessageToFormat(message);
         }));
 
@@ -187,7 +184,6 @@ const getAllMessages = async (request) => {
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
-
 };
 //////////////////////DELETE MESSAGE //////////////////////////
 const deleteMessage = async (request) => {
@@ -220,7 +216,7 @@ const deleteMessage = async (request) => {
         return { status: 200, message: "Message deleted successfully" };
     }
     catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 };
 
@@ -242,7 +238,7 @@ const getUserMentions = async (request) => {
         return { status: 200, mentions: mappedMentions };
     }
     catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 
 
@@ -250,19 +246,25 @@ const getUserMentions = async (request) => {
 //////////////////////////////GET POSTS REPLIES/////////////////////////////////////
 const getUserPostReplies = async (request) => {
     try {
+
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user || err) {
             return { success, err, status, user, msg };
         }
+
         const posts = await Post.find({ user_id: user._id });
-        console.log(posts.length);
+
         const mappedReplies = await Promise.all(posts.map(async (post) => {
+            console.log("mappedReplies")
             return await mapPostRepliesToFormat(post, user);
-        }
-        ));
-        return { status: 200, replies: mappedReplies };
+        }));
+
+        const filteredReplies = mappedReplies.filter(reply => reply !== null);
+
+
+        return { status: 200, replies: filteredReplies };
     } catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 };
 const getMessagesInbox = async (request) => {
@@ -288,10 +290,8 @@ const getMessagesInbox = async (request) => {
         return { status: 200, replies: mappedReplies, messages: allMessages };
     }
     catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 };
-
-
 
 export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox };
