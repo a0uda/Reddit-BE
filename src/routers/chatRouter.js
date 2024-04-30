@@ -1,12 +1,17 @@
 import express from "express";
-import { getMessages, sendMessage, getUsersForSidebar } from "../controller/chatController.js";
+import { getMessages, sendMessage, getUsersForSidebar, reportMessage } from "../controller/chatController.js";
 import protectRoute from "../middleware/protectRoutes.js";
 
 const chatRouter = express.Router();
 
-chatRouter.get("/chats/:id", protectRoute, getMessages);
-chatRouter.post("/chats/send/:id", protectRoute, sendMessage);
+// The receiver's username is passed in the URL.
+chatRouter.post("/chats/send/:username", protectRoute, sendMessage);
+// The other user's username is passed in the URL.
+chatRouter.get("/chats/:username", protectRoute, getMessages);
 
 chatRouter.get("/chats/", protectRoute, getUsersForSidebar);
+
+// MessageID
+chatRouter.post("/chats/report/:id", protectRoute, reportMessage);
 
 export default chatRouter;
