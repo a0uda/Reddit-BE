@@ -10,6 +10,9 @@ import { seedPostsAndComments } from "./communityPostsAndCommentsSeed.js";
 import { seedCommunities } from "./communitySeed.js";
 import { seedMessages } from "./messageSeed.js";
 
+import { seedMessageModels } from "./messageModelSeed.js";
+import { seedChatModels } from "./chatModelSeed.js";
+
 import { connect_to_db } from "../src/db/mongoose.js";
 
 (async function () {
@@ -31,8 +34,10 @@ import { connect_to_db } from "../src/db/mongoose.js";
   // const communityContentControls = await seedContentControls();
   // const communityPostsAndComments = await seedPostsAndComments();
   // const communityAppearance = await seedAppearances();
-  const messages = await seedMessages();
+  // const messages = await seedMessages();
 
+  const messageModels = await seedMessageModels();
+  const chatModels = await seedChatModels();
 
   console.log("✅ Seeds executed successfully");
   mongoose.connection.close();
