@@ -5,6 +5,8 @@ import { Message } from "../src/db/models/Message.js";
 import { User } from "../src/db/models/User.js";
 import { getRandomElement, getRandomUserId } from "./seedHelpers.js";
 import { Community } from "../src/db/models/Community.js";
+//extra attributes to be seeded : 
+//is_Invitation : boolean
 
 const MESSAGES_COUNT = 1;
 async function generateRandomMessages() {
