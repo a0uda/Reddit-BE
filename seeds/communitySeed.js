@@ -20,7 +20,7 @@ import { seedRules } from './communityRulesSeed.js';
 import generateRandomMutedUsers from './communityMutedUsersSeed.js';
 import generateRandomBannedUsers from "./communityBannedUsersSeed.js";
 import generateRandomApprovedUsers from "./communityApprovedUsersSeed.js";
-
+//add pending_flag to moderator 
 
 const COMMUNITY_COUNT = 20;
 

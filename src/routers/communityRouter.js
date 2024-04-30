@@ -35,6 +35,7 @@ import {
     getEditableModerators,
     getModeratorsSortedByDate,
     unapproveUser,
+    acceptModeratorInvitation,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -516,7 +517,17 @@ communityRouter.get("/communities/about/banned/:community_name", async (req, res
 //add moderaator
 communityRouter.post("/communities/add-moderator", async (req, res, next) => {
     try {
-        const { err, success } = await addModerator(req.body)
+        const { err, success } = await addModerator(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//accept moderator request 
+communityRouter.post("/communities/accept-moderator-invitation", async (req, res, next) => {
+    try {
+        const { err, success } = await acceptModeratorInvitation(req)
         if (err) { return next(err) }
         res.status(200).json({ message: 'OK' });
     } catch (error) {

@@ -2,8 +2,8 @@
 
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { Community } from "../db/models/Community.js";
+import { Message } from "../db/models/Message.js";
 import { User } from "../db/models/User.js"; //delete this line
-
 import {
     isUserAlreadyApproved,
     communityNameExists,
@@ -58,7 +58,7 @@ const banUser = async (request) => {
             user: banningUser,
             msg,
         } = await verifyAuthToken(request);
-        console.log("banninguser: ", banningUser);
+
 
         if (!banningUser) {
             return { success, err, status, banningUser, msg };
@@ -72,12 +72,12 @@ const banUser = async (request) => {
             return { err: { status: 400, message: "Username not found." } };
         }
         const moderators = community.moderators;
-        console.log("moderators: ", moderators);
+
         // search if  mutingUser username exists in moderators .username
         const isModerator = moderators.some(
             (moderator) => moderator.username === banningUser.username
         );
-        console.log("isModerator: ", isModerator);
+
 
         if (!isModerator) {
             return {
@@ -329,12 +329,12 @@ const muteUser = async (request) => {
                 return { err: { status: 400, message: "Username not found." } };
             }
             const moderators = community.moderators;
-            console.log("moderators: ", moderators);
+
             // search if  mutingUser username exists in moderators .username
             const isModerator = moderators.some(
                 (moderator) => moderator.username === mutingUser.username
             );
-            console.log("isModerator: ", isModerator);
+
             if (!isModerator) {
                 return {
                     err: {
@@ -702,12 +702,16 @@ const getApprovedUsers = async (community_name) => {
  * {err: {status: 500, message: error.message}}
  * @returns
  */
-const addModerator = async (requestBody) => {
+const addModerator = async (request) => {
     //TODO: INVITATION EMAIL SHOULD BE SENT TO THE USER
     try {
-        const { community_name, username, has_access } = requestBody;
 
-        // Find the community by name
+        const { success, err, status, user: invitingModerator, msg } = await verifyAuthToken(request);
+        console.log("invitingModerator: ", invitingModerator)
+        if (!invitingModerator) {
+            return { err: { status: status, message: msg } };
+        } console.log("invitingModerator: ", invitingModerator)
+        const { community_name, username, has_access } = request.body;
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
@@ -719,18 +723,39 @@ const addModerator = async (requestBody) => {
             return { err: { status: 400, message: "User not found." } };
         }
 
-        // Check if the user is already a moderator of the community
-        const isModerator = community.moderators.some(
-            (moderator) => moderator.username === username
+        // Check if the user is already a moderator of the community and get the moderator object
+        const moderator = community.moderators.find(
+            (moderator) => moderator.username === user.username
         );
-        if (isModerator) {
-            return {
-                err: {
-                    status: 400,
-                    message: "User is already a moderator of the community.",
-                },
-            };
+        console.log("moderator: ", moderator);
+        if (moderator) {
+            if (!moderator.pending_flag)
+                return {
+                    err: {
+                        status: 400,
+                        message: "User is already a moderator of the community.",
+                    },
+                };
+            else
+                return {
+                    err: {
+                        status: 400,
+                        message: "An invitation was already sent to this user .",
+                    },
+                };
         }
+        const invitation = new Message({
+            sender_id: invitingModerator._id,
+            sender_via_id: community._id,
+            sender_type: "moderator",
+            receiver_id: user._id,
+            receiver_type: "user",
+            message: "gadzooks! You are invited to become a moderator of r/" + community_name,
+            subject: "invitation to moderate/r/ " + community_name,
+            is_invitation: true,
+        });
+
+        await invitation.save();
         community.moderators.push({
             username: user.username,
             moderator_since: new Date(),
@@ -740,13 +765,14 @@ const addModerator = async (requestBody) => {
                 manage_settings: has_access.manage_settings,
                 manage_posts_and_comments: has_access.manage_posts_and_comments,
             },
+            pending_flag: true
         });
-        community.joined_users.push({ _id: user._id })
+        //community.joined_users.push({ _id: user._id })
 
         // Save the updated community
-        console.log("saving community");
+
         await community.save();
-        console.log("saved")
+
         //add community id to user moderated communities
         user.moderated_communities.push({
             id: community._id,
@@ -759,6 +785,49 @@ const addModerator = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+//accept invitation of moderator 
+const acceptModeratorInvitation = async (request) => {
+    try {
+        const { success, err, status, user: acceptingModerator, msg } = await verifyAuthToken(request);
+        if (!acceptingModerator) {
+            return { err: { status: status, message: msg } };
+        }
+        const { _id: message_id } = request.body;
+        const invitation = await Message.findOne({
+            _id: message_id
+        })
+        console.log("invitation: ", invitation);
+        if (!invitation) {
+            return { err: { status: 400, message: "Invitation with this id not found." } };
+
+        }
+
+        const community = await Community.findOne({
+            _id: invitation.sender_via_id
+        })
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+
+        const index = community.moderators.findIndex((moderator) => moderator.username === acceptingModerator.username);
+        if (index === -1) {
+            return { err: { status: 400, message: "error ,can't accept invitation , could find the invitation in the db " } };
+        }
+        community.moderators[index].pending_flag = false;
+        await community.save();
+        acceptingModerator.moderated_communities.push({
+            id: community._id,
+            favorite_flag: false,
+        });
+        community.joined_users.push({ _id: acceptingModerator._id })
+        await acceptingModerator.save();
+
+
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
 /**
  *
  * @param {String} community_name
@@ -784,7 +853,7 @@ const addModerator = async (requestBody) => {
  */
 //all moderators
 const getModerators = async (community_name) => {
-    console.log("getModerators start");
+
     try {
         const community = await communityNameExists(community_name);
         if (!community) {
@@ -795,12 +864,11 @@ const getModerators = async (community_name) => {
         const moderators = community.moderators;
         //console.log("community.moderators", moderators);
         const returned_moderators = [];
-        console.log("length")
-        console.log(moderators.length)
+
         for (let i = 0; i < moderators.length; i++) {
             //get the user object from the user collection where username is the moderator's username
             const user = await User.findOne({ username: moderators[i].username });
-            console.log("user", user);
+
             returned_moderators.push({
                 username: moderators[i].username,
                 profile_picture: user.profile_picture,
@@ -808,7 +876,7 @@ const getModerators = async (community_name) => {
                 has_access: moderators[i].has_access,
             })
         }
-        console.log("getModerators end");
+
         return { returned_moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -1045,5 +1113,6 @@ export {
     unapproveUser,
     getAllUsers,
     editBannedUser,
+    acceptModeratorInvitation,
 };
 
