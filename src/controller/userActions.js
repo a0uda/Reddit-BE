@@ -9,6 +9,7 @@ import { Post } from "../db/models/Post.js";
 import { getPost } from "./posts.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { communityNameExists } from "../utils/communities.js";
+import { pushNotification } from "./notifications.js";
 
 export async function blockUser(request) {
   try {
@@ -16,7 +17,6 @@ export async function blockUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.blocked_username);
     const userToBlock = await User.findOne({
       username: request.body.blocked_username,
     });
@@ -30,16 +30,19 @@ export async function blockUser(request) {
     const userBlockedList = user.safety_and_privacy_settings.blocked_users;
 
     const index = user.safety_and_privacy_settings.blocked_users.findIndex(
-      (blockedUser) => blockedUser._id.toString() == userToBlock._id.toString()
+      (blockedUser) => blockedUser.id.toString() == userToBlock._id.toString()
     );
-    console.log(index);
     let operation = "";
     if (index !== -1) {
       userBlockedList.splice(index, 1);
       console.log("User removed from blocked users.");
       operation = "unblocked";
     } else {
-      userBlockedList.push(userToBlock._id);
+      const newBlockedUser = {
+        id: userToBlock._id,
+        blocked_date: new Date(),
+      };
+      userBlockedList.push(newBlockedUser);
       console.log("User added to blocked users.");
       operation = "blocked";
       await followUserHelper(user, userToBlock, false);
@@ -53,7 +56,7 @@ export async function blockUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -69,7 +72,6 @@ export async function reportUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.reported_username);
     const userToReport = await User.findOne({
       username: request.body.reported_username,
     });
@@ -96,7 +98,7 @@ export async function reportUser(request) {
       msg: "User reported successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -134,7 +136,7 @@ export async function addOrRemovePicture(
       };
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -162,14 +164,21 @@ export async function muteCommunity(request) {
     }
     const userMutedList = user.safety_and_privacy_settings.muted_communities;
 
-    const index = userMutedList.indexOf(communityToMute._id);
+    const index = userMutedList.findIndex(
+      (mutedCommunity) =>
+        mutedCommunity.id.toString() === communityToMute._id.toString()
+    );
     let operation = "";
     if (index !== -1) {
       userMutedList.splice(index, 1);
       console.log("Community removed from muted communities.");
       operation = "unmuted";
     } else {
-      userMutedList.push(communityToMute._id);
+      const newMutedCommunity = {
+        id: communityToMute._id,
+        muted_date: new Date(),
+      };
+      userMutedList.push(newMutedCommunity);
       console.log("Community added to muted communities.");
       operation = "muted";
     }
@@ -181,7 +190,7 @@ export async function muteCommunity(request) {
       msg: `Community ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -208,8 +217,6 @@ export async function favoriteCommunity(request) {
     }
     const userCommunities = user.communities;
 
-    console.log(communityToFav._id);
-    console.log(userCommunities);
     const index = userCommunities.findIndex(
       (community) => community.id.toString() === communityToFav._id.toString()
     );
@@ -300,6 +307,18 @@ export async function followUser(request) {
       //   userToFollow.followers_ids.push(user._id);
       //   await userToFollow.save();
       // }
+
+      //send notif
+      console.log(userToFollow);
+      const { success: succesNotif, error: errorNotif } =
+        await pushNotification(
+          userToFollow,
+          user.username,
+          null,
+          null,
+          "new_followers"
+        );
+      if (!succesNotif) console.log(errorNotif);
     }
 
     // user.following_ids = userFollowingList;
@@ -311,7 +330,7 @@ export async function followUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -403,7 +422,7 @@ export async function joinCommunity(request, leave = false) {
       };
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -430,7 +449,7 @@ export async function clearHistory(request) {
       msg: "History cleared successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -478,7 +497,7 @@ export async function deleteAccount(request) {
       msg: "Account deleted successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,

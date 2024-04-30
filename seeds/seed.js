@@ -8,6 +8,7 @@ import { seedContentControls } from "./communityContentControlsSeed.js";
 import { seedPostsAndComments } from "./communityPostsAndCommentsSeed.js";
 
 import { seedCommunities } from "./communitySeed.js";
+import { seedMessages } from "./messageSeed.js";
 
 import { connect_to_db } from "../src/db/mongoose.js";
 
@@ -21,7 +22,7 @@ import { connect_to_db } from "../src/db/mongoose.js";
   }
   //const users = await seedUsers();
   // Seeding the communities first.
-  const communities = await seedCommunities();
+  // const communities = await seedCommunities();
 
   // const posts = await seedPosts(users);
   // const comments = await seedComments(posts, users);
@@ -30,6 +31,7 @@ import { connect_to_db } from "../src/db/mongoose.js";
   // const communityContentControls = await seedContentControls();
   // const communityPostsAndComments = await seedPostsAndComments();
   // const communityAppearance = await seedAppearances();
+  const messages = await seedMessages();
 
 
   console.log("✅ Seeds executed successfully");

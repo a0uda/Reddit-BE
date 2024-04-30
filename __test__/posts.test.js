@@ -338,7 +338,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: false,
@@ -382,7 +382,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -437,7 +437,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -482,7 +482,7 @@ describe("New Post", () => {
     checkNewPostInput.mockResolvedValue({ result: true });
     getCommunity.mockResolvedValue({ success: true });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -530,7 +530,7 @@ describe("New Post", () => {
     checkNewPostInput.mockResolvedValue({ result: true });
     getCommunity.mockResolvedValue({ success: true });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,

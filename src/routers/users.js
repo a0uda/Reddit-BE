@@ -38,15 +38,21 @@ import {
   getPosts,
   getOverview,
   getAbout,
+  getAllSavedComments,
+  getAllSavedPosts,
   getComments,
   getCommunities,
   getUserPosts,
   getUserComments,
   getBlockedUsers,
   getMutedCommunities,
+  getActiveCommunities,
 } from "../controller/userInfo.js";
 
 import {
+  addSocialLink,
+  deleteSocialLink,
+  editSocialLink,
   getSafetySettings,
   getSettings,
   setSettings,
@@ -161,7 +167,7 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         },
       }
     );
-    console.log(userData);
+    // console.log(userData);
     let user = await User.findOne({ gmail: userData.email });
 
     if (!user) {
@@ -508,7 +514,15 @@ usersRouter.get("/users/about/:username", async (req, res) => {
 
 usersRouter.get("/users/overview/:username", async (req, res) => {
   try {
-    const { success, error, message, content } = await getOverview(req);
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const { success, error, message, content } = await getOverview(
+      req,
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     if (!success) {
       res.status(error.status).send({ error });
       return;
@@ -550,6 +564,51 @@ usersRouter.get("/users/profile-settings", async (req, res) => {
       return;
     }
     res.status(200).send({ message, content: settings.profile_settings });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/add-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await addSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.post("/users/delete-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await deleteSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (e) {
+    res
+      .status(500)
+      .send({ error: { status: 500, message: "Internal server error." } });
+  }
+});
+
+usersRouter.patch("/users/edit-social-link", async (req, res) => {
+  try {
+    const { success, error, message } = await editSocialLink(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
   } catch (e) {
     res
       .status(500)
@@ -741,7 +800,7 @@ usersRouter.post("/users/block-unblock-user", async (req, res) => {
     const result = await blockUser(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -755,7 +814,7 @@ usersRouter.post("/users/report-user", async (req, res) => {
     const result = await reportUser(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -769,7 +828,7 @@ usersRouter.post("/users/add-profile-picture", async (req, res) => {
     const result = await addOrRemovePicture(req, "profile_picture");
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -783,7 +842,7 @@ usersRouter.post("/users/delete-profile-picture", async (req, res) => {
     const result = await addOrRemovePicture(req, "profile_picture", true);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -797,7 +856,7 @@ usersRouter.post("/users/add-banner-picture", async (req, res) => {
     const result = await addOrRemovePicture(req, "banner_picture");
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -811,7 +870,7 @@ usersRouter.post("/users/delete-banner-picture", async (req, res) => {
     const result = await addOrRemovePicture(req, "banner_picture", true);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -825,7 +884,7 @@ usersRouter.post("/users/mute-unmute-community", async (req, res) => {
     const result = await muteCommunity(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -855,7 +914,7 @@ usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -870,7 +929,7 @@ usersRouter.post("/users/join-community", async (req, res) => {
     const result = await joinCommunity(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -884,7 +943,7 @@ usersRouter.post("/users/leave-community", async (req, res) => {
     const result = await joinCommunity(req, true);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -895,10 +954,14 @@ usersRouter.post("/users/leave-community", async (req, res) => {
 
 usersRouter.get("/users/posts/:username", async (req, res) => {
   try {
-    const result = await getUserPosts(req);
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+
+    const result = await getUserPosts(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -909,10 +972,19 @@ usersRouter.get("/users/posts/:username", async (req, res) => {
 
 usersRouter.get("/users/upvoted-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "upvotes_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "upvotes_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -923,10 +995,19 @@ usersRouter.get("/users/upvoted-posts", async (req, res) => {
 
 usersRouter.get("/users/downvoted-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "downvotes_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "downvotes_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -937,10 +1018,19 @@ usersRouter.get("/users/downvoted-posts", async (req, res) => {
 
 usersRouter.get("/users/history-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "history_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "history_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -951,10 +1041,19 @@ usersRouter.get("/users/history-posts", async (req, res) => {
 
 usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
   try {
-    const result = await getPosts(req, "hidden_and_reported_posts_ids");
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "hidden_and_reported_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -965,10 +1064,13 @@ usersRouter.get("/users/hidden-and-reported-posts", async (req, res) => {
 
 usersRouter.get("/users/comments/:username", async (req, res) => {
   try {
-    const result = await getUserComments(req);
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getUserComments(req, pageNumber, pageSizee, sortBy);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -979,17 +1081,64 @@ usersRouter.get("/users/comments/:username", async (req, res) => {
 
 usersRouter.get("/users/saved-posts-and-comments", async (req, res) => {
   try {
-    const rposts = await getPosts(req, "saved_posts_ids");
-    const rcomments = await getComments(req, "saved_comments_ids");
+    const rposts = await getAllSavedPosts(req);
+    const rcomments = await getAllSavedComments(req);
     const result = {
       success: rposts.success,
       status: rposts.status,
-      content: rposts.posts.concat(rcomments.comments),
+      content: { posts: rposts.content, comments: rcomments.content },
     };
 
     res.status(rposts.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/saved-posts", async (req, res) => {
+  try {
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getPosts(
+      req,
+      "saved_posts_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
+
+    res.status(result.status).json(result);
+  } catch (error) {
+    //console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/saved-comments", async (req, res) => {
+  try {
+    const { page = 1, pageSize = 10, sortBy = "New" } = req.query;
+    const pageNumber = parseInt(page);
+    const pageSizee = parseInt(pageSize);
+    const result = await getComments(
+      req,
+      "saved_comments_ids",
+      pageNumber,
+      pageSizee,
+      sortBy
+    );
+    res.status(result.status).json(result);
+  } catch (error) {
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1003,7 +1152,7 @@ usersRouter.get("/users/communities", async (req, res) => {
     const result = await getCommunities(req, "");
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1017,7 +1166,7 @@ usersRouter.get("/users/moderated-communities", async (req, res) => {
     const result = await getCommunities(req, "moderated");
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1031,7 +1180,7 @@ usersRouter.post("/users/clear-history", async (req, res) => {
     const result = await clearHistory(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1045,7 +1194,7 @@ usersRouter.post("/users/delete-account", async (req, res) => {
     const result = await deleteAccount(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1085,7 +1234,7 @@ usersRouter.get("/users/blocked-users", async (req, res) => {
     const result = await getBlockedUsers(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -1099,7 +1248,21 @@ usersRouter.get("/users/muted-communities", async (req, res) => {
     const result = await getMutedCommunities(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
+    res.status(500).json({
+      success: false,
+      err: "Internal Server Error",
+      msg: "An error occurred while processing the request.",
+    });
+  }
+});
+
+usersRouter.get("/users/active-communities", async (req, res) => {
+  try {
+    const result = await getActiveCommunities(req);
+    res.status(result.status).json(result);
+  } catch (error) {
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
