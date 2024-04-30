@@ -1,6 +1,6 @@
-import ChatModel from "../db/models/ChatModel.js"
-import MessageModel from "../db/models/MessageModel.js"
-import { User } from "../db/models/User.js";
+// import ChatModel from "../db/models/ChatModel.js"
+// import MessageModel from "../db/models/MessageModel.js"
+// import { User } from "../db/models/User.js";
 
 /// TODO: Uncomment.
 // import { getReceiverSocketId, io } from "../socket/socket.js";
@@ -149,7 +149,7 @@ export const getMessages = async (req, res) => {
 			return res.status(404).json({ err: { status: 404, message: 'Chat not found' } });
 		}
 
-		const messages = chat.messages;
+// 		const messages = chat.messages;
 
 		res.status(200).json(messages);
 	} catch (error) {
