@@ -2,11 +2,13 @@
 // import http from "http";
 // import express from "express";
 
-// // This line creates a new Express application.
-// const app = express();
+// This line creates a new Express application.
+const app = express();
 
-// // This line creates a new HTTP server that uses the Express application.
-// const server = http.createServer(app);
+// This line creates a new HTTP server that uses the Express application.
+const server = http.createServer(app);
+
+// TODO: Uncomment.
 
 // // This line creates a new Socket.IO server that uses the HTTP server. 
 // // It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
@@ -22,7 +24,15 @@
 // export const getReceiverSocketId = (receiverId) => {
 // 	return userSocketMap[receiverId];
 // };
+// // This function is exported so it can be used in other files. 
+// // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
+// export const getReceiverSocketId = (receiverId) => {
+// 	return userSocketMap[receiverId];
+// };
 
+// // This object maps user IDs to socket IDs. 
+// // It's used to keep track of which socket belongs to which user.
+// const userSocketMap = {}; // {userId: socketId}
 // // This object maps user IDs to socket IDs. 
 // // It's used to keep track of which socket belongs to which user.
 // const userSocketMap = {}; // {userId: socketId}
@@ -33,7 +43,15 @@
 // // and sets up an event listener for the "disconnect" event.
 // io.on("connection", (socket) => {
 // 	console.log("a user connected", socket.id);
+// // This sets up an event listener for the "connection" event, which is emitted whenever a client connects to the server. 
+// // Inside the event listener, it logs the socket ID,
+// // stores the socket ID in userSocketMap if the user ID is defined, 
+// // and sets up an event listener for the "disconnect" event.
+// io.on("connection", (socket) => {
+// 	console.log("a user connected", socket.id);
 
+// 	const userId = socket.handshake.query.userId;
+// 	if (userId != "undefined") userSocketMap[userId] = socket.id;
 // 	const userId = socket.handshake.query.userId;
 // 	if (userId != "undefined") userSocketMap[userId] = socket.id;
 
@@ -43,8 +61,16 @@
 // 		delete userSocketMap[userId];
 // 	});
 // });
+// 	// socket.on() is used to listen to the events. can be used both on client and server side
+// 	socket.on("disconnect", () => {
+// 		console.log("user disconnected", socket.id);
+// 		delete userSocketMap[userId];
+// 	});
+// });
 
 // export { app, io, server };
+
+export { app, server };
 
 
 // // io.on: 
@@ -68,5 +94,5 @@
 // // io.to.emit: 
 // // This is used to emit an event to all clients in a specific room. 
 
-// // socket.to.emit: 
-// // This is used to emit an event to all clients in a specific room, excluding the client associated with the socket. 
+// socket.to.emit: 
+// This is used to emit an event to all clients in a specific room, excluding the client associated with the socket. 
