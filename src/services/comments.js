@@ -1,3 +1,6 @@
+
+import mongoose from "mongoose";
+
 export async function checkCommentVotesMiddleware(currentUser, comments) {
   const username = currentUser.username;
   comments = comments.map((comment) => {
@@ -6,7 +9,11 @@ export async function checkCommentVotesMiddleware(currentUser, comments) {
     var vote = 0;
     if (isUpvoted) vote = 1;
     else if (isDownvoted) vote = -1;
-    return { ...comment.toObject(), vote };
+
+    if (comment instanceof mongoose.Document)
+        return { ...comment.toObject(), vote  };
+      else return { ...comment, vote };
+
   });
   // console.log(comments);
   return comments;
