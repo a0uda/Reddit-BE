@@ -8,43 +8,47 @@ const app = express();
 // This line creates a new HTTP server that uses the Express application.
 const server = http.createServer(app);
 
-// This line creates a new Socket.IO server that uses the HTTP server. 
-// It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
-const io = new Server(server, {
-	cors: {
-		origin: ["http://localhost:3000"],
-		methods: ["GET", "POST"],
-	},
-});
+// TODO: Uncomment.
 
-// This function is exported so it can be used in other files. 
-// It takes a receiverId and returns the corresponding socket ID from userSocketMap.
-export const getReceiverSocketId = (receiverId) => {
-	return userSocketMap[receiverId];
-};
+// // This line creates a new Socket.IO server that uses the HTTP server. 
+// // It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
+// const io = new Server(server, {
+// 	cors: {
+// 		origin: ["http://localhost:3000"],
+// 		methods: ["GET", "POST"],
+// 	},
+// });
 
-// This object maps user IDs to socket IDs. 
-// It's used to keep track of which socket belongs to which user.
-const userSocketMap = {}; // {userId: socketId}
+// // This function is exported so it can be used in other files. 
+// // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
+// export const getReceiverSocketId = (receiverId) => {
+// 	return userSocketMap[receiverId];
+// };
 
-// This sets up an event listener for the "connection" event, which is emitted whenever a client connects to the server. 
-// Inside the event listener, it logs the socket ID,
-// stores the socket ID in userSocketMap if the user ID is defined, 
-// and sets up an event listener for the "disconnect" event.
-io.on("connection", (socket) => {
-	console.log("a user connected", socket.id);
+// // This object maps user IDs to socket IDs. 
+// // It's used to keep track of which socket belongs to which user.
+// const userSocketMap = {}; // {userId: socketId}
 
-	const userId = socket.handshake.query.userId;
-	if (userId != "undefined") userSocketMap[userId] = socket.id;
+// // This sets up an event listener for the "connection" event, which is emitted whenever a client connects to the server. 
+// // Inside the event listener, it logs the socket ID,
+// // stores the socket ID in userSocketMap if the user ID is defined, 
+// // and sets up an event listener for the "disconnect" event.
+// io.on("connection", (socket) => {
+// 	console.log("a user connected", socket.id);
 
-	// socket.on() is used to listen to the events. can be used both on client and server side
-	socket.on("disconnect", () => {
-		console.log("user disconnected", socket.id);
-		delete userSocketMap[userId];
-	});
-});
+// 	const userId = socket.handshake.query.userId;
+// 	if (userId != "undefined") userSocketMap[userId] = socket.id;
 
-export { app, io, server };
+// 	// socket.on() is used to listen to the events. can be used both on client and server side
+// 	socket.on("disconnect", () => {
+// 		console.log("user disconnected", socket.id);
+// 		delete userSocketMap[userId];
+// 	});
+// });
+
+// export { app, io, server };
+
+export { app, server };
 
 
 // io.on: 
