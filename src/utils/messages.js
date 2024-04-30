@@ -13,6 +13,9 @@ const mapMessageToFormat = async (message) => {
     let senderVia_name = null;
     if (message.sender_type === "moderator") {
         const community = await Community.findOne({ _id: message.sender_via_id }).select('name');
+        if (!community) {
+            return null;
+        }
         senderVia_name = community.name;
     }
     const sender_username = await User.findOne({ _id: message.sender_id }).select('username');
