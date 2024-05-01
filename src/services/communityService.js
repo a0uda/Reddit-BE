@@ -251,7 +251,7 @@ const getDetailsWidget = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      console.log("inside the if ");
+      // console.log("inside the if ");
       return {
         err: { status: 500, message: "community name does not exist " },
       };
@@ -332,7 +332,7 @@ const getMembersCount = async (community_name) => {
         err: { status: 400, message: "community name does not exist " },
       };
     }
-    console.log(community.members_count);
+    // console.log(community.members_count);
     return { members_count: community.members_count };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -382,7 +382,7 @@ const getCommunity = async (request) => {
         favorite_flag: favorite_flag,
       }
     }
-    console.log(returned_community)
+    // console.log(returned_community)
     return returned_community
   }
   catch (error) {

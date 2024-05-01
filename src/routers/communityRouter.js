@@ -59,7 +59,8 @@ import {
 } from "../services/communityProfileAndBannerPictures.js";
 
 import {
-    addNewCommunityController
+    addNewCommunityController,
+    schedulePostController,
 } from "../controller/communityController.js";
 
 import {
@@ -108,6 +109,9 @@ communityRouter.post("/communities/remove-item/:community_name", removeItemContr
 communityRouter.post("/communities/spam-item/:community_name", spamItemController);
 communityRouter.post("/communities/report-item/:community_name", reportItemController);
 communityRouter.post("/communities/approve-item/:community_name", approveItemController);
+
+//////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
+communityRouter.post("/communities/schedule-post/:community_name", schedulePostController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
