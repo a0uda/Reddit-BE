@@ -768,6 +768,7 @@ const addModerator = async (request) => {
     try {
 
         const { success, err, status, user: invitingModerator, msg } = await verifyAuthToken(request);
+        const { community_name, username, has_access } = request.body;
         console.log("invitingModerator: ", invitingModerator)
         if (!invitingModerator) {
             return { err: { status: status, message: msg } };
@@ -776,7 +777,6 @@ const addModerator = async (request) => {
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        const { community_name, username, has_access } = request.body;
 
         // Find the user by username
         const user = await User.findOne({ username });
@@ -945,6 +945,40 @@ const getModerators = async (community_name) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+
+
+const getInvitedModerators = async (community_name) => {
+
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return {
+                err: { status: 400, message: "Community not found." },
+            };
+        }
+        const moderators = community.moderators;
+        //filter moderator to get only who have flag pending_flag = false  
+        const filtered_moderators = moderators.filter((moderator) => moderator.pending_flag);
+        //console.log("community.moderators", moderators);
+        const returned_moderators = [];
+
+        for (let i = 0; i < filtered_moderators.length; i++) {
+            //get the user object from the user collection where username is the moderator's username
+            const user = await User.findOne({ username: filtered_moderators[i].username });
+
+            returned_moderators.push({
+                username: filtered_moderators[i].username,
+                profile_picture: user.profile_picture,
+                moderator_since: filtered_moderators[i].moderator_since,
+                has_access: filtered_moderators[i].has_access,
+            })
+        }
+
+        return { returned_moderators };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 const getModeratorsSortedByDate = async (request) => {
     try {
         //verify the auth token
@@ -1016,6 +1050,8 @@ const getEditableModerators = async (request) => {
         }
         const editableModerators = [];
         const moderators = community.moderators;
+        //print the moderators usernames 
+        console.log("moderators", moderators);
         //  filter to have moderators who pendinq_flag is false
         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
 
@@ -1184,6 +1220,6 @@ export {
     unapproveUser,
     getAllUsers,
     editBannedUser,
-    acceptModeratorInvitation,
+    acceptModeratorInvitation, getInvitedModerators
 };
 

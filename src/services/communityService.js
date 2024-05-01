@@ -368,11 +368,11 @@ const getCommunity = async (request) => {
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
         joined_flag: joined_flag ? true : false,
-
-        title: community.general_settings.title,
+        title: general_settings.title,
       }
+
     }
-    console.log(returned_community)
+
     return returned_community
   }
   catch (error) {

@@ -36,6 +36,7 @@ import {
     getModeratorsSortedByDate,
     unapproveUser,
     acceptModeratorInvitation,
+    getInvitedModerators,
 
     getAllUsers,
 } from "../services/communityUserManagement.js";
@@ -539,6 +540,20 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
 
     try {
         const { err, returned_moderators } = await getModerators(req.params.community_name)
+        if (err) { return next(err) }
+
+
+
+        return res.status(200).send(returned_moderators)
+    } catch (error) {
+
+        next(error)
+    }
+})
+communityRouter.get("/communities/about/invited-moderators/:community_name", async (req, res, next) => {
+
+    try {
+        const { err, returned_moderators } = await getInvitedModerators(req.params.community_name)
         if (err) { return next(err) }
 
 
