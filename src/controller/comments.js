@@ -10,7 +10,7 @@ import {
   getCommunity,
 } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
-
+import { pushNotification } from "./notifications.js";
 export async function getComment(request, verifyUser) {
   let user;
   if (verifyUser) {
@@ -111,6 +111,7 @@ export async function newComment(request) {
   }
   const comment = new Comment({
     post_id: post._id,
+    post_title: post.post_title,
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
@@ -126,6 +127,21 @@ export async function newComment(request) {
   });
 
   await comment.save();
+
+  post.comments_count++;
+  await post.save();
+
+  //send notif
+  
+  const userOfPost = await User.findById(post.user_id);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfPost,
+    user.username,
+    post,
+    comment,
+    "comments"
+  );
+  if (!succesNotif) console.log(errorNotif);
 
   return {
     success: true,
@@ -200,6 +216,23 @@ export async function replyToComment(request) {
   await comment.save();
   await reply.save();
 
+  const post=await Post.findById(comment.post_id);
+  
+  post.comments_count++;
+  await post.save();
+
+  //send notif
+  const userOfComment = await User.findById(comment.user_id);
+  console.log(userOfComment);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfComment,
+    user.username,
+    null,
+    comment,
+    "replies"
+  );
+  if (!succesNotif) console.log(errorNotif);
+
   return {
     success: true,
     error: {},
@@ -213,7 +246,7 @@ export async function commentToggler(request, toToggle) {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
     // Handle comments
     const comment = await Comment.findOne({
@@ -226,7 +259,7 @@ export async function commentToggler(request, toToggle) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
@@ -246,7 +279,7 @@ export async function commentToggler(request, toToggle) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -259,7 +292,7 @@ export async function editCommentDescription(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -272,7 +305,7 @@ export async function editCommentDescription(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
@@ -291,7 +324,7 @@ export async function editCommentDescription(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -304,7 +337,7 @@ export async function commentVote(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -316,7 +349,7 @@ export async function commentVote(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
@@ -338,6 +371,17 @@ export async function commentVote(request) {
       } else {
         comment.upvotes_count++;
         comment.upvote_users.push(user.username);
+        //send notif
+        const userOfComment = await User.findById(comment.user_id);
+        console.log(userOfComment);
+        const { success } = await pushNotification(
+          userOfComment,
+          user.username,
+          null,
+          comment,
+          "upvotes_comments"
+        );
+        if (!success) console.log("Error in sending notification");
       }
       await comment.save();
       await user.save();
@@ -369,7 +413,7 @@ export async function commentVote(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -382,7 +426,7 @@ export async function commentSave(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const commentId = request.body.id;
@@ -394,7 +438,7 @@ export async function commentSave(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found ",
+        error: "Comment Not Found ",
         msg: "Comment not found ",
       };
     }
@@ -422,7 +466,7 @@ export async function commentSave(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -435,7 +479,7 @@ export async function commentApprove(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -448,7 +492,7 @@ export async function commentApprove(request) {
       return {
         success: false,
         status: 400,
-        err: "comment Not Found or User Not Authorized",
+        error: "comment Not Found or User Not Authorized",
         msg: "comment not found or user is not authorized to modify it.",
       };
     }
@@ -471,7 +515,7 @@ export async function commentApprove(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -484,7 +528,7 @@ export async function commentRemove(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -497,7 +541,7 @@ export async function commentRemove(request) {
       return {
         success: false,
         status: 400,
-        err: "comment Not Found or User Not Authorized",
+        error: "comment Not Found or User Not Authorized",
         msg: "comment not found or user is not authorized to modify it.",
       };
     }
@@ -520,7 +564,7 @@ export async function commentRemove(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -533,7 +577,7 @@ export async function commentReport(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -545,7 +589,7 @@ export async function commentReport(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to report it.",
       };
     }
@@ -562,7 +606,7 @@ export async function commentReport(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -587,7 +631,7 @@ export async function commentDelete(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to delete it.",
       };
     }
@@ -606,7 +650,7 @@ export async function commentDelete(request) {
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }

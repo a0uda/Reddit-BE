@@ -289,7 +289,13 @@ export async function getAllSavedComments(request) {
 
     comments = comments.filter((comment) => comment != null);
 
+    comments = comments.map((comment) => {
+      return { ...comment.toObject(), is_post: false };
+    });
+
     comments = await checkCommentVotesMiddleware(user, comments);
+    console.log(comments);
+    
     return {
       success: true,
       status: 200,
@@ -327,6 +333,10 @@ export async function getAllSavedPosts(request) {
 
     posts = posts.filter((post) => post != null);
 
+    posts = posts.map((post) => {
+      return { ...post.toObject(), is_post: true };
+    });
+
     posts = await checkVotesMiddleware(user, posts);
     return {
       success: true,
@@ -356,27 +366,33 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
       return generateResponse(false, 404, "No user found with username");
     }
     const { user: loggedInUser } = await verifyAuthToken(request);
-    const posts = await getUserPostsHelper(
+    var posts = await getUserPostsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
-    const comments = await getUserCommentsHelper(
+    var comments = await getUserCommentsHelper(
       loggedInUser,
       user,
       pageNumber,
       pageSize,
       sortBy
     );
-    //concat 2 arrays
-    const overview = posts.concat(comments);
+    //add is post flag
+    posts = posts.map((post) => {
+      return { ...post, is_post: true };
+    });
+    console.log(posts);
+    comments = comments.map((comment) => {
+      return { ...comment, is_post: false };
+    });
 
     return {
       success: true,
       message: "Comments and posts retrieved successfully",
-      content: overview,
+      content: { posts, comments },
     };
   } catch (error) {
     //console.error("Error:", error);
@@ -526,7 +542,7 @@ export async function getActiveCommunities(request) {
       Post.find(postsAndCommentsQuery).exec(),
       Comment.find(postsAndCommentsQuery).exec(),
     ]);
-    
+
     // Extract unique community IDs from posts and comments
     const activeCommunityIds = [
       ...new Set([

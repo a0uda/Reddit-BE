@@ -7,9 +7,22 @@ on:
     branches:
       - main
 jobs:
+  build_dev_test:
+    name: Build Backend For Dev files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Backend For Dev files
+        run: |
+          docker build -t dev-backend -f Dockerfile.dev .
+      - name: Run Backend For Testing Dev files
+        run: |
+          docker run --rm dev-backend
   build_push_docker:
     name: Build Backend For Prod files and push to docker
     runs-on: ubuntu-latest
+    needs: build_dev_test
     steps:
       - uses: actions/checkout@v2
 

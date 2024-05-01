@@ -251,7 +251,7 @@ const getDetailsWidget = async (community_name) => {
   try {
     const community = await communityNameExists(community_name);
     if (!community) {
-      console.log("inside the if ");
+      // console.log("inside the if ");
       return {
         err: { status: 500, message: "community name does not exist " },
       };
@@ -332,7 +332,7 @@ const getMembersCount = async (community_name) => {
         err: { status: 400, message: "community name does not exist " },
       };
     }
-    console.log(community.members_count);
+    // console.log(community.members_count);
     return { members_count: community.members_count };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -357,6 +357,12 @@ const getCommunity = async (request) => {
     const general_settings_id = community.general_settings;
     const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
 
+    // These flags are requested by the front-end team.
+    const moderator_flag = user.moderated_communities.some(community => community.id === community._id);
+    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(community => community.id === community._id);
+    const favorite_flag = user.communities.some(community => community.id.toString() === community._id && community.favorite_flag) ||
+      user.moderated_communities.some(community => community.id.toString() === community._id && community.favorite_flag);
+
     const returned_community = {
       community: {
         description: general_settings.description,
@@ -369,6 +375,10 @@ const getCommunity = async (request) => {
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
         joined_flag: joined_flag ? true : false,
         title: general_settings.title,
+
+        moderator_flag: moderator_flag,
+        muted_flag: muted_flag,
+        favorite_flag: favorite_flag,
       }
 
     }
@@ -380,28 +390,6 @@ const getCommunity = async (request) => {
   }
 }
 
-const approveDiscussionItem = async (requestBody) => {
-  const { isPost, id } = requestBody;
-  try {
-    if (isPost) {
-      const post = await TempPost.findById(id);
-      if (!post) {
-        return { err: { status: 500, message: "post does not exist " } };
-      }
-      post.approved = true;
-      await post.save();
-    } else {
-      const comment = await TempComment.findById(id);
-      if (!comment) {
-        return { err: { status: 500, message: "comment does not exist " } };
-      }
-      comment.approved = true;
-      await comment.save();
-    }
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
 
 export {
   addNewCommunity,

@@ -51,7 +51,10 @@ const communityContentControlsSchema = new mongoose.Schema({
       enum: ["Required domains", "Blocked domains"],
       default: "Required domains",
     },
-    require_or_block_link_posts_with_these_domains: String,
+    require_or_block_link_posts_with_these_domains: {
+      type: [String],
+      default: [],
+    },
   },
   restrict_how_often_the_same_link_can_be_posted: {
     flag: {

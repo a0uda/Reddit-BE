@@ -606,6 +606,7 @@ const approveUser = async (request) => {
 const unapproveUser = async (request) => {
     try {
         const { username, community_name } = request.body;
+        //use auth token to verify user
         const {
             success,
             err,
@@ -616,7 +617,92 @@ const unapproveUser = async (request) => {
         if (!approvingUser) {
             return { success, err, status, approvingUser, msg };
         }
+        //unapprove user
+        const unapproveUser = async (request) => {
+            try {
+                const { username, community_name } = request.body;
+                const {
+                    success,
+                    err,
+                    status,
+                    user: approvingUser,
+                    msg,
+                } = await verifyAuthToken(request);
+                if (!approvingUser) {
+                    return { success, err, status, approvingUser, msg };
+                }
 
+                const user_to_be_unapproved = await User.findOne({ username: username });
+                if (!user_to_be_unapproved) {
+                    return { err: { status: 400, message: "Username not found." } };
+                }
+                console.log("community_name: ", community_name);
+
+                const community = await communityNameExists(community_name);
+                console.log("community: ", community);
+                if (!community) {
+                    return { err: { status: 400, message: "Community not found." } };
+                }
+                const moderators = community.moderators;
+                console.log("moderators: ", moderators);
+                // search if  approvingUser username exists in moderators .username
+                const isModerator = moderators.some(
+                    (moderator) => moderator.username === approvingUser.username
+                );
+                if (!isModerator) {
+                    return {
+                        err: {
+                            status: 400,
+                            message: "You are not a moderator in this community",
+                        },
+                    };
+                }
+
+                //get the community.moderator object of the muting user
+                const moderator = community.moderators.find(
+                    (moderator) => moderator.username === approvingUser.username
+                );
+                console.log("moderator: ", moderator);
+                //check if moderator object is allowed to mute
+                if (
+                    !moderator.has_access.everything &&
+                    !moderator.has_access.manage_users
+                ) {
+                    return {
+                        err: {
+                            status: 400,
+                            message: "You are not allowed to unapprove users. permission denied",
+                        },
+                    };
+                }
+                // Check if user username  already exists in the approved_users array of the community
+                const isAlreadyApproved = isUserAlreadyApproved(
+                    community,
+                    user_to_be_unapproved.username
+                );
+                if (!isAlreadyApproved) {
+                    return {
+                        err: {
+                            status: 400,
+                            message: "User is not approved in this community.",
+                        },
+                    };
+                }
+                //get the approved_user object of the user to be unapproved
+                const approved_user = community.approved_users.find(
+                    (user) => user.username === user_to_be_unapproved.username
+                );
+                //get the index of the approved_user object in the approved_users array
+                const index = community.approved_users.indexOf(approved_user);
+                //remove the approved_user object from the approved_users array
+                community.approved_users.splice(index, 1);
+                await community.save();
+                console.log(community.approved_users);
+                return { success: true };
+            } catch (error) {
+                return { err: { status: 500, message: error.message } };
+            }
+        };
         const user_to_be_unapproved = await User.findOne({ username: username });
         if (!user_to_be_unapproved) {
             return { err: { status: 400, message: "Username not found." } };
@@ -1003,6 +1089,52 @@ const getModeratorsSortedByDate = async (request) => {
         const returned_moderators = [];
         //get the moderators array
         const moderators = community.moderators;
+        //sort the moderators array by moderator_since date
+        moderators.sort((a, b) => {
+            return new Date(b.moderator_since) - new Date(a.moderator_since);
+        }
+        );
+        for (let i = 0; i < moderators.length; i++) {
+            //get the user object from the user collection where username is the moderator's username
+            const user = await User.findOne({ username: moderators[i].username });
+            returned_moderators.push({
+                username: moderators[i].username,
+                profile_picture: user.profile_picture,
+                moderator_since: moderators[i].moderator_since,
+                has_access: moderators[i].has_access,
+            })
+        }
+        return { returned_moderators };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+};
+
+const getModeratorsSortedByDate = async (request) => {
+    try {
+        //verify the auth token
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user) {
+            return { err: { status: status, message: msg } };
+        }
+        //check if the community exists
+        const community = await communityNameExists(request.params.community_name);
+        if (!community) {
+            return {
+                err: { status: 400, message: "Community not found." },
+            };
+        }
+        //get the moderator element from moderators array where username is the user's username
+        const moderator = community.moderators.find((moderator) => moderator.username === user.username);
+        if (!moderator) {
+            return {
+                err: { status: 400, message: "User is not a moderator of the community." },
+            };
+        }
+        const returned_moderators = [];
+        //get the moderators array
+        const moderators = community.moderators;
         //filter pending moderators 
         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
         //sort the moderators array by moderator_since date
@@ -1216,6 +1348,8 @@ export {
     deleteModerator,
     moderatorLeaveCommunity,
     getEditableModerators,
+    getModeratorsSortedByDate,
+    unapproveUser,
     getModeratorsSortedByDate,
     unapproveUser,
     getAllUsers,

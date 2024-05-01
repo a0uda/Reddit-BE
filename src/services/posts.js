@@ -199,6 +199,7 @@ export async function checkPostSettings(post, community_name) {
   const allowPolls = posts_and_comments.posts.allow_polls_posts;
   const allowMultipleImages =
     posts_and_comments.posts.allow_multiple_images_per_post;
+    console.log(`allowType: ${allowType}, type: ${type}`)
   if (
     (!allowPolls && post.polls.length > 0) ||
     (allowType == "Links Only" && type != "url" && type != "hybrid") ||

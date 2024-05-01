@@ -13,10 +13,15 @@ import {
     approveItem
 } from '../services/communityQueueService.js';
 
+// This is a dummy change to test merging the ChatsFeature branch.
+
 export const getRemovedItemsController = async (req, res, next) => {
     try {
         console.log("Entered the controller")
-        const { time_filter, posts_or_comments } = req.body;
+
+        // This attributes should be received as request Params not in the request body.
+        const { time_filter, posts_or_comments } = req.query;
+        console.log(time_filter, posts_or_comments);
         
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -47,7 +52,7 @@ export const getRemovedItemsController = async (req, res, next) => {
 
 export const getReportedItemsController = async (req, res, next) => {
     try {
-        const { time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.query;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -78,7 +83,7 @@ export const getReportedItemsController = async (req, res, next) => {
 
 export const getUnmoderatedItemsController = async (req, res, next) => {
     try {
-        const { time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.query;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
