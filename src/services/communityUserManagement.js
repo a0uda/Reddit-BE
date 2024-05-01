@@ -800,11 +800,12 @@ const addModerator = async (request) => {
     try {
 
         const { success, err, status, user: invitingModerator, msg } = await verifyAuthToken(request);
-        console.log("invitingModerator: ", invitingModerator)
+
         if (!invitingModerator) {
             return { err: { status: status, message: msg } };
-        } console.log("invitingModerator: ", invitingModerator)
+        }
         const { community_name, username, has_access } = request.body;
+
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
