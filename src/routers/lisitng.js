@@ -24,7 +24,7 @@ listingPostsRouter.get("/listing/posts/best", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -49,7 +49,7 @@ listingPostsRouter.get("/listing/posts/random", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -74,7 +74,7 @@ listingPostsRouter.get("/listing/posts/hot", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -99,7 +99,7 @@ listingPostsRouter.get("/listing/posts/new", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -124,7 +124,7 @@ listingPostsRouter.get("/listing/posts/top", async (req, res) => {
 
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",

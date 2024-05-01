@@ -136,6 +136,10 @@ const commentSchema = new mongoose.Schema({
     removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     spammed_flag: { type: Boolean, default: false },
+    spammed_type: { type: String },
+    spammed_date: { type: Date },
+    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
+    removed_count: { type: Number, default: 0, min: 0 },
     spammed_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -146,6 +150,7 @@ const commentSchema = new mongoose.Schema({
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
+    reported_date: { type: Date },
     reported_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

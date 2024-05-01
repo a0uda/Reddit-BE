@@ -58,7 +58,13 @@ export const postSchema = new mongoose.Schema({
     },
   ],
   //changed name from poll to polls
-  polls: [{ options: { type: String }, votes: { type: Number, default: 0 } }],
+  polls: [
+    {
+      options: { type: String },
+      votes: { type: Number, default: 0 },
+      users_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    },
+  ],
   //voting length in days if the type is polls
   polls_voting_length: { type: Number, default: 3 },
   polls_voting_is_expired_flag: { type: Boolean, default: false },
@@ -118,12 +124,14 @@ export const postSchema = new mongoose.Schema({
     spammed_flag: { type: Boolean, default: false },
     spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     spammed_type: { type: String, default: null },
+    spammed_date: { type: Date },
     spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     // TODO: add reported_flag, reported_by, reported_type.
     reported_flag: { type: Boolean, default: false },
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String, default: null },
+    reported_date: { type: Date },
   },
 
   user_details: {
@@ -137,19 +145,17 @@ export const postSchema = new mongoose.Schema({
     default: false,
   },
   //if true fill in this object
-  reposted: [
-    {
-      //don't need it as user id is the one who reposted
-      // shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      //don't need it as title is the caption
-      // caption: { type: String, default: null },
-      //shared to-> community name aady
-      original_post_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
-      },
+  reposted: {
+    //don't need it as user id is the one who reposted
+    // shared_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    //don't need it as title is the caption
+    // caption: { type: String, default: null },
+    //shared to-> community name aady
+    original_post_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
     },
-  ],
+  },
 });
 postSchema.pre("find", function (next) {
   // Define the projection based on whether the post is deleted or not
@@ -162,6 +168,23 @@ postSchema.pre("find", function (next) {
 });
 export const Post = mongoose.model("Post", postSchema);
 
-// postSchema.pre("find", function () {
-//   this.where({ deleted: false });
-// });
+postSchema.pre("find", function () {
+  this.where({ deleted: false });
+
+  const query = this.getQuery();
+
+  // Check if the query is for posts of type "poll" and if it includes the creation date and voting length
+  if (query.type == "polls" && query.created_at && query.polls_voting_length) {
+    // Calculate the expiration date based on creation date and voting length
+    const expirationDate = new Date(query.created_at);
+    expirationDate.setDate(
+      expirationDate.getDate() + query.polls_voting_length
+    );
+    // Check if the current date is greater than the expiration date
+    const currentDate = new Date();
+    if (currentDate > expirationDate) {
+      // Update the query to set is_expired_flag to true
+      this.update({}, { $set: { polls_voting_is_expired_flag: true } });
+    }
+  }
+});

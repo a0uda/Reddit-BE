@@ -91,15 +91,31 @@ const communitySchema = new mongoose.Schema({
 
     },
   ],
+  /*
+  muted_users: [
+    {
+      username: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      muted_by_username: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      mute_date: Date,
+      mute_reason: String,
+    },
+],
+   */
   muted_users: [
     {
       username: {
         type: String,
-        ref: "User",
+
       },
       muted_by_username: {
         type: String,
-        ref: "User",
+
       },
       mute_date: Date,
       mute_reason: String,
@@ -109,8 +125,7 @@ const communitySchema = new mongoose.Schema({
   banned_users: [
     {
       username: {
-        type: mongoose.Schema.Types.String,
-        ref: "User",
+        type: String,
       },
       banned_date: Date,
       reason_for_ban: {

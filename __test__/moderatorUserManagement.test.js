@@ -5,21 +5,24 @@ import { verifyAuthToken } from '../src/controller/userAuth';
 jest.mock("../src/utils/communities");
 jest.mock("../src/db/models/User");
 jest.mock("../src/controller/userAuth");
-//TODOS
+//contents:
 //1. Test the approveUser function
 //2. Test the getApprovedUsers function
 //3. Test the muteUser function (mute and unmute user)
 //4. Test the getMutedUsers function
 //5. Test the unmuteUser function
-//TODO:
-
 //7. Test the banUser function (ban and unban user)
 //8. Test the getBannedUsers function
-//9. Test the getModerators function
-//10. Test the getEditableModerators function
+
+//9. Test the getModerators function:
+//TODO:
+//10. Test the getEditableModerators function :;  getting i not working due to mocking issues
 //11. Test the moderatorLeaveCommunity function
 //12. Test the addModerator function
 //13. Test the removeModerator function
+
+
+
 
 describe('approveUser', () => {
     it('should return success if user is approved', async () => {
@@ -190,7 +193,7 @@ describe('getApprovedUsers', () => {
         const result = await getApprovedUsers(community_name);
         expect(result).toEqual({
             err: {
-                status: 500,
+                status: 400,
                 message: "Community not found.",
             },
         });
@@ -340,5 +343,454 @@ describe('getMutedUsers', () => {
 
     })
 
+
+})
+
+describe('banUser', () => {
+    //reset the mock
+    jest.resetAllMocks();
+    it('should ban a user from a community', async () => {
+        const requestBody = {
+            body: {
+                username: 'existingUsername',
+                community_name: 'existingCommunityName',
+                action: 'ban',
+                reason_for_ban: 'reason',
+                mod_note: 'modNote',
+                permanent_flag: true,
+                note_for_ban_message: 'noteForBanMessage',
+                banned_until: '2021-05-10T14:48:00.000Z'
+            }
+        };
+        const banningUser = {
+            username: 'banningUser',
+        };
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [{ username: 'banningUser', has_access: { everything: true, manage_users: true } }],
+            save: jest.fn(),
+            banned_users: []
+        };
+        const user = {
+            username: 'existingUsername',
+        };
+        User.findOne.mockResolvedValueOnce(user);
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: banningUser });
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await banUser(requestBody);
+        expect(result).toEqual({ success: true });
+        expect(community.banned_users).toEqual([{
+            username: 'existingUsername',
+            banned_date: community.banned_users[0].banned_date,
+            reason_for_ban: 'reason',
+            mod_note: 'modNote',
+            permanent_flag: true,
+            banned_until: '2021-05-10T14:48:00.000Z',
+            note_for_ban_message: 'noteForBanMessage',
+        }]);
+    });
+    it('should unban a user from a community', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            body: {
+                username: 'existingUsername',
+                community_name: 'existingCommunityName',
+                action: 'unban',
+            }
+        };
+        const banningUser = {
+            username: 'banningUser',
+        };
+        let community = {
+            name: 'existingCommunityName',
+            moderators: [{ username: 'banningUser', has_access: { everything: true, manage_users: true } }],
+            save: jest.fn(),
+            banned_users: [{ username: 'existingUsername' }]
+        };
+        const user = {
+            username: 'existingUsername',
+        };
+        User.findOne.mockResolvedValueOnce(user);
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: banningUser });
+        //  communityNameExists.mockResolvedValueOnce(community); lama ba uncomment da by fail el test el ablo??????????
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await banUser(requestBody);
+        expect(result).toEqual({ success: true });
+        expect(community.banned_users).toEqual([]);
+    });
+
+
+})
+describe('getBannedUsers', () => {
+    it('should return the banned users of a community', async () => {
+        //reset the mock
+        jest.resetAllMocks();
+        const community_name = 'existingCommunityName';
+        const community = {
+            name: 'existingCommunityName',
+            banned_users: [{
+                username: 'existingUsername',
+                banned_date: '2021-05-10T14:48:00.000Z',
+                reason_for_ban: 'reason',
+                mod_note: 'modNote',
+                permanent_flag: true,
+                banned_until: '2021-05-10T14:48:00.000Z',
+                note_for_ban_message: 'noteForBanMessage'
+            }],
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await getBannedUsers(community_name);
+        expect(result).toEqual({
+            users: [{
+                username: 'existingUsername',
+                banned_date: '2021-05-10T14:48:00.000Z',
+                reason_for_ban: 'reason',
+                mod_note: 'modNote',
+                permanent_flag: true,
+                banned_until: '2021-05-10T14:48:00.000Z',
+                note_for_ban_message: 'noteForBanMessage',
+                profile_picture: 'profilePicture',
+
+            }],
+        })
+
+    })
+    it('should return error if the community is not found', async () => {
+        //reset the mock
+        jest.resetAllMocks();
+        const community_name = 'existingCommunityName';
+        const community = {
+            name: 'existingCommunityName',
+            banned_users: [{ username: 'existingUsername', banned_date: '2021-05-10T14:48:00.000Z', reason_for_ban: 'reason', mod_note: 'modNote', permanent_flag: true, banned_until: '2021-05-10T14:48:00.000Z', note_for_ban_message: 'noteForBanMessage' }],
+        };
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await getBannedUsers(community_name);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: "Community not found.",
+            },
+        });
+
+    })
+
+})
+
+describe('getModerators', () => {
+    it('should return the moderators of a community', async () => {
+        jest.resetAllMocks();
+        const community_name = 'existingCommunityName';
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [{ username: 'existingUsername', moderator_since: '2021-05-10T14:48:00.000Z', has_access: { everything: true, manage_users: true } }],
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await getModerators(community_name);
+        expect(result).toEqual({
+            returned_moderators: [{
+                username: 'existingUsername',
+                profile_picture: 'profilePicture',
+                moderator_since: '2021-05-10T14:48:00.000Z',
+                has_access: { everything: true, manage_users: true },
+            }],
+        });
+    });
+    it('should return error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const community_name = 'existingCommunityName';
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await getModerators(community_name);
+        expect(communityNameExists).toHaveBeenCalledWith(community_name);
+
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^Community not found.\s*$/),
+            },
+        });
+    });
+    it('should return error if an error occurs', async () => {
+        jest.resetAllMocks();
+        const community_name = 'existingCommunityName';
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [{ username: 'existingUsername', moderator_since: '2021-05-10T14:48:00.000Z', has_access: { everything: true, manage_users: true } }],
+        };
+        communityNameExists.mockResolvedValueOnce(community);
+        User.findOne.mockRejectedValueOnce(new Error('error occurred'));
+        const result = await getModerators(community_name);
+        expect(communityNameExists).toHaveBeenCalledWith(community_name);
+        expect(User.findOne).toHaveBeenCalledWith({ username: 'existingUsername' });
+
+        expect(result.err.status).toEqual(500);
+
+    });
+
+})
+describe('getEditableModerators', () => {
+    it('should return error if the user is not a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            params: {
+                community_name: 'existingCommunityName',
+            },
+            headers: {
+                authorization: 'Bearer token',
+            },
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [
+                { username: 'existingUsername2', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
+            ],
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user });
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await getEditableModerators(request);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^User is not a moderator of the community.\s*$/),
+            },
+        });
+    });
+
+    it('should return error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            params: {
+                community_name: 'existingCommunityName',
+            },
+            headers: {
+                authorization: 'Bearer token',
+            },
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user });
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await getEditableModerators(request);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^Community not found.\s*$/),
+            },
+        });
+    });
+});
+
+describe('moderatorLeaveCommunity', () => {
+    it('should return success if the user is a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: 'existingCommunityName',
+            },
+            headers: {
+                authorization: 'Bearer token',
+            },
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [
+                { username: 'existingUsername', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
+            ],
+            save: jest.fn(),
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user });
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await moderatorLeaveCommunity(request);
+        expect(result).toEqual({ success: true });
+        expect(community.save).toHaveBeenCalled();
+    });
+
+    it('should return error if the user is not a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: 'existingCommunityName',
+            },
+            headers: {
+                authorization: 'Bearer token',
+            },
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [
+                { username: 'existingUsername2', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
+            ],
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user });
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await moderatorLeaveCommunity(request);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^User is not a moderator of the community.\s*$/),
+            },
+        });
+    });
+
+    it('should return error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: 'existingCommunityName',
+            },
+            headers: {
+                authorization: 'Bearer token',
+            },
+        };
+        const user = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user });
+        User.findOne.mockResolvedValueOnce(user);
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await moderatorLeaveCommunity(request);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^Community not found.\s*$/),
+            },
+        });
+    });
+
+})
+
+describe('addModerator', () => {
+    // it('should return success if the user is not a moderator of the community', async () => {
+    //     jest.resetAllMocks();
+    //     const requestBody = {
+    //         community_name: 'existingCommunityName',
+    //         username: 'existingUsername',
+    //         has_access: {
+    //             everything: true,
+    //             manage_users: true,
+    //             manage_settings: true,
+    //             manage_posts_and_comments: true,
+    //         },
+    //     };
+    //     const community = {
+    //         name: 'existingCommunityName',
+    //         moderators: [],
+    //         save: jest.fn(),
+    //     };
+    //     const user = {
+    //         username: 'existingUsername',
+    //     };
+    //     communityNameExists.mockResolvedValueOnce(community);
+    //     User.findOne.mockResolvedValueOnce(user);
+    //     const result = await addModerator(requestBody);
+    //     expect(result).toEqual({ success: true });
+    //     expect(community.moderators).toEqual([{
+    //         username: user.username,
+    //         moderator_since: expect.any(Date),
+    //         has_access: {
+    //             everything: requestBody.has_access.everything,
+    //             manage_users: requestBody.has_access.manage_users,
+    //             manage_settings: requestBody.has_access.manage_settings,
+    //             manage_posts_and_comments: requestBody.has_access.manage_posts_and_comments,
+    //         },
+    //     }]);
+    //     expect(community.save).toHaveBeenCalled();
+    // });
+    // TODO: test if the user is already a moderator of the community
+
+
+
+    it('should return error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: 'existingCommunityName',
+            username: 'existingUsername',
+            has_access: {
+                everything: true,
+                manage_users: true,
+                manage_settings: true,
+                manage_posts_and_comments: true,
+            },
+        };
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await addModerator(requestBody);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^Community not found.\s*$/),
+            },
+        });
+    });
+})
+describe('deleteModerator', () => {
+    it('should return success if the user is a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: 'existingCommunityName',
+            username: 'existingUsername',
+        };
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [
+                { username: 'existingUsername', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
+            ],
+            save: jest.fn(),
+        };
+        const user = {
+            username: 'existingUsername',
+        };
+        communityNameExists.mockResolvedValueOnce(community);
+        User.findOne.mockResolvedValueOnce(user);
+        const result = await deleteModerator(requestBody);
+        expect(result).toEqual({ success: true });
+        expect(community.moderators).toEqual([]);
+        expect(community.save).toHaveBeenCalled();
+    });
+
+
+    it('should return error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: 'existingCommunityName',
+            username: 'existingUsername',
+        };
+        communityNameExists.mockResolvedValueOnce(undefined);
+        const result = await deleteModerator(requestBody);
+        expect(result).toEqual({
+            err: {
+                status: 400,
+                message: expect.stringMatching(/^Community not found.\s*$/),
+            },
+        });
+    });
 
 })

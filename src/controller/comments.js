@@ -9,6 +9,7 @@ import {
   getCommentRepliesHelper,
   getCommunity,
 } from "../services/posts.js";
+import { checkCommentVotesMiddleware } from "../services/comments.js";
 
 export async function getComment(request, verifyUser) {
   let user;
@@ -49,12 +50,23 @@ export async function getComment(request, verifyUser) {
 
 export async function getCommentWithReplies(request) {
   const { success, error, comment, message } = await getComment(request, false);
-  console.log(comment);
+  // console.log(comment);
   if (!success) {
     return { success, error };
   }
   const { user } = await verifyAuthToken(request);
-  const commentWithReplies = await getCommentRepliesHelper(user, comment);
+  var commentWithReplies = await getCommentRepliesHelper(comment);
+  if (user) {
+    var resultComment = await checkCommentVotesMiddleware(user, [
+      commentWithReplies,
+    ]);
+    commentWithReplies = resultComment[0];
+    // commentWithReplies = commentWithReplies.toObject();
+    // commentWithReplies.replies_comments_ids = await checkCommentVotesMiddleware(
+    //   user,
+    //   commentWithReplies.replies_comments_ids
+    // );
+  }
   return {
     success: true,
     comment: commentWithReplies,
@@ -127,7 +139,7 @@ export async function replyToComment(request) {
     request,
     true
   );
-  console.log(comment);
+  // console.log(comment);
   if (!success) {
     return { success, error };
   }
@@ -230,7 +242,7 @@ export async function commentToggler(request, toToggle) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -275,7 +287,7 @@ export async function editCommentDescription(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -353,7 +365,7 @@ export async function commentVote(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -394,7 +406,7 @@ export async function commentSave(request) {
       user.saved_comments_ids.splice(index, 1);
     } else {
       // If not found, add it to the array
-      user.saved_comments_ids.push(commentId);
+      user.saved_comments_ids.push(comment._id);
     }
 
     await user.save();
@@ -406,7 +418,7 @@ export async function commentSave(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -455,7 +467,7 @@ export async function commentApprove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -504,7 +516,7 @@ export async function commentRemove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -546,7 +558,7 @@ export async function commentReport(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -590,7 +602,7 @@ export async function commentDelete(request) {
       msg: "Comment deleted successfully",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
