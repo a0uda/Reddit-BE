@@ -151,7 +151,10 @@ const communitySchema = new mongoose.Schema({
         type: Boolean,
         default: true,
       },
-      banned_until: Date,
+      banned_until: {
+        type: Number,
+        default: 0
+      },
       note_for_ban_message: {
         type: String,
       },
