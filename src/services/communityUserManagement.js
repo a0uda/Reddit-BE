@@ -1349,8 +1349,8 @@ export {
     moderatorLeaveCommunity,
     getEditableModerators,
     getModeratorsSortedByDate,
-    unapproveUser,
-    getModeratorsSortedByDate,
+
+
     unapproveUser,
     getAllUsers,
     editBannedUser,
