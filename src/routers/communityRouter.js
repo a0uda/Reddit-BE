@@ -35,8 +35,8 @@ import {
     getEditableModerators,
     getModeratorsSortedByDate,
     unapproveUser,
-    getModeratorsSortedByDate,
-    unapproveUser,
+
+
     acceptModeratorInvitation,
     getInvitedModerators,
 
