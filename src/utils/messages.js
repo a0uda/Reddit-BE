@@ -6,9 +6,9 @@ import { Post } from '../db/models/Post.js';
 const mapMessageToFormat = async (message) => {
     let receiver_username = null;
     if (message.receiver_type === "user")
-        receiver_username = await User.findOne({ _id: message.receiver_id }).select('username');
+        receiver_username = await User.findOne({ _id: message.receiver_id }).select('username').username;
     else //reciever type is moderator 
-        receiver_username = await Community.findOne({ _id: message.receiver_id }).select('name');
+        receiver_username = await Community.findOne({ _id: message.receiver_id }).select('name').name;
 
     let senderVia_name = null;
     if (message.sender_type === "moderator") {
@@ -18,19 +18,19 @@ const mapMessageToFormat = async (message) => {
         }
         senderVia_name = community.name;
     }
-    const sender_username = await User.findOne({ _id: message.sender_id }).select('username');
+    const sender_username_and_id = await User.findOne({ _id: message.sender_id }).select('username _id');
     return {
         _id: message._id,
-        sender_username: sender_username.username,
+        sender_username: sender_username_and_id.username,
         sender_type: message.sender_type,
-        receiver_username: receiver_username.name,
+        receiver_username: receiver_username,
         receiver_type: message.receiver_type,
         senderVia: senderVia_name,
         message: message.message,
         created_at: message.created_at,
         deleted_at: message.deleted_at,
         unread_flag: message.unread_flag,
-        isSent: message.sender_id === user._id,
+        isSent: message.sender_id === sender_username_and_id._id,
         parentMessageId: message.parent_message_id,
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
