@@ -22,7 +22,7 @@ import generateRandomBannedUsers from "./communityBannedUsersSeed.js";
 import generateRandomApprovedUsers from "./communityApprovedUsersSeed.js";
 //add pending_flag to moderator 
 
-const COMMUNITY_COUNT = 20;
+const COMMUNITY_COUNT = 10;
 
 async function generateRandomCommunities() {
     // Seed the subdocuments and get the IDs
@@ -35,20 +35,27 @@ async function generateRandomCommunities() {
     const contentControlsIds = (await CommunityContentControls.find()).map(doc => doc._id);
     const postsAndCommentsIds = (await CommunityPostsAndComments.find()).map(doc => doc._id);
     const rulesIds = (await Rule.find()).map(doc => doc._id);
+    const rulesCount = rulesIds.length;
 
     const communities = [];
     const users = await User.find();
-    const owner = await User.findOne();
 
+    //each community have 15 member , element 0 is the owner, 0 to 4 are moderators
+    // 5 to 7 are approved users, 8 to 9 are muted users, 10 to 11 are banned users
+    //the rest are just joined users
+    //no pending moderators in the seed  
+    //community type , restricted , public , private ?
     for (let i = 0; i < COMMUNITY_COUNT; i++) {
 
-        // Randomly select multiple rule IDs for each community
-        const numberOfRules = faker.number.int({ min: 1, max: 5 }); // Adjust the maximum number of rules as needed
+        const joined_users = users.slice(0, 15);
+        const owner = joined_users[0];
+        const moderators = users.slice(0, 4); // Select first 5 users as moderators including the owner
         const selectedRules = faker.helpers.shuffle(rulesIds).slice(0, numberOfRules);
-        const muted_users = await generateRandomMutedUsers();
-        const banned_users = await generateRandomBannedUsers();
-        const approved_users = await generateRandomApprovedUsers();
-        const moderators = users.slice(0, 3); // Select first 3 users as moderators      
+        const numberOfRules = selectedRules.length;
+        const muted_users = await generateRandomMutedUsers(joined_users);
+        const banned_users = await generateRandomBannedUsers(joined_users);
+        const approved_users = await generateRandomApprovedUsers(joined_users);
+
         const fakeCommunity = {
             // Basic Attributes.
             created_at: Date.now(),
@@ -57,7 +64,7 @@ async function generateRandomCommunities() {
             category: getRandomElement([
                 'Technology', 'Science', 'Music', 'Sports', 'Gaming', 'News', 'Movies', 'Books', 'Fashion', 'Food', 'Travel', 'Health', 'Art', 'Photography', 'Education', 'Business', 'Finance', 'Politics', 'Religion', 'DIY', 'Pets', 'Environment', 'Humor', 'Personal'
             ]),
-            members_count: faker.number.int({ min: 0, max: 1000 }),
+            members_count: joined_users.length,
             owner: owner._id,
 
             // Part 1 of embedded documents.
@@ -66,6 +73,7 @@ async function generateRandomCommunities() {
             posts_and_comments: postsAndCommentsIds[i],
 
             // Part 2 of embedded documents.
+            joined_users: joined_users.map(user => user._id),
             approved_users: approved_users,
             muted_users: muted_users,
             banned_users: banned_users,
@@ -73,14 +81,13 @@ async function generateRandomCommunities() {
                 username: user.username,
                 moderator_since: faker.date.recent(),
                 has_access: {
-                    everything: faker.datatype.boolean(),
-                    manage_users: faker.datatype.boolean(),
-                    manage_settings: faker.datatype.boolean(),
-                    manage_posts_and_comments: faker.datatype.boolean(),
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
                 },
+                pending_flag: false
             })),
-            //joined users 
-
 
             rules_ids: selectedRules,
             removal_reasons: [
@@ -104,5 +111,18 @@ export async function seedCommunities() {
     const communities = await generateRandomCommunities();
     const options = { timeout: 30000 }; // 30 seconds timeout
     const communitiesInserted = await Community.insertMany(communities, options);
+    //for each community , find its owner and moderators and add the community to their moderated_communities 
+    for (let i = 0; i < communitiesInserted.length; i++) {
+        const community = communitiesInserted[i];
+        for (let j = 0; j < community.moderators.length; j++) {
+            const moderator = await User.findOne({ username: community.moderators[j].username });
+            moderator.moderated_communities.push({
+                id: community._id,
+                favorite_flag: false,
+            })
+            await moderator.save();
+
+        }
+    }
     return communitiesInserted;
 } 

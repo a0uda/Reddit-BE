@@ -19,7 +19,6 @@ const mapMessageToFormat = async (message) => {
         senderVia_name = community.name;
     }
     const sender_username = await User.findOne({ _id: message.sender_id }).select('username');
-
     return {
         _id: message._id,
         sender_username: sender_username.username,
@@ -31,12 +30,14 @@ const mapMessageToFormat = async (message) => {
         created_at: message.created_at,
         deleted_at: message.deleted_at,
         unread_flag: message.unread_flag,
-        isSent: true,
-        isReply: !!message.parent_message_id,
+        isSent: message.sender_id === user._id,
         parentMessageId: message.parent_message_id,
-        subject: message.subject
-    };
+        subject: message.subject,
+        isReply: message.parent_message_id ? true : false,
+    }
+
 };
+
 const mapUserMentionsToFormat = async (userMentions, user) => {
     console.log("insise mapUserMentionsToFormat")
 
@@ -82,6 +83,7 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         rank: rank,
         upvotes_count: comment.upvotes_count,
         downvotes_count: comment.downvotes_count,
+        isSent: "true"
 
     };
 
@@ -94,10 +96,6 @@ const mapPostRepliesToFormat = async (post, user) => {
     //console.log("inside mapPostRepliesToFormat")
     const comment = await Comment.findOne({ post_id: post._id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
     if (comment) {
-
-
-        // console.log("comment")
-        // console.log(comment)
         const postCreator = user.username;
         let postCreatorType = null;
         let rank;

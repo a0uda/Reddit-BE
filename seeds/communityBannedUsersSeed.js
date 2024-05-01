@@ -3,13 +3,12 @@ import { getRandomElement } from "./seedHelpers.js";
 import { User } from "../src/db/models/User.js";
 
 
-const BANNED_USERS_COUNT = 6;
 
-async function generateRandomBannedUsers() {
+async function generateRandomBannedUsers(users) {
     const banned_users = [];
-    const users = await User.find();
 
-    for (let i = 0; i < BANNED_USERS_COUNT; i++) {
+
+    for (let i = 6; i < 8; i++) {
         const permanentFlag = faker.datatype.boolean();
         const banned_until = permanentFlag ? null : faker.date.future();
 
