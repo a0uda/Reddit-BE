@@ -121,11 +121,13 @@ const communitySchema = new mongoose.Schema({
       mute_reason: String,
 
     },
+
   ],
   joined_users: [
     {
       _id: {
         type: mongoose.Schema.Types.ObjectId,
+
       }
 
     }
@@ -232,12 +234,7 @@ const communitySchema = new mongoose.Schema({
   //   min: 0,
   //   default: 0,
   // },
-  messages: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-    },
-  ],
+
 });
 
 export const Community = mongoose.model("Community", communitySchema);

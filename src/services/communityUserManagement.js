@@ -995,10 +995,12 @@ const getModeratorsSortedByDate = async (request) => {
 
 const getEditableModerators = async (request) => {
     try {
+        console.log("inside getEditableModerators")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user) {
             return { err: { status: status, message: msg } };
         }
+        console.log("authentication passed")
         const community = await communityNameExists(request.params.community_name);
         if (!community) {
             return {
@@ -1014,22 +1016,24 @@ const getEditableModerators = async (request) => {
         }
         const editableModerators = [];
         const moderators = community.moderators;
-        //filter to have moderators who pendinq_flag is false 
+        //  filter to have moderators who pendinq_flag is false
         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
+
         for (let i = 0; i < filtered_moderators.length; i++) {
             //get the user object from the user collection where username is the moderator's username
             const user = await User.findOne({
-                username: community.filtered_moderators[i].username,
+                username: filtered_moderators[i].username,
             });
-            if (community.filtered_moderators[i].moderator_since > moderator.moderator_since) {
+            if (filtered_moderators[i].moderator_since > moderator.moderator_since) {
                 editableModerators.push({
-                    username: community.filtered_moderators[i].username,
+                    username: filtered_moderators[i].username,
                     profile_picture: user.profile_picture,
-                    moderator_since: community.filtered_moderators[i].moderator_since,
-                    has_access: community.filtered_moderators[i].has_access,
+                    moderator_since: filtered_moderators[i].moderator_since,
+                    has_access: filtered_moderators[i].has_access,
                 });
             }
         }
+
         //remove has_access from each moderator
         return { editableModerators };
     } catch (error) {
