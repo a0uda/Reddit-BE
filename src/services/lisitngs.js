@@ -115,7 +115,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
       // Check if the user follows anyone
       if (followedUsers.length > 0) {
         // Fetch posts from followed users
-        posts = paginateFollowingPosts(
+        posts = await paginateFollowingPosts(
           followedUsers,
           hidden_posts,
           blocked_users,
