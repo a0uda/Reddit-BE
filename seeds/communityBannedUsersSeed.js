@@ -10,7 +10,7 @@ async function generateRandomBannedUsers(users) {
 
     for (let i = 6; i < 8; i++) {
         const permanentFlag = faker.datatype.boolean();
-        const banned_until = permanentFlag ? null : faker.date.future();
+        const banned_until = permanentFlag ? null : faker.number.between(1, 30);
 
         const fakeBannedUser = {
             username: getRandomElement(users).username,
