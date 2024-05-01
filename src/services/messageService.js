@@ -102,7 +102,6 @@ const getUserUnreadMessages = async (request) => {
         if (!user) {
             return { success, err, status, user, msg };
         }
-
         const user_id = user._id;
 
         // Query for messages where the receiver is the user and unread_flag is true
@@ -122,12 +121,15 @@ const getUserUnreadMessages = async (request) => {
 
         // Combine the results from both queries
         const messages = [...userMessages, ...moderatorMessages];
-        // console.log(messages);
+
 
         // Map the messages to the desired format
         const messagesToSend = await Promise.all(messages.map(async (message) => {
             return await mapMessageToFormat(message);
         }));
+        console.log("habhooba");
+        // console.log("messagesToSend");
+        // console.log(messagesToSend);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
