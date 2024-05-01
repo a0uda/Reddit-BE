@@ -552,6 +552,7 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
 //get editable moderators
 communityRouter.get("/communities/about/editable-moderators/:community_name", async (req, res, next) => {
     try {
+        console.log("hello from router ")
         const { err, editableModerators } = await getEditableModerators(req)
         if (err) { return next(err) }
         return res.status(200).send(editableModerators)

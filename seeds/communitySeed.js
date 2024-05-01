@@ -79,10 +79,7 @@ async function generateRandomCommunities() {
                     manage_posts_and_comments: faker.datatype.boolean(),
                 },
             })),
-            //joined users are the ids of the moderators and some other users 
-            //     joined_users: moderators.map(user => user._id).concat(users.slice(3, 10).map(user => user._id)),
-
-            //add invited moderators array  and handle it 
+            //joined users 
 
 
             rules_ids: selectedRules,
