@@ -590,7 +590,7 @@ const approveUser = async (request) => {
             sender_id: approvingUser._id,
             sender_via_id: community._id,
             sender_type: "moderator",
-            receiver_id: approved_user._id,
+            receiver_id: user_to_be_approved._id,
             receiver_type: "user",
             message: "You are approved by the moderator " + approvingUser.username + " in the subreddit  r/" + community_name,
             subject: "You are approved in the subreddit  /r/ " + community_name,
@@ -606,7 +606,6 @@ const approveUser = async (request) => {
 const unapproveUser = async (request) => {
     try {
         const { username, community_name } = request.body;
-        //use auth token to verify user
         const {
             success,
             err,
@@ -622,7 +621,6 @@ const unapproveUser = async (request) => {
         if (!user_to_be_unapproved) {
             return { err: { status: 400, message: "Username not found." } };
         }
-        console.log("community_name: ", community_name);
 
         const community = await communityNameExists(community_name);
         console.log("community: ", community);
@@ -630,7 +628,6 @@ const unapproveUser = async (request) => {
             return { err: { status: 400, message: "Community not found." } };
         }
         const moderators = community.moderators;
-        console.log("moderators: ", moderators);
         // search if  approvingUser username exists in moderators .username
         const isModerator = moderators.some(
             (moderator) => moderator.username === approvingUser.username
@@ -648,7 +645,6 @@ const unapproveUser = async (request) => {
         const moderator = community.moderators.find(
             (moderator) => moderator.username === approvingUser.username
         );
-        console.log("moderator: ", moderator);
         //check if moderator object is allowed to mute
         if (
             !moderator.has_access.everything &&
@@ -691,7 +687,6 @@ const unapproveUser = async (request) => {
             receiver_type: "user",
             message: "You are unapproved by the moderator " + approvingUser.username + " in the subreddit  r/" + community_name,
             subject: "You are unapproved in the subreddit  /r/ " + community_name,
-
         });
         await message.save();
         console.log(community.approved_users);
@@ -777,11 +772,11 @@ const addModerator = async (request) => {
         if (!invitingModerator) {
             return { err: { status: status, message: msg } };
         } console.log("invitingModerator: ", invitingModerator)
-        const { community_name, username, has_access } = request.body;
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
+        const { community_name, username, has_access } = request.body;
 
         // Find the user by username
         const user = await User.findOne({ username });

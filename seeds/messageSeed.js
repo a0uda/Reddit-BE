@@ -32,6 +32,8 @@ async function generateRandomMessages() {
             deleted_at: null,
             unread_flag: faker.datatype.boolean(),
             parent_message_id: null,
+            //is invitation = true of sender_via is not null 
+
         };
         messages.push(fakeMessage);
     }
