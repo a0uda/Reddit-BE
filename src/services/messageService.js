@@ -288,7 +288,9 @@ const getMessagesInbox = async (request) => {
         const mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
         }));
-        const allMessages = [...mappedReplies, ...mappedMessages, ...mappedMentions];
+        const allMessages = [...mappedReplies, ...mappedMessages, ...mappedMentions].filter(
+            (message) => message !== null
+        );
         return { status: 200, replies: mappedReplies, messages: allMessages };
     }
     catch (error) {
