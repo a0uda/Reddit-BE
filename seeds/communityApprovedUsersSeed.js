@@ -5,10 +5,10 @@ import { User } from "../src/db/models/User.js";
 import { getRandomElement } from "./seedHelpers.js";
 const APPROVED_USERS_COUNT = 6;
 
-async function generateRandomApprovedUsers() {
+async function generateRandomApprovedUsers(users) {
     const approved_users = [];
     const users = await User.find();
-    for (let i = 0; i < APPROVED_USERS_COUNT; i++) {
+    for (let i = 8; i < 10; i++) {
         const fakeApprovedUser = {
             // get random user
             username: getRandomElement(users).username,
