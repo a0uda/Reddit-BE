@@ -170,7 +170,12 @@ const communitySchema = new mongoose.Schema({
       manage_users: { type: Boolean, default: true },
       manage_settings: { type: Boolean, default: true },
       manage_posts_and_comments: { type: Boolean, default: true },
-    }
+    },
+    pending_flag: {
+      type: Boolean,
+      default: true,
+    },
+
   }],
 
   ////////////////////////////////////////////////////// Rules & Removal Reasons //////////////////////////////////////////////////////

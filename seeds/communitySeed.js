@@ -20,7 +20,7 @@ import { seedRules } from './communityRulesSeed.js';
 import generateRandomMutedUsers from './communityMutedUsersSeed.js';
 import generateRandomBannedUsers from "./communityBannedUsersSeed.js";
 import generateRandomApprovedUsers from "./communityApprovedUsersSeed.js";
-
+//add pending_flag to moderator 
 
 const COMMUNITY_COUNT = 20;
 
@@ -79,7 +79,10 @@ async function generateRandomCommunities() {
                     manage_posts_and_comments: faker.datatype.boolean(),
                 },
             })),
+            //joined users are the ids of the moderators and some other users 
+            //     joined_users: moderators.map(user => user._id).concat(users.slice(3, 10).map(user => user._id)),
 
+            //add invited moderators array  and handle it 
 
 
             rules_ids: selectedRules,
