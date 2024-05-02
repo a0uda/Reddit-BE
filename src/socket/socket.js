@@ -1,6 +1,10 @@
-// import { Server } from "socket.io";
-// import http from "http";
-// import express from "express";
+import { Server } from "socket.io";
+import http from "http";
+import express from "express";
+
+const io = require("socket.io")(Server, {
+  path: "/socket.io",
+});
 
 // // This line creates a new Express application.
 // const app = express();
