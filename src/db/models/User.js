@@ -452,13 +452,8 @@ const userSchema = new mongoose.Schema({
       ref: "Ticket",
     },
   },
-
-
-
-
-
-
 });
+
 
 userSchema.pre("save", async function (next) {
   const user = this;
