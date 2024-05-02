@@ -591,14 +591,14 @@ export async function postVote(request) {
         //send notif
         const userOfPost = await User.findById(post.user_id);
 
-        const { success } = await pushNotification(
+        const { success,error } = await pushNotification(
           userOfPost,
           user.username,
           post,
           null,
           "upvotes_posts"
         );
-        if (!success) console.log("Error in sending notification");
+        if (!success) console.log(error);
       }
       await post.save();
       await user.save();
