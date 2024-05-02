@@ -120,7 +120,7 @@ export async function createPost(request) {
   else {
     post.nsfw_flag = user.profile_settings.nsfw_flag;
   }
-
+  
   //if all good and i am going to post
   //set all necessary attributes (flags oc and nsf and spoiler if found)
   //upvote++
@@ -132,6 +132,7 @@ export async function createPost(request) {
   user.upvotes_posts_ids.push(post._id);
   await post.save();
   await user.save();
+  console.log("HIIIIIIIIII", post._id);
   return {
     success: true,
     error: {},
@@ -323,7 +324,7 @@ export async function getPost(request, verifyUser) {
 
   //   post = result[0];
   // }
-  
+
   return {
     success: true,
     post,
@@ -589,7 +590,7 @@ export async function postVote(request) {
 
         //send notif
         const userOfPost = await User.findById(post.user_id);
-      
+
         const { success } = await pushNotification(
           userOfPost,
           user.username,
@@ -601,7 +602,6 @@ export async function postVote(request) {
       }
       await post.save();
       await user.save();
-
     } else {
       if (downvoteIndex != -1) {
         user.downvotes_posts_ids.splice(downvoteIndex, 1);
