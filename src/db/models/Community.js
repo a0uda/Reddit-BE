@@ -91,22 +91,7 @@ const communitySchema = new mongoose.Schema({
 
     },
   ],
-  /*
-  muted_users: [
-    {
-      username: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      muted_by_username: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      mute_date: Date,
-      mute_reason: String,
-    },
-],
-   */
+
   muted_users: [
     {
       username: {

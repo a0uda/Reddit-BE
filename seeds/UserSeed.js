@@ -143,7 +143,7 @@ async function generateRandomUsers() {
       communities: [],
       moderated_communities: [],
       reported_users: [],
-      user_mentions: [],
+      user_mentions: [],//TODO: This should be seeded with real users because its referenced in messages , I need an extra attribute: unread 
       tickets_ids: [],
     };
 
