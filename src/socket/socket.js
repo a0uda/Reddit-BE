@@ -12,13 +12,15 @@ const server = http.createServer(app);
 
 // This line creates a new Socket.IO server that uses the HTTP server.
 // It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
-const io = new Server(server, {
-  cors: {
-    // origin: ["http://localhost:2998", "http://localhost:2999", "http://localhost:3000"],
-    origin: "*", // allow all origins
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  },
-});
+
+// const io = new Server(server, {
+//     cors: {
+//         origin: ["http://localhost:2998", "http://localhost:2999", "http://localhost:3000"],
+//         methods: ["GET", "POST", "PUT", "PATCH","DELETE"],
+//     },
+// });
+
+const io = new Server(server)
 
 // This function is exported so it can be used in other files.
 // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
