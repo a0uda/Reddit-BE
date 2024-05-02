@@ -121,7 +121,7 @@ const composeNewMessage = async (request, isReply) => {
 
 // //////////////////////SENT //////////////////////////
 
-const getUserSentMessages = async (request, filterBy) => {
+const getUserSentMessages = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
 
@@ -133,7 +133,8 @@ const getUserSentMessages = async (request, filterBy) => {
         const messages = await Message.find({ sender_id: user_id }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message, user, "getUserSentMessages");
+            const type = "getUserSentMessages"
+            return await mapMessageToFormat(message, user, type);
         }));
         //Filter the messages from messages sent by the users blocked users
         //the user contains array blocked_users  
@@ -155,14 +156,14 @@ const getUserUnreadMessages = async (request) => {
         const user_id = user._id;
 
         // Query for messages where the receiver is the user and unread_flag is true
-        const userMessages = await Message.find({
+        let userMessages = await Message.find({
             receiver_type: "user",
             receiver_id: user_id,
             unread_flag: true
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id and unread_flag is true
-        const moderatorMessages = await Message.find({
+        let moderatorMessages = await Message.find({
             receiver_type: "moderator",
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id }, // Assuming user.communities holds the IDs of communities the user is a moderator of
@@ -170,12 +171,13 @@ const getUserUnreadMessages = async (request) => {
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages];
+        let messages = [...userMessages, ...moderatorMessages];
 
 
         // Map the messages to the desired format
-        const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message, user, "getUserUnreadMessages");
+        const type = "getUserUnreadMessages"
+        let messagesToSend = await Promise.all(messages.map(async (message) => {
+            return await mapMessageToFormat(message, user, type);
         }));
         //filter this array from nulls 
         messagesToSend = messagesToSend.filter((message) => message !== null);
@@ -216,7 +218,7 @@ const getAllMessages = async (request) => {
         // }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
+        let messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
         //remove duplicates 
         const seen = new Set();
         const uniqueMessages = messages.filter(message => {
@@ -225,10 +227,12 @@ const getAllMessages = async (request) => {
             seen.add(message._id.toString());
             return !isDuplicate;
         });
-        const messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
+        let messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
 
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
+        //filter this array from nulls 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -322,11 +326,12 @@ const getMessagesInbox = async (request) => {
         const messages = await Message.find({ receiver_id: user._id });
         const mentions = user.user_mentions;
         const mappedReplies = await Promise.all(posts.map(async (post) => {
+
             return await mapPostRepliesToFormat(post, user);
         }
         ));
         const mappedMessages = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
         const mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
