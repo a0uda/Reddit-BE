@@ -361,8 +361,8 @@ const getCommunity = async (request) => {
     const moderator_flag = user.moderated_communities.some(community => community.id === community._id);
     const muted_flag = user.safety_and_privacy_settings.muted_communities.some(community => community.id === community._id);
     const favorite_flag = user.communities.some(community => community.id.toString() === community._id && community.favorite_flag) ||
-                user.moderated_communities.some(community => community.id.toString() === community._id && community.favorite_flag);
-    
+      user.moderated_communities.some(community => community.id.toString() === community._id && community.favorite_flag);
+
     const returned_community = {
       community: {
         description: general_settings.description,
@@ -374,15 +374,15 @@ const getCommunity = async (request) => {
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
         joined_flag: joined_flag ? true : false,
-
-        title: community.general_settings.title,
+        title: general_settings.title,
 
         moderator_flag: moderator_flag,
         muted_flag: muted_flag,
         favorite_flag: favorite_flag,
       }
+
     }
-    // console.log(returned_community)
+
     return returned_community
   }
   catch (error) {

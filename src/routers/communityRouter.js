@@ -36,6 +36,10 @@ import {
     getModeratorsSortedByDate,
     unapproveUser,
 
+
+    acceptModeratorInvitation,
+    getInvitedModerators,
+
     getAllUsers,
 } from "../services/communityUserManagement.js";
 
@@ -520,7 +524,17 @@ communityRouter.get("/communities/about/banned/:community_name", async (req, res
 //add moderaator
 communityRouter.post("/communities/add-moderator", async (req, res, next) => {
     try {
-        const { err, success } = await addModerator(req.body)
+        const { err, success } = await addModerator(req)
+        if (err) { return next(err) }
+        res.status(200).json({ message: 'OK' });
+    } catch (error) {
+        next(error)
+    }
+})
+//accept moderator request 
+communityRouter.post("/communities/accept-moderator-invitation", async (req, res, next) => {
+    try {
+        const { err, success } = await acceptModeratorInvitation(req)
         if (err) { return next(err) }
         res.status(200).json({ message: 'OK' });
     } catch (error) {
@@ -542,9 +556,24 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
         next(error)
     }
 })
+communityRouter.get("/communities/about/invited-moderators/:community_name", async (req, res, next) => {
+
+    try {
+        const { err, returned_moderators } = await getInvitedModerators(req.params.community_name)
+        if (err) { return next(err) }
+
+
+
+        return res.status(200).send(returned_moderators)
+    } catch (error) {
+
+        next(error)
+    }
+})
 //get editable moderators
 communityRouter.get("/communities/about/editable-moderators/:community_name", async (req, res, next) => {
     try {
+        console.log("hello from router ")
         const { err, editableModerators } = await getEditableModerators(req)
         if (err) { return next(err) }
         return res.status(200).send(editableModerators)

@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { User } from "../src/db/models/User.js";
 import { getRandomElement } from "./seedHelpers.js";
-const MUTED_USERS_COUNT = 6;
 
-async function generateRandomMutedUsers() {
+
+async function generateRandomMutedUsers(users) {
     const muted_users = [];
-    const users = await User.find();
-    for (let i = 0; i < MUTED_USERS_COUNT; i++) {
+    for (let i = 4; i < 6; i++) {
         const fakeMutedUser = {
             username: getRandomElement(users).username,
             muted_by_username: getRandomElement(users).username,

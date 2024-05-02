@@ -9,27 +9,30 @@ const protectRoute = async (req, res, next) => {
 		const token = req.headers.authorization?.split(" ")[1];
 
 		if (!token) {
-			return res.status(401).json({ error: "Unauthorized - No Token Provided" });
+			const err = { status: 401, message: "Unauthorized - No Token Provided" };
+			return next(err);
 		}
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		if (!decoded) {
-			return res.status(401).json({ error: "Unauthorized - Invalid Token" });
+			const err = { status: 401, message: "Unauthorized - Invalid Token" };
+			return next(err);
 		}
 
 		const user = await User.findById(decoded._id).select("-password");
 
 		if (!user) {
-			return res.status(404).json({ error: "User not found" });
+			const err = { status: 404, message: "User not found" };
+			return next(err);
 		}
 
 		req.user = user;
 
 		next();
 	} catch (error) {
-		console.log("Error in protectRoute middleware: ", error.message);
-		res.status(500).json({ error: "Internal server error" });
+		const err = { status: 500, message: error.message };
+		return next(err);
 	}
 };
 

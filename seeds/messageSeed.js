@@ -5,8 +5,7 @@ import { Message } from "../src/db/models/Message.js";
 import { User } from "../src/db/models/User.js";
 import { getRandomElement, getRandomUserId } from "./seedHelpers.js";
 import { Community } from "../src/db/models/Community.js";
-//extra attributes to be seeded : 
-//is_Invitation : boolean
+
 
 const MESSAGES_COUNT = 1;
 async function generateRandomMessages() {
@@ -32,6 +31,8 @@ async function generateRandomMessages() {
             deleted_at: null,
             unread_flag: faker.datatype.boolean(),
             parent_message_id: null,
+            //is invitation = true of sender_via is not null 
+
         };
         messages.push(fakeMessage);
     }
