@@ -1,11 +1,11 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox } from "../services/messageService.js";
+import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
     try {
-        console.log("debugging composeNewMessage")
-        const { err, message } = await composeNewMessage(req)
+
+        const { err, message } = await composeNewMessage(req, false)
 
         if (err) { return next(err) }
 
@@ -114,7 +114,7 @@ messageRouter.get("/messages/inbox", async (req, res, next) => {
 messageRouter.post("/messages/reply", async (req, res, next) => {
     try {
 
-        const { err, message } = await composeNewMessage(req)
+        const { err, message } = await composeNewMessage(req, true)
 
         if (err) { return next(err) }
 
@@ -125,3 +125,17 @@ messageRouter.post("/messages/reply", async (req, res, next) => {
     }
 })
 export { messageRouter };
+////////////mark as read //////////
+messageRouter.post("/messages/mark-as-read", async (req, res, next) => {
+    try {
+
+        const { err, message } = await markMessageAsRead(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
