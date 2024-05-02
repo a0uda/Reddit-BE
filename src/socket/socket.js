@@ -14,8 +14,8 @@ const server = http.createServer(app);
 // It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:3000"],
-        methods: ["GET", "POST"],
+        origin: ["http://localhost:2998", "http://localhost:2999", "http://localhost:3000"],
+        methods: ["GET", "POST", "PUT", "PATCH","DELETE"],
     },
 });
 
