@@ -23,6 +23,7 @@ async function generateRandomComments(posts, users) {
 
     const fakeComment = {
       post_id: randomPost._id,
+      post_title: randomPost.post_title,
       user_id: randomUser._id,
       username: randomUser.username,
       parent_id: null,
@@ -49,19 +50,19 @@ async function generateRandomComments(posts, users) {
         approved_by: moderator._id,
         approved_date: faker.date.past(),
         approved_count: 0,
-       
+
         removed_flag: faker.datatype.boolean(),
         removed_by: moderator._id,
         removed_date: faker.date.past(),
         removed_removal_reason: faker.lorem.sentence(),
         removed_count: 0,
-       
+        //
         spammed_flag: faker.datatype.boolean(),
         spammed_by: moderator._id,
         spammed_type: faker.lorem.word(),
         spammed_date: faker.date.past(),
         spammed_removal_reason: faker.lorem.sentence(),
-       
+
         reported_flag: faker.datatype.boolean(),
         reported_by: moderator._id,
         reported_type: faker.lorem.word(),

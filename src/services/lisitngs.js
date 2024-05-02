@@ -151,7 +151,6 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
     let posts = [];
     if (currentUser) {
       let followedUsers = currentUser.following_ids; // Assuming following_ids contains user IDs of followed users
-
       let hidden_posts = currentUser.hidden_and_reported_posts_ids;
       let blocked_users =
         currentUser.safety_and_privacy_settings.blocked_users.map(

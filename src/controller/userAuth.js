@@ -38,8 +38,12 @@ export async function verifyAuthToken(request) {
   if (!token) {
     return { success: false, status: 401, err: "Access Denied" };
   }
-
-  const userToken = jwt.verify(token, process.env.JWT_SECRET);
+  var userToken;
+  try {
+     userToken = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return { success: false, err, status: 400 };
+  }
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {

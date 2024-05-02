@@ -925,6 +925,7 @@ usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
 
 usersRouter.post("/users/join-community", async (req, res) => {
   try {
+
     const result = await joinCommunity(req);
     res.status(result.status).json(result);
   } catch (error) {

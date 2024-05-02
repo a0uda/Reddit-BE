@@ -1,4 +1,5 @@
 import { Post } from "../db/models/Post.js";
+import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
   getCommunityGeneralSettings,
@@ -19,6 +20,7 @@ import {
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import mongoose from "mongoose";
 import { generateResponse } from "../utils/generalUtils.js";
+import { pushNotification } from "./notifications.js";
 
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -118,7 +120,7 @@ export async function createPost(request) {
   else {
     post.nsfw_flag = user.profile_settings.nsfw_flag;
   }
-
+  
   //if all good and i am going to post
   //set all necessary attributes (flags oc and nsf and spoiler if found)
   //upvote++
@@ -130,6 +132,7 @@ export async function createPost(request) {
   user.upvotes_posts_ids.push(post._id);
   await post.save();
   await user.save();
+  console.log("HIIIIIIIIII", post._id);
   return {
     success: true,
     error: {},
@@ -321,6 +324,7 @@ export async function getPost(request, verifyUser) {
 
   //   post = result[0];
   // }
+
   return {
     success: true,
     post,
@@ -583,6 +587,18 @@ export async function postVote(request) {
       } else {
         post.upvotes_count = post.upvotes_count + 1;
         user.upvotes_posts_ids.push(post._id);
+
+        //send notif
+        const userOfPost = await User.findById(post.user_id);
+
+        const { success } = await pushNotification(
+          userOfPost,
+          user.username,
+          post,
+          null,
+          "upvotes_posts"
+        );
+        if (!success) console.log("Error in sending notification");
       }
       await post.save();
       await user.save();
