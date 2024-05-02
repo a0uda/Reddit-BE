@@ -11,7 +11,7 @@ const messageSchema = new mongoose.Schema({
     sender_via_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Community",
-        required: false
+        default: null
     },
     sender_type: {
         type: String,
@@ -54,7 +54,12 @@ const messageSchema = new mongoose.Schema({
     },
     parent_message_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Message"
+        ref: "Message",
+        default: null
+    },
+    is_invitation: {
+        type: Boolean,
+        default: false
     }
 });
 

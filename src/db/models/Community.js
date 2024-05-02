@@ -121,11 +121,13 @@ const communitySchema = new mongoose.Schema({
       mute_reason: String,
 
     },
+
   ],
   joined_users: [
     {
       _id: {
         type: mongoose.Schema.Types.ObjectId,
+
       }
 
     }
@@ -149,7 +151,10 @@ const communitySchema = new mongoose.Schema({
         type: Boolean,
         default: true,
       },
-      banned_until: Date,
+      banned_until: {
+        type: Number,
+        default: 0
+      },
       note_for_ban_message: {
         type: String,
       },
@@ -170,7 +175,12 @@ const communitySchema = new mongoose.Schema({
       manage_users: { type: Boolean, default: true },
       manage_settings: { type: Boolean, default: true },
       manage_posts_and_comments: { type: Boolean, default: true },
-    }
+    },
+    pending_flag: {
+      type: Boolean,
+      default: true,
+    },
+
   }],
 
   ////////////////////////////////////////////////////// Rules & Removal Reasons //////////////////////////////////////////////////////
@@ -227,12 +237,7 @@ const communitySchema = new mongoose.Schema({
   //   min: 0,
   //   default: 0,
   // },
-  messages: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Message",
-    },
-  ],
+
 });
 
 export const Community = mongoose.model("Community", communitySchema);
