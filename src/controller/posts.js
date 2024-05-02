@@ -584,7 +584,7 @@ export async function postVote(request) {
         //send notif
         const userOfPost = await User.findById(post.user_id);
 
-        const { success,error } = await pushNotification(
+        const { success, error } = await pushNotification(
           userOfPost,
           user.username,
           post,
@@ -593,10 +593,6 @@ export async function postVote(request) {
         );
         if (!success) console.log(error);
       }
-      post.user_details.upvote_rate =
-        post.upvotes_count / (post.upvotes_count + post.downvotes_count);
-      await post.save();
-      await user.save();
     } else {
       if (downvoteIndex != -1) {
         user.downvotes_posts_ids.splice(downvoteIndex, 1);
@@ -610,10 +606,24 @@ export async function postVote(request) {
         post.downvotes_count = post.downvotes_count + 1;
         user.downvotes_posts_ids.push(post._id);
       }
+    }
+    // console.log(post);
+    console.log(post.upvotes_count + post.downvotes_count);
+    console.log(post.downvotes_count);
+    if (post.upvotes_count + post.downvotes_count != 0) {
+      console.log(
+        (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100
+      );
+      post.user_details.upvote_rate =
+        (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) *
+        100;
+    }
+    try {
       await post.save();
       await user.save();
+    } catch (e) {
+      console.log(e);
     }
-
     return {
       success: true,
       status: 200,
@@ -986,7 +996,6 @@ export async function getTrendingPosts(request) {
     }
 
     return { success: true, posts };
-    
   } catch (e) {
     return {
       success: false,

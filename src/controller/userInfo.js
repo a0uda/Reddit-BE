@@ -1,4 +1,5 @@
 import { User } from "../db/models/User.js";
+import mongoose from "mongoose";
 import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
@@ -295,7 +296,7 @@ export async function getAllSavedComments(request) {
 
     comments = await checkCommentVotesMiddleware(user, comments);
     console.log(comments);
-    
+
     return {
       success: true,
       status: 200,
@@ -382,11 +383,15 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
     );
     //add is post flag
     posts = posts.map((post) => {
-      return { ...post, is_post: true };
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), is_post: true };
+      else return { ...post, is_post: true };
     });
     console.log(posts);
     comments = comments.map((comment) => {
-      return { ...comment, is_post: false };
+      if (comment instanceof mongoose.Document)
+        return { ...comment.toObject(), is_post: false };
+      else return { ...comment, is_post: false };
     });
 
     return {
