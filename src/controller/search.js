@@ -143,6 +143,7 @@ export async function searchCommunities(
       _id: { $nin: mutedCommunities },
       $or: [{ name: { $regex: searchQuery, $options: "i" } }],
     })
+      .populate("general_settings")
       .skip(offset)
       .limit(pageSize)
       .exec();
