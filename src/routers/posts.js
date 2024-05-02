@@ -11,6 +11,7 @@ import {
   createPost,
   sharePost,
   pollVote,
+  getTrendingPosts,
 } from "../controller/posts.js";
 
 dotenv.config();
@@ -144,6 +145,19 @@ postsRouter.post("/posts/poll-vote", async (req, res) => {
       return;
     }
     res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+postsRouter.get("/posts/trending", async (req, res) => {
+  try {
+    const { success, error, message, posts } = await getTrendingPosts(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message, content: posts });
   } catch (e) {
     res.status(500).send({ error: e });
   }
