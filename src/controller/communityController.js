@@ -97,4 +97,3 @@ export const schedulePostController = async (req, res, next) => {
         next(error)
     }
 }
-
