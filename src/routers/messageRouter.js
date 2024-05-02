@@ -17,7 +17,6 @@ messageRouter.post("/messages/compose", async (req, res, next) => {
 })
 messageRouter.get("/messages/sent", async (req, res, next) => {
     try {
-        console.log("debugging getUserSentMessages")
         const { err, messages } = await getUserSentMessages(req)
 
         if (err) { return next(err) }
@@ -30,7 +29,7 @@ messageRouter.get("/messages/sent", async (req, res, next) => {
 })
 messageRouter.get("/messages/unread", async (req, res, next) => {
     try {
-        console.log("debugging getUserUnreadMessages")
+
         const { err, messages } = await getUserUnreadMessages(req)
 
         if (err) { return next(err) }

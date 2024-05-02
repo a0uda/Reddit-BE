@@ -38,9 +38,9 @@ const composeNewMessage = async (request, isReply) => {
         let global_receiver_id = null;
         let global_sender_via_id = null;
 
-        ///////CASE 1: MODERATOR->USER//////////////////////// 
+        ///////CASE 1: MODERATOR->USER////////////////////////
+        //TODO: CHECK IF THE USER IS MUTING THIS COMMUNITY 
         if (sender_type === "moderator") {
-
             const community = await Community.findOne({ name: senderVia });
             if (!community) {
                 return { err: { status: 400, message: "the provided senderVia Community id does not exist" } };
@@ -53,8 +53,6 @@ const composeNewMessage = async (request, isReply) => {
             global_sender_id = sender._id;
             global_sender_via_id = community._id;
             if (receiver_type === "user") {
-
-
                 const receiver = await User.findOne({ username: receiver_username });
                 if (!receiver) {
                     return { err: { status: 400, message: "reciever User does not exist" } };
@@ -62,7 +60,7 @@ const composeNewMessage = async (request, isReply) => {
                 }
                 global_receiver_id = receiver._id;
             }
-            ///////CASE 2: MODERATOR->COMMUNITY//////////////////////// IS THIS A VALID ACTION ?
+            ///////CASE 2: MODERATOR->COMMUNITY////////////////////////TODO: IS THIS A VALID ACTION ?
             else
 
                 if (receiver_type === "moderator") {
@@ -84,6 +82,11 @@ const composeNewMessage = async (request, isReply) => {
                 if (!receiver) {
                     return { err: { status: 400, message: "reciever Community does not exist" } };
 
+                }
+                //CHECK IF THE SENDER IS MUTED IN THE COMMUNITY AND GET THE MUTED DATE 
+                const muted_user = receiver.muted_users.find((muted_user) => muted_user.username === sender.username);
+                if (muted_user) {
+                    return { err: { status: 400, message: "You are muted from this community , your message will not be sent  " } };
                 }
                 global_receiver_id = receiver._id;
             }
@@ -130,8 +133,12 @@ const getUserSentMessages = async (request) => {
         const messages = await Message.find({ sender_id: user_id }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+            const type = "getUserSentMessages"
+            return await mapMessageToFormat(message, user, type);
         }));
+        //Filter the messages from messages sent by the users blocked users
+        //the user contains array blocked_users  
+
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -149,14 +156,14 @@ const getUserUnreadMessages = async (request) => {
         const user_id = user._id;
 
         // Query for messages where the receiver is the user and unread_flag is true
-        const userMessages = await Message.find({
+        let userMessages = await Message.find({
             receiver_type: "user",
             receiver_id: user_id,
             unread_flag: true
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id and unread_flag is true
-        const moderatorMessages = await Message.find({
+        let moderatorMessages = await Message.find({
             receiver_type: "moderator",
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id }, // Assuming user.communities holds the IDs of communities the user is a moderator of
@@ -164,17 +171,16 @@ const getUserUnreadMessages = async (request) => {
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages];
+        let messages = [...userMessages, ...moderatorMessages];
 
 
         // Map the messages to the desired format
-        const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+        const type = "getUserUnreadMessages"
+        let messagesToSend = await Promise.all(messages.map(async (message) => {
+            return await mapMessageToFormat(message, user, type);
         }));
-        console.log("habhooba");
-        // console.log("messagesToSend");
-        // console.log(messagesToSend);
-
+        //filter this array from nulls 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
         return { status: 200, messages: messagesToSend };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -212,7 +218,7 @@ const getAllMessages = async (request) => {
         // }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
+        let messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
         //remove duplicates 
         const seen = new Set();
         const uniqueMessages = messages.filter(message => {
@@ -221,10 +227,12 @@ const getAllMessages = async (request) => {
             seen.add(message._id.toString());
             return !isDuplicate;
         });
-        const messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
+        let messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
 
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
+        //filter this array from nulls 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -240,25 +248,20 @@ const deleteMessage = async (request) => {
         if (!user) {
             return { success, err, status, user, msg };
         }
-        console.log("user :")
-        console.log(user)
+
         const { _id } = request.body;
-        console.log("message id :")
-        console.log(_id)
+
         const message = await Message.findById(_id);
-        console.log("messages :")
-        console.log(message)
+
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id.toString() !== user._id.toString()) {
-            return { err: { status: 401, message: "you are not authorized" } };
-        }
-        console.log("message to be deleted")
-        message.deleted_at = Date.now();//662d42da902d36ede3ff2ca
+        if (message.sender_id == user.id)
+            message.sender_deleted_at = Date.now();
+        else
+            message.receiver_deleted_at = Date.now();
         await message.save();
-        console.log("message deleted")
-        console.log(message)
+
         return { status: 200, message: "Message deleted successfully" };
     }
     catch (error) {
@@ -323,11 +326,12 @@ const getMessagesInbox = async (request) => {
         const messages = await Message.find({ receiver_id: user._id });
         const mentions = user.user_mentions;
         const mappedReplies = await Promise.all(posts.map(async (post) => {
+
             return await mapPostRepliesToFormat(post, user);
         }
         ));
         const mappedMessages = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
         const mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
