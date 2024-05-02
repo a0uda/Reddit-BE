@@ -15,8 +15,6 @@ import {
 } from "./communitySettingsService.js";
 
 const schedulePost = async (postInput, user) => {
-    console.log("Entered schedulePost");
-
     // Check that the input to create the new post is valid.
     const { result, message } = await checkNewPostInput(postInput);
 
@@ -111,7 +109,7 @@ const schedulePost = async (postInput, user) => {
     await user.save();
 
     // Return a success message.
-    return {successMessage: "Post created successfully!"};
+    return {successMessage: "Post saved successfully!"};
 }
 
 export { schedulePost };

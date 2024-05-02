@@ -695,6 +695,38 @@ const unapproveUser = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+const getInvitedModerators = async (community_name) => {
+
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return {
+                err: { status: 400, message: "Community not found." },
+            };
+        }
+        const moderators = community.moderators;
+        //filter moderator to get only who have flag pending_flag = false  
+        const filtered_moderators = moderators.filter((moderator) => moderator.pending_flag);
+        //console.log("community.moderators", moderators);
+        const returned_moderators = [];
+
+        for (let i = 0; i < filtered_moderators.length; i++) {
+            //get the user object from the user collection where username is the moderator's username
+            const user = await User.findOne({ username: filtered_moderators[i].username });
+
+            returned_moderators.push({
+                username: filtered_moderators[i].username,
+                profile_picture: user.profile_picture,
+                moderator_since: filtered_moderators[i].moderator_since,
+                has_access: filtered_moderators[i].has_access,
+            })
+        }
+
+        return { returned_moderators };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 /**
  *
  * @param {String} community_name
@@ -768,15 +800,16 @@ const addModerator = async (request) => {
     try {
 
         const { success, err, status, user: invitingModerator, msg } = await verifyAuthToken(request);
-        console.log("invitingModerator: ", invitingModerator)
+
         if (!invitingModerator) {
             return { err: { status: status, message: msg } };
-        } console.log("invitingModerator: ", invitingModerator)
+        }
+        const { community_name, username, has_access } = request.body;
+
         const community = await communityNameExists(community_name);
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
-        const { community_name, username, has_access } = request.body;
 
         // Find the user by username
         const user = await User.findOne({ username });
@@ -995,10 +1028,12 @@ const getModeratorsSortedByDate = async (request) => {
 
 const getEditableModerators = async (request) => {
     try {
+        console.log("inside getEditableModerators")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user) {
             return { err: { status: status, message: msg } };
         }
+        console.log("authentication passed")
         const community = await communityNameExists(request.params.community_name);
         if (!community) {
             return {
@@ -1014,22 +1049,24 @@ const getEditableModerators = async (request) => {
         }
         const editableModerators = [];
         const moderators = community.moderators;
-        //filter to have moderators who pendinq_flag is false 
+        //  filter to have moderators who pendinq_flag is false
         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
+
         for (let i = 0; i < filtered_moderators.length; i++) {
             //get the user object from the user collection where username is the moderator's username
             const user = await User.findOne({
-                username: community.filtered_moderators[i].username,
+                username: filtered_moderators[i].username,
             });
-            if (community.filtered_moderators[i].moderator_since > moderator.moderator_since) {
+            if (filtered_moderators[i].moderator_since > moderator.moderator_since) {
                 editableModerators.push({
-                    username: community.filtered_moderators[i].username,
+                    username: filtered_moderators[i].username,
                     profile_picture: user.profile_picture,
-                    moderator_since: community.filtered_moderators[i].moderator_since,
-                    has_access: community.filtered_moderators[i].has_access,
+                    moderator_since: filtered_moderators[i].moderator_since,
+                    has_access: filtered_moderators[i].has_access,
                 });
             }
         }
+
         //remove has_access from each moderator
         return { editableModerators };
     } catch (error) {
@@ -1181,5 +1218,5 @@ export {
     getAllUsers,
     editBannedUser,
     acceptModeratorInvitation,
+    getInvitedModerators
 };
-

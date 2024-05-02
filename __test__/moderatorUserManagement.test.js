@@ -749,9 +749,6 @@ describe('addModerator', () => {
         //add the verify auth token mock 
         jest.resetAllMocks();
         const request = {
-            params: {
-                community_name: 'existingCommunityName',
-            },
             headers: {
                 authorization: 'Bearer token',
             },
@@ -764,6 +761,7 @@ describe('addModerator', () => {
                     manage_settings: true,
                     manage_posts_and_comments: true,
                 },
+                _id: '123456789012345678901234'
 
             }
         };
@@ -771,11 +769,12 @@ describe('addModerator', () => {
         const user = {
             username: 'existingUsername',
             profile_picture: 'profilePicture',
+            _id: '123456789012345678901234'
         };
         const requestBody = request.body;
         verifyAuthToken.mockResolvedValueOnce({ success: true, user });
         communityNameExists.mockResolvedValueOnce(undefined);
-        const result = await addModerator(requestBody);
+        const result = await addModerator(request);
         expect(result).toEqual({
             err: {
                 status: 400,
