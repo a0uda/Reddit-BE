@@ -8,72 +8,116 @@ import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { mapMessageToFormat, mapUserMentionsToFormat, mapPostRepliesToFormat } from "../utils/messages.js";
 import { Post } from "../db/models/Post.js";
-const composeNewMessage = async (request) => {
+const composeNewMessage = async (request, isReply) => {
     try {
+        console.log("trying to authenticate the user")
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
 
         if (!sender) {
-            return { success, err, status, banningUser, msg };
+            return { success, err, status, sender, msg };
         }
-        const { sender_username, sender_type, receiver_username, receiver_type, subject, message, senderVia } = request.body.data;
-        if (!sender_username || !receiver_username || !subject || !message) {
-            return { status: 400, message: "Please provide all the required fields" };
-        }
-        if (sender_username === receiver_username) {
-            return { status: 400, message: "Sender and receiver cannot be the same" };
-        }
+        console.log("user authenticated")
+        const { sender_type, receiver_username, receiver_type, subject, message, senderVia = null, parent_message_id = null } = request.body.data;
 
-        const sender_id = sender._id;
-        let sender_via_id = null;
+        if (!receiver_username || !subject || !message || !sender_type || !receiver_type) {
+            return { err: { status: 400, message: "Please provide all the required fields" } };
+        }
+        if (sender.username === receiver_username) {
+            return { err: { status: 400, message: "Sender and receiver cannot be the same" } };
+        }
+        if (isReply) {
+            if (!parent_message_id) {
+                return { err: { status: 400, message: "This is a reply Please provide the parent_message_id" } };
+            }
+            const parentMessage = await Message.findOne({ _id: parent_message_id });
+            if (!parentMessage) {
+                return { err: { status: 400, message: "the provided parent_message_id does not exist" } };
+            }
+        }
+        let global_sender_id = null;
+        let global_receiver_id = null;
+        let global_sender_via_id = null;
 
+        ///////CASE 1: MODERATOR->USER//////////////////////// 
         if (sender_type === "moderator") {
+
             const community = await Community.findOne({ name: senderVia });
             if (!community) {
-                return { status: 400, message: "Community does not exist" };
+                return { err: { status: 400, message: "the provided senderVia Community id does not exist" } };
             }
-
-            const moderator = await Community.findOne({ _id: community._id, 'moderators.username': sender_username });
+            //check if the sender is a moderator in the community 
+            const moderator = community.moderators.find((moderator) => moderator.username === sender.username);
             if (!moderator) {
-                return { status: 400, message: "User is not a moderator in this community. Try to send via another community" };
+                return { err: { status: 400, message: "User is not a moderator in this community. Try to send via another community" } };
             }
+            global_sender_id = sender._id;
+            global_sender_via_id = community._id;
+            if (receiver_type === "user") {
 
-            sender_via_id = community._id;
+
+                const receiver = await User.findOne({ username: receiver_username });
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever User does not exist" } };
+
+                }
+                global_receiver_id = receiver._id;
+            }
+            ///////CASE 2: MODERATOR->COMMUNITY//////////////////////// IS THIS A VALID ACTION ?
+            else
+
+                if (receiver_type === "moderator") {
+                    const receiver = await Community.findOne({ name: receiver_username })
+                    if (!receiver) {
+                        return { err: { status: 400, message: "reciever Community does not exist" } };
+
+                    }
+                    global_receiver_id = receiver._id;
+                }
         }
+        else {
 
-        let receiver_id = null;
-        if (receiver_type === "user") {
-            const receiver = await User.findOne({ username: receiver_username });
-            if (!receiver) {
-                return { status: 400, message: "User does not exist" };
+            global_sender_id = sender._id;
+            global_sender_via_id = null;
+            ///////CASE 3: USER->MODERATOR////////////////////////
+            if (receiver_type === "moderator") {
+                const receiver = await Community.findOne({ name: receiver_username })
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever Community does not exist" } };
+
+                }
+                global_receiver_id = receiver._id;
             }
-            receiver_id = receiver._id;
-        } else {
-            const community = await Community.findOne({ name: receiver_username });
-            if (!community) {
-                return { status: 400, message: "Community does not exist" };
+            /////////CASE 4: USER->USER//////////////////////// 
+            else {
+                console.log("inside user to user")
+                const receiver = await User.findOne({ username: receiver_username });
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever User does not exist" } };
+
+                }
+                global_receiver_id = receiver._id;
             }
-            receiver_id = community._id;
         }
-
         const newMessage = new Message({
-            sender_id,
-            sender_via_id,
+            sender_id: global_sender_id,
+            sender_via_id: global_sender_via_id,
             sender_type,
-            [receiver_type]: receiver_id,
-            receiver_id,
+            [receiver_type]: global_receiver_id,
+            receiver_id: global_receiver_id,
             receiver_type,
             message,
-            subject
+            subject,
+            parent_message_id,
         });
-
         await newMessage.save();
         return { status: 200, message: "Message sent successfully" };
     } catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 };
 
-//////////////////////SENT //////////////////////////
+// //////////////////////SENT //////////////////////////
+
 const getUserSentMessages = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);

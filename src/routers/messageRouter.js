@@ -4,8 +4,8 @@ import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
     try {
-        console.log("debugging composeNewMessage")
-        const { err, message } = await composeNewMessage(req)
+
+        const { err, message } = await composeNewMessage(req, false)
 
         if (err) { return next(err) }
 
@@ -114,7 +114,7 @@ messageRouter.get("/messages/inbox", async (req, res, next) => {
 messageRouter.post("/messages/reply", async (req, res, next) => {
     try {
 
-        const { err, message } = await composeNewMessage(req)
+        const { err, message } = await composeNewMessage(req, true)
 
         if (err) { return next(err) }
 
