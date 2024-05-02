@@ -341,5 +341,26 @@ const getMessagesInbox = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 };
-
-export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox };
+//////////////////////////MARK MESSAGE AS READ //////////////////////////
+const markMessageAsRead = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user || err) {
+            return { success, err, status, user, msg };
+        }
+        const { _id } = request.body;
+        const message = await Message.findById(_id);
+        if (!message) {
+            return { err: { status: 400, message: "Message not found" } };
+        }
+        // if (message.receiver_id.toString() !== user._id.toString()) {
+        //     return { err: { status: 401, message: "you are not the reciever of this message to mark as read :) " } };
+        // }
+        message.unread_flag = false;
+        await message.save();
+        return { status: 200, message: "Message marked as read" };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
