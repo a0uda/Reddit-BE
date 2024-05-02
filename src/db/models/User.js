@@ -219,6 +219,8 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
+
+
     comments: {
       type: Boolean,
       default: true,
@@ -442,6 +444,10 @@ const userSchema = new mongoose.Schema({
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
+        unread_flag: {
+          type: Boolean,
+          default: true
+        }
       },
     },
   },
