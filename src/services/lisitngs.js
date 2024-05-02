@@ -116,6 +116,7 @@ export async function paginateComments(
   const userComments = await Comment.find({
     _id: { $in: user[commentsType] },
   })
+    .populate("replies_comments_ids")
     .sort(sortCriteria)
     .skip(offset)
     .limit(pageSize)
@@ -135,6 +136,7 @@ export async function paginateUserComments(
     user_id: userId,
     _id: { $nin: reported_comments },
   })
+    .populate("replies_comments_ids")
     .sort(sortCriteria)
     .skip(offset)
     .limit(pageSize)

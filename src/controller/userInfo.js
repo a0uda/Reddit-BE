@@ -285,7 +285,9 @@ export async function getAllSavedComments(request) {
     user = authenticatedUser;
     var comments = await Comment.find({
       _id: { $in: user.saved_comments_ids },
-    }).exec();
+    })
+      .populate("replies_comments_ids")
+      .exec();
 
     comments = comments.filter((comment) => comment != null);
 
@@ -295,7 +297,7 @@ export async function getAllSavedComments(request) {
 
     comments = await checkCommentVotesMiddleware(user, comments);
     console.log(comments);
-    
+
     return {
       success: true,
       status: 200,

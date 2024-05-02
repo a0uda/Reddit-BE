@@ -34,14 +34,10 @@ export async function getCommentRepliesHelper(comment) {
 }
 
 export async function getPostCommentsHelper(postId) {
-  const comments = await Comment.find({ post_id: postId }).exec();
-  if (!comments || comments.length === 0) return [];
-  const commentsWithReplies = [];
-  for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
-    commentsWithReplies.push(commentResult);
-  }
-  return commentsWithReplies;
+  const comments = await Comment.find({ post_id: postId })
+    .populate("replies_comments_ids")
+    .exec();
+  return comments;
 }
 
 export async function checkNewPostInput(requestBody) {
@@ -199,7 +195,7 @@ export async function checkPostSettings(post, community_name) {
   const allowPolls = posts_and_comments.posts.allow_polls_posts;
   const allowMultipleImages =
     posts_and_comments.posts.allow_multiple_images_per_post;
-    console.log(`allowType: ${allowType}, type: ${type}`)
+  console.log(`allowType: ${allowType}, type: ${type}`);
   if (
     (!allowPolls && post.polls.length > 0) ||
     (allowType == "Links Only" && type != "url" && type != "hybrid") ||
