@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 
 import { usersRouter } from "./routers/users.js";
+import { searchRouter } from "./routers/search.js";
 import { postsRouter } from "./routers/posts.js";
 import { commentsRouter } from "./routers/comments.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
@@ -40,6 +41,7 @@ app.use([
   communityRouter,
   messageRouter,
   chatRouter,
+  searchRouter,
 ]);
 
 try {

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import mongooseFuzzySearching from "mongoose-fuzzy-searching";
 const userSchema = new mongoose.Schema({
   created_at: {
     type: Date,
@@ -452,13 +452,8 @@ const userSchema = new mongoose.Schema({
       ref: "Ticket",
     },
   },
-
-
-
-
-
-
 });
+
 
 userSchema.pre("save", async function (next) {
   const user = this;

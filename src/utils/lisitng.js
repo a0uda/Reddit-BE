@@ -2,6 +2,14 @@ export function getSortCriteria(sortBy) {
   let sortCriteria;
 
   switch (sortBy) {
+    case "relevance":
+      sortCriteria = {
+        created_at: -1,
+        upvotes_count: -1,
+        comments_count: -1,
+        shares_count: -1,
+      };
+      break;
     case "best":
       sortCriteria = {
         created_at: -1,
@@ -25,6 +33,9 @@ export function getSortCriteria(sortBy) {
       break;
     case "new":
       sortCriteria = { views_count: -1, created_at: -1 };
+      break;
+    case "mostcomments":
+      sortCriteria = { comments_count: -1, created_at: -1 };
       break;
     default:
       sortCriteria = { created_at: -1 };
