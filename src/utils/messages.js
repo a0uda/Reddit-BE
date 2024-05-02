@@ -19,17 +19,17 @@ const mapMessageToFormat = async (message, user, which_function) => {
         senderVia_name = community.name;
     }
     //this part is not tested 
-    const isSent = message.sender_id === user._id ? true : false;
+    let isSent = message.sender_id === user._id ? true : false;
     //if the message is recieved by the user and the function is getUserSentMessages
     // remove all read messages and messages from blocked users and mjuted communities
     if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false ||
-        (user.blocked_users.includes(message.sender_id) ||
+        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
             (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
     )) return null;
     //if the message is sent by the user and the function is getUserUnreadMessages 
     // remove all messages from blocked users and muted communities 
     if (which_function === "getAllMessages" && (!isSent) && (
-        (user.blocked_users.includes(message.sender_id) ||
+        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
             (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
     )) return null;
     return {
@@ -143,7 +143,7 @@ const mapPostRepliesToFormat = async (post, user) => {
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
         };
-
+        console.log("passed")
         return mappedMessages;
     } else {
         return null;
