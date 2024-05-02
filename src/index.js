@@ -48,7 +48,7 @@ try {
   console.log("Error, Couldn't connect to the database.");
 }
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server Running on port ${PORT}`);
 });
 
