@@ -104,7 +104,7 @@ export async function searchPosts(
       return generateResponse(false, 400, "Query string is required");
     console.log(searchQuery);
 
-    const posts = await Post.find({
+    var posts = await Post.find({
       _id: { $nin: hiddenPosts },
       community_id: { $nin: mutedCommunities },
       user_id: { $nin: blockedUsers },
@@ -119,6 +119,16 @@ export async function searchPosts(
       .sort(sortCriteria)
       .exec();
 
+    if (user) {
+      const postIds = new Set(posts.map((post) => post._id));
+      user.history_posts_ids.push(
+        ...[...postIds].filter(
+          (postId) => !user.history_posts_ids.includes(postId)
+        )
+      );
+      console.log(user.history_posts_ids.length);
+      await user.save();
+    }
     return {
       success: true,
       status: 200,
@@ -312,7 +322,16 @@ export async function searchPostCommunities(
       .limit(pageSize)
       .sort(sortCriteria)
       .exec();
-
+    if (user) {
+      const postIds = new Set(posts.map((post) => post._id));
+      user.history_posts_ids.push(
+        ...[...postIds].filter(
+          (postId) => !user.history_posts_ids.includes(postId)
+        )
+      );
+      console.log(user.history_posts_ids.length);
+      await user.save();
+    }
     return {
       success: true,
       status: 200,
