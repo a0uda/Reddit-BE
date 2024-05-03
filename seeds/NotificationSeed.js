@@ -78,9 +78,9 @@ async function generateRandomNotifications(posts, comments, users) {
   return notifications;
 }
 
-export async function seedNotifications(posts, users) {
-  // await Comment.deleteMany({});
-  const notifications = await generateRandomNotifications(posts, users);
+export async function seedNotifications(posts,comments, users) {
+  await Notification.deleteMany({});
+  const notifications = await generateRandomNotifications(posts,comments, users);
   const options = { timeout: 30000 }; // 30 seconds timeout
   const notificationsInserted = await Notification.insertMany(
     notifications,

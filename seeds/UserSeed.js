@@ -25,7 +25,7 @@ async function generateRandomUsers() {
       username: faker.internet.userName(),
       token: [],
       //password: faker.internet.password(8),
-      password: "hamada123",
+      password: "testing123",
       is_password_set_flag: true,
       connected_google: false,
       email: faker.internet.email(),
@@ -152,6 +152,31 @@ async function generateRandomUsers() {
   return users;
 }
 
+export async function seedUserMentions(users, posts, comments) {
+  for (let i = 0; i < users.length; i++) {
+    let user = users[i];
+    let randomPost;
+    let randomComment;
+    let randomUser;
+    do {
+      randomUser = getRandomElement(users).username;
+    } while (randomUser == user.username);
+
+    if (i % 2 == 0) {
+      randomPost = null;
+      randomComment = getRandomElement(comments)._id;
+    } else {
+      randomPost = getRandomElement(posts)._id;
+      randomComment = null;
+    }
+    user.user_mentions.push({
+      post_id: randomPost,
+      comment_id: randomComment,
+      sender_username: randomUser,
+    });
+    await user.save();
+  }
+}
 // export async function completeUserSeed(users) {
 //   const blocked_users = users.slice(0, 10);
 //   for (let i = 0; i < users.length; i++) {
@@ -193,7 +218,7 @@ async function generateRandomUsers() {
 // }
 
 export async function seedUsers() {
-  // await User.deleteMany({});
+  await User.deleteMany({});
   const users = await generateRandomUsers();
   const options = { timeout: 30000 };
   const usersInserted = await User.insertMany(users, options);

@@ -11,7 +11,7 @@ import { verifyAuthToken } from "../controller/userAuth.js";
 
 import { User } from "../db/models/User.js"; //delete this line
 import { Rule } from "../db/models/Rule.js";
-import { TempComment } from "../db/models/temp-files/TempComment.js";
+// import { TempComment } from "../db/models/temp-files/TempComment.js";
 
 import {
   isUserAlreadyApproved,
@@ -195,27 +195,27 @@ const getCommunityMembersCount = async (community_name) => {
 //////////////////////////////////////////////////////////////////////// Comments Retrieval //////////////////////////////////////////////////////////////
 //to be extended -> I needed this to test moderation
 //should we store ids of posts owners or the username itself?
-const addComment = async (requestBody) => {
-  const { description } = requestBody;
-  try {
-    const comment = new TempComment({
-      description,
-    });
-    await comment.save();
-    return { success: true };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
+// const addComment = async (requestBody) => {
+//   const { description } = requestBody;
+//   try {
+//     const comment = new TempComment({
+//       description,
+//     });
+//     await comment.save();
+//     return { success: true };
+//   } catch (error) {
+//     return { err: { status: 500, message: error.message } };
+//   }
+// };
 //to be extended -> I needed this to test moderation
-const getComments = async () => {
-  try {
-    const comments = await TempComment.find();
-    return { comments: comments };
-  } catch (error) {
-    return { err: { status: 500, message: error.message } };
-  }
-};
+// const getComments = async () => {
+//   try {
+//     const comments = await TempComment.find();
+//     return { comments: comments };
+//   } catch (error) {
+//     return { err: { status: 500, message: error.message } };
+//   }
+// };
 
 //////////////////////////////////////////////////////////////////////// Details Widget //////////////////////////////////////////////////////////////
 /**
@@ -400,7 +400,7 @@ export {
   getDetailsWidget,
   editDetailsWidget,
   getMembersCount,
-  getComments,
-  addComment,
+  // getComments,
+  // addComment,
   getCommunity
 };
