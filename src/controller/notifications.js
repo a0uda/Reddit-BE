@@ -19,7 +19,7 @@ export async function pushNotification(
         (community) => community.id
       );
 
-    console.log(post.community_id.toString());
+    // console.log(post.community_id.toString());
     if (post) {
       if (post.post_in_community_flag) {
         community_name = post.community_name;

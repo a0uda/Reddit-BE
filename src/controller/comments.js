@@ -218,6 +218,7 @@ export async function replyToComment(request) {
   post.comments_count++;
   await post.save();
 
+  console.log(comment);
   //send notif
   const userOfComment = await User.findById(comment.user_id);
   console.log(userOfComment);

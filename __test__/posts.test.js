@@ -44,6 +44,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -72,6 +73,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -100,6 +102,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -126,6 +129,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -165,6 +169,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -194,6 +199,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -226,6 +232,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -258,6 +265,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -289,6 +297,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -330,6 +339,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -374,6 +384,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -429,6 +440,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -476,6 +488,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -524,6 +537,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });

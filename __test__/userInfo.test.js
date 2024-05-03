@@ -34,6 +34,7 @@ describe("Get Followers", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       followers_ids: ["followerId1", "followerId2"],
       created_at: "2022-04-14T10:00:00Z",
       email: "user@example.com",
@@ -106,6 +107,7 @@ describe("Get Following", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       following_ids: ["followingId1", "followingId2"],
       created_at: "2022-04-14T10:00:00Z",
       email: "user@example.com",
@@ -181,6 +183,7 @@ describe("Get Followers Count", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       followers_ids: ["followerId1", "followerId2"],
     };
 
@@ -218,6 +221,7 @@ describe("Get Following Count", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       following_ids: ["followingId1", "followingId2"],
     };
 
