@@ -92,7 +92,7 @@ usersRouter.post("/users/signup", async (req, res) => {
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, error, message, user, refreshToken } = await loginUser(
+    const { success, error, message, user } = await loginUser(
       req.body
     );
     if (!success) {
@@ -101,7 +101,7 @@ usersRouter.post("/users/login", async (req, res) => {
     }
     // Set the token in the response header
     res.header("Authorization", `Bearer ${user.token} `);
-    res.setHeader("RefreshToken", refreshToken);
+    // res.setHeader("RefreshToken", refreshToken);
 
     res.status(200).send({ message });
   } catch (e) {
