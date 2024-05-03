@@ -113,6 +113,16 @@ export async function getUserPostsHelper(
           },
         }
       );
+      if (loggedInUser._id.toString() != user._id.toString()) {
+        const postIdsSet = new Set(posts.map((post) => post._id));
+        loggedInUser.history_posts_ids.push(
+          ...[...postIdsSet].filter(
+            (postId) => !loggedInUser.history_posts_ids.includes(postId)
+          )
+        );
+        console.log(loggedInUser.history_posts_ids.length);
+        await loggedInUser.save();
+      }
     } else {
       posts = await paginateUserPosts(
         user._id,
