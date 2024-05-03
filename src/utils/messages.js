@@ -8,18 +8,15 @@ const mapMessageToFormat = async (message, user, which_function) => {
     if (message.receiver_type === "user") {
         const receiver = await User.findOne({ _id: message.receiver_id })
         if (!receiver) {
-            console.log("reciever not found hena ")
 
         }
         receiver_username = receiver.username;
-        console.log(receiver_username)
 
 
     }
     else //reciever type is moderator here is the bug 
     {
         const community = await Community.findOne({ _id: message.receiver_id }).select('name')
-        console.log(community.name)
         receiver_username = community.name;
 
 
@@ -73,7 +70,6 @@ const mapMessageToFormat = async (message, user, which_function) => {
 }
 
 const mapUserMentionsToFormat = async (userMentions, user) => {
-    console.log("insise mapUserMentionsToFormat")
 
     const post = await Post.findOne({ _id: userMentions.post_id });
 
@@ -125,7 +121,6 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 }
 const mapPostRepliesToFormat = async (post, user) => {
 
-    //console.log("inside mapPostRepliesToFormat")
     const comment = await Comment.findOne({ post_id: post._id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
     if (comment) {
         const postCreator = user.username;
@@ -165,7 +160,6 @@ const mapPostRepliesToFormat = async (post, user) => {
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
         };
-        console.log("passed")
         return mappedMessages;
     } else {
         return null;

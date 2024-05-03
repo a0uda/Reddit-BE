@@ -10,13 +10,11 @@ import { mapMessageToFormat, mapUserMentionsToFormat, mapPostRepliesToFormat } f
 import { Post } from "../db/models/Post.js";
 const composeNewMessage = async (request, isReply) => {
     try {
-        console.log("trying to authenticate the user")
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
 
         if (!sender) {
             return { success, err, status, sender, msg };
         }
-        console.log("user authenticated")
         const { sender_type, receiver_username, receiver_type, subject = null, message, senderVia = null, parent_message_id = null } = request.body.data;
 
         if (!receiver_username || !subject || !message || !sender_type || !receiver_type) {
@@ -90,7 +88,6 @@ const composeNewMessage = async (request, isReply) => {
             }
             /////////CASE 4: USER->USER//////////////////////// 
             else {
-                console.log("inside user to user")
                 const receiver = await User.findOne({ username: receiver_username });
                 if (!receiver) {
                     return { err: { status: 400, message: "reciever User does not exist" } };
@@ -99,8 +96,6 @@ const composeNewMessage = async (request, isReply) => {
                 global_receiver_id = receiver._id;
             }
         }
-        console.log("global sender id")
-        console.log(global_receiver_id)
         const newMessage = new Message({
             sender_id: global_sender_id,
             sender_via_id: global_sender_via_id,
@@ -136,7 +131,7 @@ const getUserSentMessages = async (request) => {
             const type = "getUserSentMessages"
             return await mapMessageToFormat(message, user, type);
         }));
-        //filter null values 
+        //TODO: FILTER DELETED AT 
         messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
@@ -310,7 +305,6 @@ const getUserPostReplies = async (request) => {
         const posts = await Post.find({ user_id: user._id });
 
         const mappedReplies = await Promise.all(posts.map(async (post) => {
-            console.log("mappedReplies")
             return await mapPostRepliesToFormat(post, user);
         }));
 
