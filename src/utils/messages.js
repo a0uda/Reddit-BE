@@ -5,10 +5,26 @@ import { Post } from '../db/models/Post.js';
 
 const mapMessageToFormat = async (message, user, which_function) => {
     let receiver_username = null;
-    if (message.receiver_type === "user")
-        receiver_username = await User.findOne({ _id: message.receiver_id }).select('username').username;
-    else //reciever type is moderator 
-        receiver_username = await Community.findOne({ _id: message.receiver_id }).select('name').name;
+    if (message.receiver_type === "user") {
+        const receiver = await User.findOne({ _id: message.receiver_id })
+        if (!receiver) {
+            console.log("reciever not found hena ")
+
+        }
+        receiver_username = receiver.username;
+        console.log(receiver_username)
+
+
+    }
+    else //reciever type is moderator here is the bug 
+    {
+        const community = await Community.findOne({ _id: message.receiver_id }).select('name')
+        console.log(community.name)
+        receiver_username = community.name;
+
+
+    }
+
 
     let senderVia_name = null;
     if (message.sender_type === "moderator") {
@@ -32,11 +48,14 @@ const mapMessageToFormat = async (message, user, which_function) => {
         (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
             (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
     )) return null;
+    //filter deleted messages
+    //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
+
     return {
         _id: message._id,
         sender_username: user.username,
         sender_type: message.sender_type,
-        receiver_username: receiver_username,
+        receiver_username,
         receiver_type: message.receiver_type,
         senderVia: senderVia_name,
         message: message.message,
@@ -47,6 +66,7 @@ const mapMessageToFormat = async (message, user, which_function) => {
         parentMessageId: message.parent_message_id,
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
+
     }
 }
 

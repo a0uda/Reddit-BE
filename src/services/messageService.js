@@ -17,14 +17,12 @@ const composeNewMessage = async (request, isReply) => {
             return { success, err, status, sender, msg };
         }
         console.log("user authenticated")
-        const { sender_type, receiver_username, receiver_type, subject, message, senderVia = null, parent_message_id = null } = request.body.data;
+        const { sender_type, receiver_username, receiver_type, subject = null, message, senderVia = null, parent_message_id = null } = request.body.data;
 
         if (!receiver_username || !subject || !message || !sender_type || !receiver_type) {
             return { err: { status: 400, message: "Please provide all the required fields" } };
         }
-        if (sender.username === receiver_username) {
-            return { err: { status: 400, message: "Sender and receiver cannot be the same" } };
-        }
+
         if (isReply) {
             if (!parent_message_id) {
                 return { err: { status: 400, message: "This is a reply Please provide the parent_message_id" } };
@@ -101,6 +99,8 @@ const composeNewMessage = async (request, isReply) => {
                 global_receiver_id = receiver._id;
             }
         }
+        console.log("global sender id")
+        console.log(global_receiver_id)
         const newMessage = new Message({
             sender_id: global_sender_id,
             sender_via_id: global_sender_via_id,
@@ -132,13 +132,12 @@ const getUserSentMessages = async (request) => {
         const user_id = user._id;
         const messages = await Message.find({ sender_id: user_id }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
-        const messagesToSend = await Promise.all(messages.map(async (message) => {
+        let messagesToSend = await Promise.all(messages.map(async (message) => {
             const type = "getUserSentMessages"
             return await mapMessageToFormat(message, user, type);
         }));
-        //Filter the messages from messages sent by the users blocked users
-        //the user contains array blocked_users  
-
+        //filter null values 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -261,6 +260,9 @@ const deleteMessage = async (request) => {
         else
             message.receiver_deleted_at = Date.now();
         await message.save();
+        //get from users _id of the user who is named heba 
+
+
 
         return { status: 200, message: "Message deleted successfully" };
     }
