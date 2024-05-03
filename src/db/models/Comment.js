@@ -97,29 +97,6 @@ const commentSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-
-  // moderator_details: {
-  //   //if in my own profile then Im the moderator
-  //   approved_by: String,
-  //   approved_date: Date,
-  //   removed_by: String,
-  //   removed_date: Date,
-  //   spammed_by: String,
-  //   spammed_type: String,
-  //   removed_flag: {
-  //     type: Boolean,
-  //     default: false,
-  //   },
-  //   approved_flag: {
-  //     type: Boolean,
-  //     default: false,
-  //   },
-  //   spammed_flag: {
-  //     type: Boolean,
-  //     default: false,
-  //   },
-  // },
-
   //if in my own profile then Im the moderator
   moderator_details: {
     approved_flag: { type: Boolean, default: false },
@@ -140,10 +117,7 @@ const commentSchema = new mongoose.Schema({
     removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
     spammed_flag: { type: Boolean, default: false },
-    spammed_type: { type: String },
     spammed_date: { type: Date },
-    spammed_removal_reason: { type: String }, // TODO: add removal reason (optional).
-    removed_count: { type: Number, default: 0, min: 0 },
     spammed_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

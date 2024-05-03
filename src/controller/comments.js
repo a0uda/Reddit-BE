@@ -123,8 +123,10 @@ export async function newComment(request) {
 
   await comment.save();
 
-  post.comments_count++;
-  await post.save();
+  console.log(post);
+  const postObj = await Post.findById(post._id);
+  postObj.comments_count++;
+  await postObj.save();
 
   //send notif
 

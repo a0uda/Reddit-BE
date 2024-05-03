@@ -1,27 +1,29 @@
 import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
 import { Post } from "../src/db/models/Post.js";
-import { Community } from "../src/db/models/Community.js";
-import { User } from "../src/db/models/User.js";
+
 import {
   getRandomBool,
   getRandomElement,
   getRandomNumber,
   getRandomUserId,
-} from "./seedHelpers.js";
+} from "./helpers/seedHelpers.js";
 
 const POSTS_COUNT = 20;
 
-async function generateRandomPosts(users) {
+async function generateRandomPosts(communities, users) {
   const posts = [];
-  const community = await Community.findOne();
-  const moderator = await User.findOne();
+  const randomUser = getRandomElement(users);
+  // const community = await Community.findOne();
+  // const moderator = await User.findOne();
 
   for (let i = 0; i < POSTS_COUNT; i++) {
     const randomUserId = getRandomUserId(users);
-
+    const community = getRandomElement(communities);
+    const moderator = getRandomElement(community.moderators);
     const fakePost = {
-      user_id: randomUserId,
+      user_id: randomUserId._id,
+      username: randomUserId.username,
       title: faker.lorem.words(),
       description: faker.lorem.sentences(),
       created_at: faker.date.past(),
@@ -35,16 +37,49 @@ async function generateRandomPosts(users) {
         "url",
         "text",
         "hybrid",
+        "reposted",
       ]),
-      link_url: faker.internet.url(),
-      images: [{ path: faker.image.url(), caption: "", link: "" }],
-      videos: [{ path: faker.internet.url(), caption: "", link: "" }],
-      polls: [{ options: faker.lorem.words(), votes: 7 }],
-      
-      // TODO:Comment from community & moderation: we interact with posts using community_name, so If you don't use the community_id you can delete it. I will populate the community_name.
-      community_id: null,
-      community_name: community.name,
-      
+      link_url: type == "url" || type == "hybrid" ? faker.internet.url() : "",
+      images:
+        type == "image_and_videos" || type == "hybrid"
+          ? [
+              {
+                path: faker.image.url(),
+                caption: faker.lorem.words(),
+                link: faker.internet.url(),
+              },
+            ]
+          : [],
+      videos:
+        type == "image_and_videos" || type == "hybrid"
+          ? [
+              {
+                path: faker.internet.url(),
+                caption: faker.lorem.words(),
+                link: faker.internet.url(),
+              },
+            ]
+          : [],
+      polls:
+        type == "polls"
+          ? [
+              {
+                options: faker.lorem.words(),
+                votes: 7,
+                users_ids: [randomUser],
+              },
+            ]
+          : [],
+      polls_voting_length: type == "polls" ? getRandomNumber(3, 10) : 3,
+      polls_voting_is_expired_flag: type == "polls" ? getRandomBool() : false,
+
+      // TODO:Comment from community & moderation: we interact with posts using
+      // community_name, so If you don't use the community_id you can delete it.
+      //I will populate the community_name.
+      post_in_community_flag: getRandomBool(),
+      community_id: post_in_community_flag ? community._id : null,
+      community_name: post_in_community_flag ? community.name : null,
+
       followers_ids: [],
       comments_count: 0,
       views_count: getRandomNumber(0, 10),
@@ -66,36 +101,35 @@ async function generateRandomPosts(users) {
         "Controversial",
         "New",
       ]),
-      scheduled_flag: getRandomBool(),
+
+      scheduled_flag: false,
 
       moderator_details: {
         approved_flag: faker.datatype.boolean(),
-        approved_by: moderator._id,
-        approved_date: faker.date.past(),
-        approved_count: 0,
-       
-        removed_flag: faker.datatype.boolean(),
-        removed_by: moderator._id,
-        removed_date: faker.date.past(),
-        removed_removal_reason: faker.lorem.sentence(),
-       
-        spammed_flag: faker.datatype.boolean(),
-        spammed_by: moderator._id,
-        spammed_type: faker.lorem.word(),
-        spammed_date: faker.date.past(),
-        spammed_removal_reason: faker.lorem.sentence(),
-        removed_count: 0,
-       
-        reported_flag: faker.datatype.boolean(),
-        reported_by: moderator._id,
-        reported_type: faker.lorem.word(),
-        reported_date: faker.date.past(),
-      },
+        approved_by: approved_flag ? moderator._id : null,
+        approved_date: approved_flag ? faker.date.past() : null,
 
+        removed_flag: !approved_flag ? faker.datatype.boolean() : null,
+        removed_by: removed_flag ? moderator._id : null,
+        removed_date: removed_flag ? faker.date.past() : null,
+        removed_removal_reason: removed_flag ? faker.lorem.sentence() : null,
+
+        spammed_flag: faker.datatype.boolean(),
+        spammed_type: spammed_flag ? faker.lorem.word() : null,
+        spammed_date: spammed_flag ? faker.date.past() : null,
+        spammed_removal_reason: spammed_flag ? faker.lorem.sentence() : null,
+        spammed_by: spammed_flag ? moderator._id : null,
+
+        reported_flag: faker.datatype.boolean(),
+        reported_by: reported_flag ? moderator._id : null,
+        reported_type: reported_flag ? faker.lorem.word() : null,
+        reported_date: reported_flag ? faker.date.past() : null,
+      },
+      is_reposted_flag: false,
       user_details: {
-        total_views: getRandomNumber(0, 10),
-        upvote_rate: getRandomNumber(0, 10),
-        total_shares: getRandomNumber(0, 10),
+        total_views: views_count,
+        upvote_rate: upvotes_count / (upvotes_count + downvotes_count),
+        total_shares: shares_count,
       },
     };
 
@@ -105,10 +139,24 @@ async function generateRandomPosts(users) {
   return posts;
 }
 
-export async function seedPosts(users) {
-  await Post.deleteMany({});
-  const posts = await generateRandomPosts(users);
+export async function seedPosts(communities, users) {
+  // await Post.deleteMany({});
+  const posts = await generateRandomPosts(communities, users);
   const options = { timeout: 30000 }; // 30 seconds timeout
+  for (let i = 0; i < posts.length; i++) {
+    let post = posts[i];
+    for (let j = 0; j < post.upvotes_count; j++) {
+      const user = users.getRandomElement(users);
+      user.upvotes_posts_ids.push(post._id);
+    }
+    for (let j = 0; j < post.downvotes_count; j++) {
+      let user;
+      do {
+        user = users.getRandomElement(users);
+      } while (user.upvotes_posts_ids.includes(post._id));
+      user.downvotes_posts_ids.push(post._id);
+    }
+  }
   const postsInserted = await Post.insertMany(posts, options);
   return postsInserted;
 }
