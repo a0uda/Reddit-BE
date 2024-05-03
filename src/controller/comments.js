@@ -4,11 +4,7 @@ import { User } from "../db/models/User.js";
 import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
-import {
-  checkBannedUser,
-  getCommentRepliesHelper,
-  getCommunity,
-} from "../services/posts.js";
+import { checkBannedUser, getCommunity } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import { pushNotification } from "./notifications.js";
 export async function getComment(request, verifyUser) {
@@ -33,7 +29,9 @@ export async function getComment(request, verifyUser) {
       error: { status: 400, message: "Comment id is required" },
     };
   }
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId)
+    .populate("replies_comments_ids")
+    .exec();
   if (!comment) {
     return {
       success: false,
@@ -54,22 +52,19 @@ export async function getCommentWithReplies(request) {
   if (!success) {
     return { success, error };
   }
+  var commentWithReply = comment;
   const { user } = await verifyAuthToken(request);
-  var commentWithReplies = await getCommentRepliesHelper(comment);
   if (user) {
-    var resultComment = await checkCommentVotesMiddleware(user, [
-      commentWithReplies,
-    ]);
-    commentWithReplies = resultComment[0];
-    // commentWithReplies = commentWithReplies.toObject();
-    // commentWithReplies.replies_comments_ids = await checkCommentVotesMiddleware(
-    //   user,
-    //   commentWithReplies.replies_comments_ids
-    // );
+    var res = await checkCommentVotesMiddleware(user, [commentWithReply]);
+    commentWithReply = res[0];
+    commentWithReply.replies_comments_ids = await checkCommentVotesMiddleware(
+      user,
+      commentWithReply.replies_comments_ids
+    );
   }
   return {
     success: true,
-    comment: commentWithReplies,
+    comment: commentWithReply,
     user,
     message: "Comment Retrieved sucessfully",
   };
@@ -111,7 +106,7 @@ export async function newComment(request) {
   }
   const comment = new Comment({
     post_id: post._id,
-    post_title: post.post_title,
+    post_title: post.title,
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
@@ -132,7 +127,7 @@ export async function newComment(request) {
   await post.save();
 
   //send notif
-  
+
   const userOfPost = await User.findById(post.user_id);
   const { success: succesNotif, error: errorNotif } = await pushNotification(
     userOfPost,
@@ -195,8 +190,12 @@ export async function replyToComment(request) {
       };
     }
   }
+
+  const post = await Post.findById(comment.post_id);
+
   const reply = new Comment({
     post_id: comment.post_id,
+    post_title: post.title,
     user_id: user._id,
     username: user.username,
     parent_id: comment._id, //i am  a reply so my parent is another comment
@@ -204,23 +203,22 @@ export async function replyToComment(request) {
     is_reply: true, //reply so true
     created_at: Date.now(),
     description,
-    comment_in_community_flag: comment.post_in_community_flag, //same as post
+    comment_in_community_flag: comment.comment_in_community_flag, //same as post
     community_id: comment.community_id,
     community_name: comment.community_name,
     upvotes_count: 1, //when i first make comment
     spoiler_flag: comment.spoiler_flag,
   });
 
+  console.log("J");
   comment.replies_comments_ids.push(reply._id);
 
   await comment.save();
   await reply.save();
-
-  const post=await Post.findById(comment.post_id);
-  
   post.comments_count++;
   await post.save();
 
+  console.log(comment);
   //send notif
   const userOfComment = await User.findById(comment.user_id);
   console.log(userOfComment);

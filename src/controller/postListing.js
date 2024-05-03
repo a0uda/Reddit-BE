@@ -34,6 +34,19 @@ export async function getPostsPaginated(
     // Fetch posts with pagination and sorting
     var posts = await getPostsHelper(user, offset, pageSize, sortBy);
     // console.log(posts);
+    // console.log(posts);
+    const postIds = posts.map((post) => post._id);
+
+    await Post.updateMany(
+      { _id: { $in: postIds } },
+      {
+        $inc: {
+          views_count: 1,
+          "user_details.total_views": 1,
+        },
+      }
+    );
+    
     if (user) posts = await checkVotesMiddleware(user, posts);
     return {
       success: true,

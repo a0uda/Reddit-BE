@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "jest ./__test__/moderatorUserManagement.test.js",
+    "test": "jest ./__test__",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
-    "seed": "node ./seeds/seed.js"
+    "seed": "node ./seeds/seed.js",
+    "coverage": "jest --coverage"
   },
   "type": "module",
   "author": "",
@@ -23,6 +24,7 @@
     "jest": "^29.7.0",
     "jest-fetch-mock": "^3.0.3",
     "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.5.45",
     "mongodb": "^6.5.0",
     "mongodb-memory-server": "^9.1.7",
     "mongoose": "^8.2.1",

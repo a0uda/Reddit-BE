@@ -1,4 +1,5 @@
 import { User } from "../db/models/User.js";
+import mongoose from "mongoose";
 import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
@@ -244,7 +245,7 @@ export async function getComments(
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-
+    console.log("SAVED", user.saved_comments_ids);
     const comments = await getCommentsHelper(
       user,
       commentsType,
@@ -285,17 +286,27 @@ export async function getAllSavedComments(request) {
     user = authenticatedUser;
     var comments = await Comment.find({
       _id: { $in: user.saved_comments_ids },
-    }).exec();
+    })
+      .populate("replies_comments_ids")
+      .exec();
 
-    comments = comments.filter((comment) => comment != null);
+    // comments = comments.filter((comment) => comment != null);
 
     comments = comments.map((comment) => {
       return { ...comment.toObject(), is_post: false };
     });
-
-    comments = await checkCommentVotesMiddleware(user, comments);
-    console.log(comments);
     
+    comments = await checkCommentVotesMiddleware(user, comments);
+    
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
+
     return {
       success: true,
       status: 200,
@@ -382,11 +393,15 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
     );
     //add is post flag
     posts = posts.map((post) => {
-      return { ...post, is_post: true };
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), is_post: true };
+      else return { ...post, is_post: true };
     });
     console.log(posts);
     comments = comments.map((comment) => {
-      return { ...comment, is_post: false };
+      if (comment instanceof mongoose.Document)
+        return { ...comment.toObject(), is_post: false };
+      else return { ...comment, is_post: false };
     });
 
     return {

@@ -2,8 +2,8 @@ import ChatModel from "../db/models/ChatModel.js"
 import MessageModel from "../db/models/MessageModel.js"
 import { User } from "../db/models/User.js";
 
-/// TODO: Uncomment.
-// import { getReceiverSocketId, io } from "../socket/socket.js";
+// TODO: Uncomment.
+import { getReceiverSocketId, io } from "../socket/socket.js";
 
 const sendMessage = async (sender, receiverUsername, message) => {
     // Validating the sender and receiver.
@@ -69,6 +69,12 @@ const sendMessage = async (sender, receiverUsername, message) => {
         const [savedChat, savedMessage] = await Promise.all([chat.save(), newMessage.save()]);
     } catch (error) {
         return { err: { status: 500, message: 'An error occurred while saving the chat or message' } };
+    }
+
+    const receiverSocketId = getReceiverSocketId(receiver._id);
+    if (receiverSocketId) {
+        // io.to(<socket_id>).emit() used to send events to specific client
+        io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
     return { newMessage };
@@ -220,7 +226,7 @@ const reportMessage = async (messageId, reason, reportingUserId) => {
 
 const removeMessage = async (messageId, removingUserId) => {
     if (!messageId) {
-        return {err: { status: 400, message: 'Message ID is missing' }};
+        return { err: { status: 400, message: 'Message ID is missing' } };
     }
 
     // Find the message
@@ -228,16 +234,16 @@ const removeMessage = async (messageId, removingUserId) => {
     try {
         message = await MessageModel.findOne({ _id: messageId });
     } catch (error) {
-        return {err: { status: 500, message: `Error occurred while trying to find the message with ID: ${messageId}` }};
+        return { err: { status: 500, message: `Error occurred while trying to find the message with ID: ${messageId}` } };
     }
 
     if (!message) {
-        return {err: { status: 404, message: `No message found with the ID: ${messageId}` }};
+        return { err: { status: 404, message: `No message found with the ID: ${messageId}` } };
     }
 
     // The sender of the message is the only one allowed to remove it
     if (message.senderId.toString() !== removingUserId.toString()) {
-        return {err: { status: 403, message: 'You are not the sender of this message and hence not allowed to remove it' }};
+        return { err: { status: 403, message: 'You are not the sender of this message and hence not allowed to remove it' } };
     }
 
     // Find the chat that contains the message
@@ -245,7 +251,7 @@ const removeMessage = async (messageId, removingUserId) => {
     try {
         chat = await ChatModel.findOne({ messages: messageId });
     } catch (error) {
-        return {err: { status: 500, message: `Error occurred while trying to find the chat containing the message with ID: ${messageId}` }};
+        return { err: { status: 500, message: `Error occurred while trying to find the chat containing the message with ID: ${messageId}` } };
     }
 
     // If the removed message was the last message in the chat, update the last message attribute
@@ -259,7 +265,7 @@ const removeMessage = async (messageId, removingUserId) => {
         try {
             await chat.save();
         } catch (error) {
-            return {err: { status: 500, message: 'Error occurred while saving the chat' }};
+            return { err: { status: 500, message: 'Error occurred while saving the chat' } };
         }
     }
 
@@ -268,8 +274,8 @@ const removeMessage = async (messageId, removingUserId) => {
 
     try {
         await message.save();
-    }catch (error) {
-        return {err: { status: 500, message: 'Error occurred while saving the message' }};
+    } catch (error) {
+        return { err: { status: 500, message: 'Error occurred while saving the message' } };
     }
 
     return { successMessage: 'Message removed successfully' };

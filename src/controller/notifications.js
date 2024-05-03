@@ -13,7 +13,35 @@ export async function pushNotification(
 ) {
   //if the user wants to recieve notifs of this type
   try {
-    const community_name = post ? post.community_name : comment?.community_name;
+    let community_name = "";
+    let mutedCommunities =
+      user.safety_and_privacy_settings.muted_communities.map(
+        (community) => community.id
+      );
+
+    // console.log(post.community_id.toString());
+    if (post) {
+      if (post.post_in_community_flag) {
+        community_name = post.community_name;
+        const index = mutedCommunities.findIndex(
+          (id) => id.toString() == post.community_id.toString()
+        );
+        if (index != -1)
+          return { success: false, error: "User has this community muted" };
+      }
+    }
+
+    if (comment) {
+      if (comment.comment_in_community_flag) {
+        community_name = comment.community_name;
+        const index = mutedCommunities.findIndex(
+          (id) => id.toString() == comment.community_id.toString()
+        );
+        if (index != -1)
+          return { success: false, error: "User has this community muted" };
+      }
+    }
+
     console.log("hi", user, notifType);
     console.log(user.username, sending_user_username);
     if (user.username != sending_user_username) {
@@ -44,7 +72,9 @@ export async function getNotifications(request) {
       return generateResponse(success, status, err);
     }
 
-    const notifications = await Notification.find({ user_id: user._id }).exec();
+    const notifications = await Notification.find({ user_id: user._id })
+      .sort({ created_at: -1 })
+      .exec();
     const communityNames = new Set();
     const sendingUserUsernames = new Set();
 

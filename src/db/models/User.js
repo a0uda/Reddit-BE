@@ -21,10 +21,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  token: {
-    type: String,
-    default: null,
-  },
+  token: [
+    {
+      type: String,
+      default: null,
+    },
+  ],
   password: {
     type: String,
     minlength: 8,
@@ -219,7 +221,6 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
-
 
     comments: {
       type: Boolean,
@@ -446,8 +447,8 @@ const userSchema = new mongoose.Schema({
         },
         unread_flag: {
           type: Boolean,
-          default: true
-        }
+          default: true,
+        },
       },
     },
   },
@@ -458,12 +459,6 @@ const userSchema = new mongoose.Schema({
       ref: "Ticket",
     },
   },
-
-
-
-
-
-
 });
 
 userSchema.pre("save", async function (next) {
@@ -493,16 +488,18 @@ userSchema.pre("find", function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign(
-    {
-      _id: user._id.toString(),
-      username: user.username,
-      profile_picture: user.profile_picture,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1d",
-    }
+  this.token.push(
+    jwt.sign(
+      {
+        _id: user._id.toString(),
+        username: user.username,
+        profile_picture: user.profile_picture,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    )
   );
   const refreshToken = jwt.sign(
     { _id: user._id.toString() },

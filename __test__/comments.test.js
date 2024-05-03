@@ -40,7 +40,12 @@ describe("Get Comment", () => {
     const request = {
       body: { id: "invalid_comment_id" },
     };
-    Comment.findById.mockResolvedValue(null);
+
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(null),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
 
     const result = await getComment(request, false);
     expect(result.success).toBe(false);
@@ -57,6 +62,7 @@ describe("Get Comment", () => {
     };
     const verifiedUser = {
       _id: "verified_user_id",
+      token: ["valid_token"],
       generateAuthToken: jest.fn(),
     };
     const mockComment = {
@@ -66,7 +72,11 @@ describe("Get Comment", () => {
     };
     User.mockImplementation(() => mockUser);
     User.findById = jest.fn().mockReturnValue(verifiedUser);
-    Comment.findById.mockResolvedValue(mockComment);
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(mockComment),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
     jwt.verify.mockReturnValue({ _id: verifiedUser._id });
 
     const result = await getComment(request, true);
@@ -85,7 +95,12 @@ describe("Get Comment", () => {
       text: "Test comment",
       user_id: "commenter_user_id",
     };
-    Comment.findById.mockResolvedValue(mockComment);
+
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(mockComment),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
 
     const result = await getComment(request, false);
     expect(result.success).toBe(true);
@@ -201,7 +216,7 @@ describe("New Comment", () => {
     Post.mockReturnValueOnce({
       save: jest.fn().mockResolvedValueOnce(true),
     });
-    
+
     const result = await newComment(request);
 
     expect(result.success).toBe(true);

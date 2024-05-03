@@ -166,14 +166,15 @@ const commentSchema = new mongoose.Schema({
   downvote_users: [{ type: String }], // Array of usernames who downvoted
 });
 
-commentSchema.pre("find", function (next) {
-  // Define the projection based on whether the post is deleted or not
-  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+commentSchema.pre("find", function () {
+  this.where({ deleted: false });
+  // // Define the projection based on whether the post is deleted or not
+  // const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
 
-  // Set the projection to the query
-  this.select(projection);
+  // // Set the projection to the query
+  // this.select(projection);
 
-  next();
+  // next();
 });
 
 export const Comment = mongoose.model("Comment", commentSchema);
