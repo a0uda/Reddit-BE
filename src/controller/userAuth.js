@@ -44,6 +44,13 @@ export async function verifyAuthToken(request) {
   } catch (err) {
     return { success: false, err, status: 400 };
   }
+  if (!userToken) {
+    return {
+      success: false,
+      err: "Invalid token",
+      status: 400,
+    };
+  }
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {
@@ -112,8 +119,8 @@ export async function loginUser(requestBody) {
 }
 
 export async function logoutUser(request) {
-  const token = request.headers.authorization?.split(" ")[1];
-
+  const token = request.headers?.authorization?.split(" ")[1];
+  if (!token) return generateResponse(false, 400, "Missing token");
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
     return generateResponse(success, status, err);
