@@ -44,6 +44,7 @@ app.use([
   notificationsRouter,
   communityRouter,
   messageRouter,
+  searchRouter,
   // chatRouter,
 ]);
 
