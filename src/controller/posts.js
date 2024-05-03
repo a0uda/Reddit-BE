@@ -21,6 +21,7 @@ import { checkCommentVotesMiddleware } from "../services/comments.js";
 import mongoose from "mongoose";
 import { generateResponse } from "../utils/generalUtils.js";
 import { pushNotification } from "./notifications.js";
+import { getCommentsHelper } from "../services/users.js";
 
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -120,7 +121,7 @@ export async function createPost(request) {
   else {
     post.nsfw_flag = user.profile_settings.nsfw_flag;
   }
-  
+
   //if all good and i am going to post
   //set all necessary attributes (flags oc and nsf and spoiler if found)
   //upvote++
@@ -147,7 +148,7 @@ export async function sharePost(request) {
       true
     );
 
-    // console.log("LL", success);
+    //
     if (!success) {
       return { success, error };
     }
@@ -264,17 +265,9 @@ export async function sharePost(request) {
 
     post.shares_count++;
     post.user_details.total_shares++;
+
     await shared_post.save();
-    try {
-      const post = await post.save();
-      // console.log("SSSS", post);
-    } catch (err) {
-      return {
-        success: false,
-        error: { status: 500, message: err },
-      };
-    }
-    // console.log("Case");
+    await post.save();
 
     return {
       success: true,
@@ -591,7 +584,7 @@ export async function postVote(request) {
         //send notif
         const userOfPost = await User.findById(post.user_id);
 
-        const { success,error } = await pushNotification(
+        const { success, error } = await pushNotification(
           userOfPost,
           user.username,
           post,
@@ -600,8 +593,6 @@ export async function postVote(request) {
         );
         if (!success) console.log(error);
       }
-      await post.save();
-      await user.save();
     } else {
       if (downvoteIndex != -1) {
         user.downvotes_posts_ids.splice(downvoteIndex, 1);
@@ -615,10 +606,24 @@ export async function postVote(request) {
         post.downvotes_count = post.downvotes_count + 1;
         user.downvotes_posts_ids.push(post._id);
       }
+    }
+    // console.log(post);
+    console.log(post.upvotes_count + post.downvotes_count);
+    console.log(post.downvotes_count);
+    if (post.upvotes_count + post.downvotes_count != 0) {
+      console.log(
+        (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100
+      );
+      post.user_details.upvote_rate =
+        (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) *
+        100;
+    }
+    try {
       await post.save();
       await user.save();
+    } catch (e) {
+      console.log(e);
     }
-
     return {
       success: true,
       status: 200,
@@ -943,6 +948,54 @@ export async function pollVote(request) {
       error: {},
       message: "Voted to option " + post.polls[index].options + " sucessfully",
     };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: e },
+    };
+  }
+}
+
+export async function getTrendingPosts(request) {
+  try {
+    const postsTitles = await Post.aggregate([
+      {
+        $match: {
+          type: "image_and_videos",
+          images: { $elemMatch: { path: { $exists: true, $ne: null } } },
+        },
+      },
+      {
+        $group: {
+          _id: "$title",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: 5,
+      },
+      {
+        $lookup: {
+          from: "Post",
+          localField: "_id",
+          foreignField: "title",
+          as: "Post",
+        },
+      },
+    ]);
+
+    console.log(postsTitles);
+    var posts = [];
+
+    for (const titleInfo of postsTitles) {
+      const post = await Post.findOne({ title: titleInfo._id }); // Assuming title is unique
+      posts.push(post);
+    }
+
+    return { success: true, posts };
   } catch (e) {
     return {
       success: false,
