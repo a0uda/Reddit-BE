@@ -8,72 +8,119 @@ import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { mapMessageToFormat, mapUserMentionsToFormat, mapPostRepliesToFormat } from "../utils/messages.js";
 import { Post } from "../db/models/Post.js";
-const composeNewMessage = async (request) => {
+const composeNewMessage = async (request, isReply) => {
     try {
+        console.log("trying to authenticate the user")
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
 
         if (!sender) {
-            return { success, err, status, banningUser, msg };
+            return { success, err, status, sender, msg };
         }
-        const { sender_username, sender_type, receiver_username, receiver_type, subject, message, senderVia } = request.body.data;
-        if (!sender_username || !receiver_username || !subject || !message) {
-            return { status: 400, message: "Please provide all the required fields" };
-        }
-        if (sender_username === receiver_username) {
-            return { status: 400, message: "Sender and receiver cannot be the same" };
+        console.log("user authenticated")
+        const { sender_type, receiver_username, receiver_type, subject = null, message, senderVia = null, parent_message_id = null } = request.body.data;
+
+        if (!receiver_username || !subject || !message || !sender_type || !receiver_type) {
+            return { err: { status: 400, message: "Please provide all the required fields" } };
         }
 
-        const sender_id = sender._id;
-        let sender_via_id = null;
+        if (isReply) {
+            if (!parent_message_id) {
+                return { err: { status: 400, message: "This is a reply Please provide the parent_message_id" } };
+            }
+            const parentMessage = await Message.findOne({ _id: parent_message_id });
+            if (!parentMessage) {
+                return { err: { status: 400, message: "the provided parent_message_id does not exist" } };
+            }
+        }
+        let global_sender_id = null;
+        let global_receiver_id = null;
+        let global_sender_via_id = null;
 
+        ///////CASE 1: MODERATOR->USER////////////////////////
+        //TODO: CHECK IF THE USER IS MUTING THIS COMMUNITY 
         if (sender_type === "moderator") {
             const community = await Community.findOne({ name: senderVia });
             if (!community) {
-                return { status: 400, message: "Community does not exist" };
+                return { err: { status: 400, message: "the provided senderVia Community id does not exist" } };
             }
-
-            const moderator = await Community.findOne({ _id: community._id, 'moderators.username': sender_username });
+            //check if the sender is a moderator in the community 
+            const moderator = community.moderators.find((moderator) => moderator.username === sender.username);
             if (!moderator) {
-                return { status: 400, message: "User is not a moderator in this community. Try to send via another community" };
+                return { err: { status: 400, message: "User is not a moderator in this community. Try to send via another community" } };
             }
+            global_sender_id = sender._id;
+            global_sender_via_id = community._id;
+            if (receiver_type === "user") {
+                const receiver = await User.findOne({ username: receiver_username });
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever User does not exist" } };
 
-            sender_via_id = community._id;
+                }
+                global_receiver_id = receiver._id;
+            }
+            ///////CASE 2: MODERATOR->COMMUNITY////////////////////////TODO: IS THIS A VALID ACTION ?
+            else
+
+                if (receiver_type === "moderator") {
+                    const receiver = await Community.findOne({ name: receiver_username })
+                    if (!receiver) {
+                        return { err: { status: 400, message: "reciever Community does not exist" } };
+
+                    }
+                    global_receiver_id = receiver._id;
+                }
         }
+        else {
 
-        let receiver_id = null;
-        if (receiver_type === "user") {
-            const receiver = await User.findOne({ username: receiver_username });
-            if (!receiver) {
-                return { status: 400, message: "User does not exist" };
+            global_sender_id = sender._id;
+            global_sender_via_id = null;
+            ///////CASE 3: USER->MODERATOR////////////////////////
+            if (receiver_type === "moderator") {
+                const receiver = await Community.findOne({ name: receiver_username })
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever Community does not exist" } };
+
+                }
+                //CHECK IF THE SENDER IS MUTED IN THE COMMUNITY AND GET THE MUTED DATE 
+                const muted_user = receiver.muted_users.find((muted_user) => muted_user.username === sender.username);
+                if (muted_user) {
+                    return { err: { status: 400, message: "You are muted from this community , your message will not be sent  " } };
+                }
+                global_receiver_id = receiver._id;
             }
-            receiver_id = receiver._id;
-        } else {
-            const community = await Community.findOne({ name: receiver_username });
-            if (!community) {
-                return { status: 400, message: "Community does not exist" };
+            /////////CASE 4: USER->USER//////////////////////// 
+            else {
+                console.log("inside user to user")
+                const receiver = await User.findOne({ username: receiver_username });
+                if (!receiver) {
+                    return { err: { status: 400, message: "reciever User does not exist" } };
+
+                }
+                global_receiver_id = receiver._id;
             }
-            receiver_id = community._id;
         }
-
+        console.log("global sender id")
+        console.log(global_receiver_id)
         const newMessage = new Message({
-            sender_id,
-            sender_via_id,
+            sender_id: global_sender_id,
+            sender_via_id: global_sender_via_id,
             sender_type,
-            [receiver_type]: receiver_id,
-            receiver_id,
+            [receiver_type]: global_receiver_id,
+            receiver_id: global_receiver_id,
             receiver_type,
             message,
-            subject
+            subject,
+            parent_message_id,
         });
-
         await newMessage.save();
         return { status: 200, message: "Message sent successfully" };
     } catch (error) {
-        return { status: 500, message: error.message };
+        return { err: { status: 500, message: error.message } };
     }
 };
 
-//////////////////////SENT //////////////////////////
+// //////////////////////SENT //////////////////////////
+
 const getUserSentMessages = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -85,9 +132,12 @@ const getUserSentMessages = async (request) => {
         const user_id = user._id;
         const messages = await Message.find({ sender_id: user_id }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
-        const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+        let messagesToSend = await Promise.all(messages.map(async (message) => {
+            const type = "getUserSentMessages"
+            return await mapMessageToFormat(message, user, type);
         }));
+        //filter null values 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -105,14 +155,14 @@ const getUserUnreadMessages = async (request) => {
         const user_id = user._id;
 
         // Query for messages where the receiver is the user and unread_flag is true
-        const userMessages = await Message.find({
+        let userMessages = await Message.find({
             receiver_type: "user",
             receiver_id: user_id,
             unread_flag: true
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id and unread_flag is true
-        const moderatorMessages = await Message.find({
+        let moderatorMessages = await Message.find({
             receiver_type: "moderator",
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id }, // Assuming user.communities holds the IDs of communities the user is a moderator of
@@ -120,17 +170,16 @@ const getUserUnreadMessages = async (request) => {
         }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages];
+        let messages = [...userMessages, ...moderatorMessages];
 
 
         // Map the messages to the desired format
-        const messagesToSend = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+        const type = "getUserUnreadMessages"
+        let messagesToSend = await Promise.all(messages.map(async (message) => {
+            return await mapMessageToFormat(message, user, type);
         }));
-        console.log("habhooba");
-        // console.log("messagesToSend");
-        // console.log(messagesToSend);
-
+        //filter this array from nulls 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
         return { status: 200, messages: messagesToSend };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -168,7 +217,7 @@ const getAllMessages = async (request) => {
         // }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
-        const messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
+        let messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
         //remove duplicates 
         const seen = new Set();
         const uniqueMessages = messages.filter(message => {
@@ -177,10 +226,12 @@ const getAllMessages = async (request) => {
             seen.add(message._id.toString());
             return !isDuplicate;
         });
-        const messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
+        let messagesToSend = await Promise.all(uniqueMessages.map(async (message) => {
 
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
+        //filter this array from nulls 
+        messagesToSend = messagesToSend.filter((message) => message !== null);
 
         return { status: 200, messages: messagesToSend };
     } catch (error) {
@@ -196,25 +247,27 @@ const deleteMessage = async (request) => {
         if (!user) {
             return { success, err, status, user, msg };
         }
-        console.log("user :")
-        console.log(user)
+
         const { _id } = request.body;
-        console.log("message id :")
-        console.log(_id)
+
         const message = await Message.findById(_id);
-        console.log("messages :")
-        console.log(message)
+
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id.toString() !== user._id.toString()) {
-            return { err: { status: 401, message: "you are not authorized" } };
-        }
-        console.log("message to be deleted")
-        message.deleted_at = Date.now();//662d42da902d36ede3ff2ca
+        if (message.sender_id == user.id)
+            message.sender_deleted_at = Date.now();
+        else
+            message.receiver_deleted_at = Date.now();
         await message.save();
-        console.log("message deleted")
-        console.log(message)
+        // //get from users _id of the user who is named heba  
+        // const heba = await User.findOne({ username: "heba" });
+        // //delete all messages sent or received by heba 
+        // await Message.deleteMany({ $or: [{ sender_id: heba._id }, { receiver_id: heba._id }] });
+
+
+
+
         return { status: 200, message: "Message deleted successfully" };
     }
     catch (error) {
@@ -279,11 +332,12 @@ const getMessagesInbox = async (request) => {
         const messages = await Message.find({ receiver_id: user._id });
         const mentions = user.user_mentions;
         const mappedReplies = await Promise.all(posts.map(async (post) => {
+
             return await mapPostRepliesToFormat(post, user);
         }
         ));
         const mappedMessages = await Promise.all(messages.map(async (message) => {
-            return await mapMessageToFormat(message);
+            return await mapMessageToFormat(message, user);
         }));
         const mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
@@ -297,5 +351,26 @@ const getMessagesInbox = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 };
-
-export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox };
+//////////////////////////MARK MESSAGE AS READ //////////////////////////
+const markMessageAsRead = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user || err) {
+            return { success, err, status, user, msg };
+        }
+        const { _id } = request.body;
+        const message = await Message.findById(_id);
+        if (!message) {
+            return { err: { status: 400, message: "Message not found" } };
+        }
+        // if (message.receiver_id.toString() !== user._id.toString()) {
+        //     return { err: { status: 401, message: "you are not the reciever of this message to mark as read :) " } };
+        // }
+        message.unread_flag = false;
+        await message.save();
+        return { status: 200, message: "Message marked as read" };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };

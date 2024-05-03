@@ -40,7 +40,11 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    deleted_at: {
+    sender_deleted_at: {
+        type: Date,
+        default: null
+    },
+    receiver_deleted_at: {
         type: Date,
         default: null
     },

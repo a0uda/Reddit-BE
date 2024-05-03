@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 
 import { usersRouter } from "./routers/users.js";
+import { searchRouter } from "./routers/search.js";
 import { postsRouter } from "./routers/posts.js";
 import { commentsRouter } from "./routers/comments.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
@@ -11,11 +12,11 @@ import { notificationsRouter } from "./routers/notifications.js";
 
 import { communityRouter } from "./routers/communityRouter.js";
 import { messageRouter } from "./routers/messageRouter.js";
-import chatRouter from "./routers/chatRouter.js";
+// import chatRouter from "./routers/chatRouter.js";
 
 import { connect_to_db } from "./db/mongoose.js";
-import { app, server } from "./socket/socket.js";
-
+// import { app, server } from "./socket/socket.js";
+const app = express();
 dotenv.config();
 
 // PORT should be assigned after calling dotenv.config() because we need to access the env variables.
@@ -39,7 +40,7 @@ app.use([
   notificationsRouter,
   communityRouter,
   messageRouter,
-  chatRouter,
+  // chatRouter,
 ]);
 
 try {
@@ -48,7 +49,7 @@ try {
   console.log("Error, Couldn't connect to the database.");
 }
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server Running on port ${PORT}`);
 });
 

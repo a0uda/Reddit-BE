@@ -57,6 +57,9 @@ import {
 import {
     addCommunityProfilePicture,
     deleteCommunityProfilePicture,
+    getCommunityProfilePicture,
+    getCommunityBannerPicture,
+
 
     addCommunityBannerPicture,
     deleteCommunityBannerPicture,
@@ -406,7 +409,32 @@ communityRouter.post("/communities/delete-profile-picture", async (req, res, nex
         next(error)
     }
 })
+//get profile picture 
+communityRouter.get("/communities/get-profile-picture/:community_name", async (req, res, next) => {
+    try {
+        const { err, picture } = await getCommunityProfilePicture(req.params.community_name)
 
+        if (err) { return next(err) }
+
+        res.status(200).send(picture);
+
+    } catch (error) {
+        next(error)
+    }
+})
+//get banner picture 
+communityRouter.get("/communities/get-banner-picture/:community_name", async (req, res, next) => {
+    try {
+        const { err, picture } = await getCommunityBannerPicture(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        res.status(200).send(picture);
+
+    } catch (error) {
+        next(error)
+    }
+})
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/delete-banner-picture", async (req, res, next) => {
     try {

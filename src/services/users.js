@@ -100,7 +100,21 @@ export async function getUserPostsHelper(
         pageSize
       );
 
+
       posts = await checkVotesMiddleware(loggedInUser, posts);
+
+      const postIds = posts.map((post) => post._id);
+
+      await Post.updateMany(
+        { _id: { $in: postIds } },
+        {
+          $inc: {
+            views_count: 1,
+            "user_details.total_views": 1,
+          },
+        }
+      );
+      
     } else {
       posts = await paginateUserPosts(
         user._id,

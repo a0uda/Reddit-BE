@@ -3,12 +3,28 @@ import { Community } from '../db/models/Community.js';
 import { Comment } from '../db/models/Comment.js';
 import { Post } from '../db/models/Post.js';
 
-const mapMessageToFormat = async (message) => {
+const mapMessageToFormat = async (message, user, which_function) => {
     let receiver_username = null;
-    if (message.receiver_type === "user")
-        receiver_username = await User.findOne({ _id: message.receiver_id }).select('username').username;
-    else //reciever type is moderator 
-        receiver_username = await Community.findOne({ _id: message.receiver_id }).select('name').name;
+    if (message.receiver_type === "user") {
+        const receiver = await User.findOne({ _id: message.receiver_id })
+        if (!receiver) {
+            console.log("reciever not found hena ")
+
+        }
+        receiver_username = receiver.username;
+        console.log(receiver_username)
+
+
+    }
+    else //reciever type is moderator here is the bug 
+    {
+        const community = await Community.findOne({ _id: message.receiver_id }).select('name')
+        console.log(community.name)
+        receiver_username = community.name;
+
+
+    }
+
 
     let senderVia_name = null;
     if (message.sender_type === "moderator") {
@@ -18,25 +34,43 @@ const mapMessageToFormat = async (message) => {
         }
         senderVia_name = community.name;
     }
-    const sender_username_and_id = await User.findOne({ _id: message.sender_id }).select('username _id');
+    //this part is not tested 
+    let isSent = message.sender_id.toString() === user._id.toString() ? true : false;
+
+
+    //if the message is recieved by the user and the function is getUserSentMessages
+    // remove all read messages and messages from blocked users and mjuted communities
+    if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false ||
+        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
+            (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
+    )) return null;
+    //if the message is sent by the user and the function is getUserUnreadMessages 
+    // remove all messages from blocked users and muted communities 
+    if (which_function === "getAllMessages" && (!isSent) && (
+        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
+            (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
+    )) return null;
+    //filter deleted messages
+    //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
+
     return {
         _id: message._id,
-        sender_username: sender_username_and_id.username,
+        sender_username: user.username,
         sender_type: message.sender_type,
-        receiver_username: receiver_username,
+        receiver_username,
         receiver_type: message.receiver_type,
         senderVia: senderVia_name,
         message: message.message,
         created_at: message.created_at,
-        deleted_at: message.deleted_at,
+        deleted_at: isSent ? message.sender_deleted_at : message.receiver_deleted_at,
         unread_flag: message.unread_flag,
-        isSent: message.sender_id === sender_username_and_id._id,
+        isSent: isSent,
         parentMessageId: message.parent_message_id,
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
-    }
 
-};
+    }
+}
 
 const mapUserMentionsToFormat = async (userMentions, user) => {
     console.log("insise mapUserMentionsToFormat")
@@ -78,16 +112,14 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         postSubject: post.title,
         replyContent: comment.description,
         _id: comment._id,
-        unread: "true",
+        unread: user.user_mentions.unread,//TODO:SEED THIS OBJECT 
         commentsCount: post.comments_count,
         rank: rank,
         upvotes_count: comment.upvotes_count,
         downvotes_count: comment.downvotes_count,
-        isSent: "true"
+        isSent: false
 
     };
-
-    console.log(mappedMessages)
     return mappedMessages;
 
 }
@@ -127,13 +159,13 @@ const mapPostRepliesToFormat = async (post, user) => {
             postSubject: post.title,
             replyContent: comment.description,
             _id: comment._id,
-            unread: "true",
+            unread: "true",//TODO: this attribute does not exist ,
             commentsCount: post.comments_count,
             rank: rank,
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
         };
-
+        console.log("passed")
         return mappedMessages;
     } else {
         return null;
