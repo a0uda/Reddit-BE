@@ -42,8 +42,8 @@ export async function pushNotification(
       }
     }
 
-    console.log("hi", user, notifType);
-    console.log(user.username, sending_user_username);
+    // console.log("hi", user, notifType);
+    // console.log(user.username, sending_user_username);
     if (user.username != sending_user_username) {
       if (user.notifications_settings[notifType]) {
         const notification = new Notification({

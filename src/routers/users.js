@@ -92,19 +92,18 @@ usersRouter.post("/users/signup", async (req, res) => {
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, error, message, user } = await loginUser(
-      req.body
-    );
+    const { success, error, message, user, token } = await loginUser(req.body);
     if (!success) {
       res.status(error.status).send({ error });
       return;
     }
     // Set the token in the response header
-    res.header("Authorization", `Bearer ${user.token} `);
+    res.header("Authorization", `Bearer ${token} `);
     // res.setHeader("RefreshToken", refreshToken);
 
     res.status(200).send({ message });
   } catch (e) {
+    console.log(e);
     res
       .status(500)
       .send({ error: { status: 500, message: "Internal server error." } });
@@ -299,7 +298,7 @@ usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
     }
     // res.status(200).send(msg);
     console.log(msg);
-    res.redirect("/homepage"); //frontend
+    res.redirect("https://redditech.me"); //frontend
   } catch (error) {
     res.status(500).json({ error: "Internal server error." });
   }

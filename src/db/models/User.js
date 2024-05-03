@@ -464,25 +464,19 @@ userSchema.pre("find", function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token.push(
-    jwt.sign(
-      {
-        _id: user._id.toString(),
-        username: user.username,
-        profile_picture: user.profile_picture,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
-    )
-  );
-  const refreshToken = jwt.sign(
-    { _id: user._id.toString() },
+  const token = jwt.sign(
+    {
+      _id: user._id.toString(),
+      username: user.username,
+      profile_picture: user.profile_picture,
+    },
     process.env.JWT_SECRET,
-    { expiresIn: "8d" }
+    {
+      expiresIn: "1d",
+    }
   );
-  return refreshToken;
+  user.token.push(token);
+  return token;
 };
 
 export const User = mongoose.model("User", userSchema);
