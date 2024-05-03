@@ -4,11 +4,7 @@ import { User } from "../db/models/User.js";
 import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
-import {
-  checkBannedUser,
-  getCommentRepliesHelper,
-  getCommunity,
-} from "../services/posts.js";
+import { checkBannedUser, getCommunity } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import { pushNotification } from "./notifications.js";
 export async function getComment(request, verifyUser) {
@@ -33,7 +29,9 @@ export async function getComment(request, verifyUser) {
       error: { status: 400, message: "Comment id is required" },
     };
   }
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId)
+    .populate("replies_comments_ids")
+    .exec();
   if (!comment) {
     return {
       success: false,
@@ -54,22 +52,19 @@ export async function getCommentWithReplies(request) {
   if (!success) {
     return { success, error };
   }
+  var commentWithReply = comment;
   const { user } = await verifyAuthToken(request);
-  var commentWithReplies = await getCommentRepliesHelper(comment);
   if (user) {
-    var resultComment = await checkCommentVotesMiddleware(user, [
-      commentWithReplies,
-    ]);
-    commentWithReplies = resultComment[0];
-    // commentWithReplies = commentWithReplies.toObject();
-    // commentWithReplies.replies_comments_ids = await checkCommentVotesMiddleware(
-    //   user,
-    //   commentWithReplies.replies_comments_ids
-    // );
+    var res = await checkCommentVotesMiddleware(user, [commentWithReply]);
+    commentWithReply = res[0];
+    commentWithReply.replies_comments_ids = await checkCommentVotesMiddleware(
+      user,
+      commentWithReply.replies_comments_ids
+    );
   }
   return {
     success: true,
-    comment: commentWithReplies,
+    comment: commentWithReply,
     user,
     message: "Comment Retrieved sucessfully",
   };

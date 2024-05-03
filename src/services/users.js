@@ -148,7 +148,16 @@ export async function getCommentsHelper(
       sortCriteria,
       pageSize
     );
-    if (user) comments = await checkCommentVotesMiddleware(user, comments);
+    comments = await checkCommentVotesMiddleware(user, comments);
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
     return comments;
   } catch (error) {
     console.error("Error fetching posts:", error);
