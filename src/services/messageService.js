@@ -255,10 +255,10 @@ const deleteMessage = async (request) => {
         else
             message.receiver_deleted_at = Date.now();
         await message.save();
-        // //get from users _id of the user who is named heba  
-        // const heba = await User.findOne({ username: "heba" });
-        // //delete all messages sent or received by heba 
-        // await Message.deleteMany({ $or: [{ sender_id: heba._id }, { receiver_id: heba._id }] });
+        //get from users _id of the user who is named heba  
+        const heba = await User.findOne({ username: "newHeba" });
+        //delete all messages sent or received by heba 
+        await Message.deleteMany({ $or: [{ sender_id: heba._id }, { receiver_id: heba._id }] });
 
 
 
@@ -367,4 +367,22 @@ const markMessageAsRead = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
-export { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
+//mark all user messages as read
+
+const markAllAsRead = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user || err) {
+            return { success, err, status, user, msg };
+        }
+        const messages = await Message.find({ receiver_id: user._id });
+        messages.forEach(async (message) => {
+            message.unread_flag = false;
+            await message.save();
+        });
+        return { status: 200, message: "All messages marked as read" };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+export { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };

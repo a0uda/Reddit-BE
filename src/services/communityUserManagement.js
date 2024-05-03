@@ -1130,6 +1130,11 @@ const deleteModerator = async (requestBody) => {
         // Remove the user from the moderators array
         community.moderators.splice(moderatorIndex, 1);
 
+        user.moderated_communities = user.moderated_communities.filter(
+            (moderated_community) => (moderated_community.id).toString() != community._id.toString()
+        )
+        await user.save();
+
         // Save the updated community
         await community.save();
 
@@ -1200,6 +1205,7 @@ const getAllUsers = async () => {
         return { err: { status: 500, message: error.message } };
     }
 };
+
 
 export {
     banUser,
