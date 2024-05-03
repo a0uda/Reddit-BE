@@ -1,4 +1,5 @@
 import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
@@ -11,7 +12,6 @@ import {
   checkApprovedUser,
   checkBannedUser,
   checkNewPostInput,
-  getPostCommentsHelper,
   getCommunity,
   checkPostSettings,
   checkContentSettings,
@@ -312,11 +312,11 @@ export async function getPost(request, verifyUser) {
       error: { status: 404, message: "Post Not found" },
     };
   }
-  // if (user) {
-  //   var result = await checkVotesMiddleware(user, [post]);
-
-  //   post = result[0];
-  // }
+  const { user: loggedInUser } = await verifyAuthToken(request);
+  if (loggedInUser) {
+    var result = await checkVotesMiddleware(loggedInUser, [post]);
+    post = result[0];
+  }
 
   return {
     success: true,
@@ -332,8 +332,21 @@ export async function getPostComments(request) {
     return { success, error };
   }
   const { user } = await verifyAuthToken(request);
-  var comments = await getPostCommentsHelper(post._id);
-  if (user) comments = await checkCommentVotesMiddleware(user, comments);
+  var comments = await Comment.find({ post_id: post._id })
+    .populate("replies_comments_ids")
+    .exec();
+  if (user) {
+    comments = await checkCommentVotesMiddleware(user, comments);
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
+  }
   return {
     success: true,
     comments,

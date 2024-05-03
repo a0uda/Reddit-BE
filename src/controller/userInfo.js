@@ -245,7 +245,7 @@ export async function getComments(
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-
+    console.log("SAVED", user.saved_comments_ids);
     const comments = await getCommentsHelper(
       user,
       commentsType,
@@ -290,14 +290,22 @@ export async function getAllSavedComments(request) {
       .populate("replies_comments_ids")
       .exec();
 
-    comments = comments.filter((comment) => comment != null);
+    // comments = comments.filter((comment) => comment != null);
 
     comments = comments.map((comment) => {
       return { ...comment.toObject(), is_post: false };
     });
-
+    
     comments = await checkCommentVotesMiddleware(user, comments);
-    console.log(comments);
+    
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
 
     return {
       success: true,

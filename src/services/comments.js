@@ -4,6 +4,7 @@ export async function checkCommentVotesMiddleware(currentUser, comments) {
   if (currentUser) {
     const username = currentUser.username;
     comments = comments.map((comment) => {
+      // console.log(comment);
       const isUpvoted = comment.upvote_users.includes(username);
       const isDownvoted = comment.downvote_users.includes(username);
       var vote = 0;
