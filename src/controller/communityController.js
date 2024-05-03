@@ -39,7 +39,12 @@ export const schedulePostController = async (req, res, next) => {
 
         const { date, hours, minutes } = subTime;
         const [year, month, day] = date.split('-').map(Number);
-        const scheduleDate = new Date(Date.UTC(year, month - 1, day, Number(hours), Number(minutes)));
+        const scheduleDate = new Date(year, month - 1, day, Number(hours), Number(minutes));
+
+        // Check if the scheduleDate is in the past
+        if (scheduleDate < new Date()) {
+            return res.status(400).send({ err: { status: 400,  message: 'The input date is in the past.'} });
+        }
 
         console.log('Scheduled date:', scheduleDate);
 
@@ -91,7 +96,7 @@ export const schedulePostController = async (req, res, next) => {
             });
         }
 
-        return res.status(201).send({ message: 'Post scheduled successfully!' });
+        return res.status(201).send({ message: `Post scheduled successfully on ${new Date()} to be posted on ${scheduleDate}!` });
 
     } catch (error) {
         next(error)

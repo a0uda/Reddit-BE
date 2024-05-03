@@ -109,7 +109,7 @@ const schedulePost = async (postInput, user) => {
     await user.save();
 
     // Return a success message.
-    return {successMessage: "Post saved successfully!"};
+    return {successMessage: `Post posted successfully on ${post.created_at}!`};
 }
 
 export { schedulePost };
