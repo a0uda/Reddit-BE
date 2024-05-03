@@ -44,6 +44,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -72,6 +73,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -100,6 +102,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -126,6 +129,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -165,6 +169,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -194,6 +199,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -226,6 +232,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -258,6 +265,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -289,6 +297,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -330,6 +339,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -338,7 +348,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: false,
@@ -374,6 +384,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -382,7 +393,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -429,6 +440,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -437,7 +449,7 @@ describe("New Post", () => {
       success: true,
     });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -476,13 +488,14 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
     checkNewPostInput.mockResolvedValue({ result: true });
     getCommunity.mockResolvedValue({ success: true });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,
@@ -524,13 +537,14 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"]
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
     checkNewPostInput.mockResolvedValue({ result: true });
     getCommunity.mockResolvedValue({ success: true });
     getCommunityGeneralSettings.mockResolvedValue({
-      general_settings: { visibility: "Public" },
+      general_settings: { type: "Public" },
     });
     checkBannedUser.mockResolvedValue({
       success: true,

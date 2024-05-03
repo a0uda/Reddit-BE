@@ -8,6 +8,10 @@ import bcrypt from "bcryptjs";
 import { Post } from "../db/models/Post.js";
 import { getPost } from "./posts.js";
 import { generateResponse } from "../utils/generalUtils.js";
+import { communityNameExists } from "../utils/communities.js";
+import { pushNotification } from "./notifications.js";
+import { newFollowerFormatEmail } from "../templates/email.js";
+import { sendEmail } from "../utils/emailSending.js";
 
 export async function blockUser(request) {
   try {
@@ -15,7 +19,6 @@ export async function blockUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.blocked_username);
     const userToBlock = await User.findOne({
       username: request.body.blocked_username,
     });
@@ -31,7 +34,6 @@ export async function blockUser(request) {
     const index = user.safety_and_privacy_settings.blocked_users.findIndex(
       (blockedUser) => blockedUser.id.toString() == userToBlock._id.toString()
     );
-    console.log(index);
     let operation = "";
     if (index !== -1) {
       userBlockedList.splice(index, 1);
@@ -56,7 +58,7 @@ export async function blockUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -72,7 +74,6 @@ export async function reportUser(request) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log(request.body.reported_username);
     const userToReport = await User.findOne({
       username: request.body.reported_username,
     });
@@ -99,7 +100,7 @@ export async function reportUser(request) {
       msg: "User reported successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -137,7 +138,7 @@ export async function addOrRemovePicture(
       };
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -191,7 +192,7 @@ export async function muteCommunity(request) {
       msg: `Community ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -218,8 +219,6 @@ export async function favoriteCommunity(request) {
     }
     const userCommunities = user.communities;
 
-    console.log(communityToFav._id);
-    console.log(userCommunities);
     const index = userCommunities.findIndex(
       (community) => community.id.toString() === communityToFav._id.toString()
     );
@@ -310,6 +309,32 @@ export async function followUser(request) {
       //   userToFollow.followers_ids.push(user._id);
       //   await userToFollow.save();
       // }
+
+      //send email
+      console.log(userToFollow.email_settings.new_follower_email);
+      console.log(userToFollow.email_settings.unsubscribe_from_all_emails);
+      if (userToFollow.email_settings.new_follower_email) {
+        if (!userToFollow.email_settings.unsubscribe_from_all_emails) {
+          let message = newFollowerFormatEmail(
+            userToFollow.email,
+            user.username
+          );
+          sendEmail(message);
+          console.log("New follower email sent");
+        }
+      }
+
+      //send notif
+      console.log(userToFollow);
+      const { success: succesNotif, error: errorNotif } =
+        await pushNotification(
+          userToFollow,
+          user.username,
+          null,
+          null,
+          "new_followers"
+        );
+      if (!succesNotif) console.log(errorNotif);
     }
 
     // user.following_ids = userFollowingList;
@@ -321,7 +346,7 @@ export async function followUser(request) {
       msg: `User ${operation} successfully.`,
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -330,17 +355,22 @@ export async function followUser(request) {
     };
   }
 }
+/*
+ joined_users: {
+    type: mongoose.Schema.Types.String,
+    ref: "User",
 
+  },
+ */
 export async function joinCommunity(request, leave = false) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
       return { success, err, status, user, msg };
     }
+    console.log("debugging join community :", request.body.community_name);
+    const community = await communityNameExists(request.body.community_name);
 
-    const community = await Community.findOne({
-      name: request.body.community_name,
-    });
     if (!community) {
       return {
         success: false,
@@ -350,12 +380,11 @@ export async function joinCommunity(request, leave = false) {
     }
 
     if (leave) {
-      const index = community.approved_users.indexOf(user._id);
+      const index = community.joined_users.indexOf(user._id);
       if (index !== -1) {
-        community.approved_users.splice(index, 1);
+        community.joined_users.splice(index, 1);
         await community.save();
       }
-
       const communityIndex = user.communities.findIndex(
         (c) => c.id.toString() === community._id.toString()
       );
@@ -363,7 +392,6 @@ export async function joinCommunity(request, leave = false) {
         user.communities.splice(communityIndex, 1);
         await user.save();
       }
-
       return {
         success: true,
         status: 200,
@@ -371,40 +399,54 @@ export async function joinCommunity(request, leave = false) {
       };
     } else {
       // Join the community
-      if (!community.banned_users.includes(user._id)) {
-        if (!community.approved_users.includes(user._id)) {
-          community.approved_users.push(user._id);
-          await community.save();
-        }
 
-        if (
-          !user.communities.some(
-            (c) => c.id.toString() === community._id.toString()
-          )
-        ) {
-          user.communities.push({
-            id: community._id,
-            favorite_flag: false,
-            disable_updates: false,
-          });
-          await user.save();
-        }
-
-        return {
-          success: true,
-          status: 200,
-          msg: `User ${user.username} joined community ${community.name} successfully.`,
-        };
-      } else {
+      if (community.banned_users.includes(user._id)) {
         return {
           success: false,
           status: 400,
           msg: `User ${user.username} is banned from community ${community.name} .`,
         };
       }
+
+      console.log(
+        community.joined_users.some(
+          (userObj) => userObj._id.toString() === user._id.toString()
+        )
+      );
+      if (
+        community.joined_users.some(
+          (userObj) => userObj._id.toString() === user._id.toString()
+        )
+      ) {
+        return {
+          success: false,
+          status: 400,
+          msg: `User ${user.username} already joined community ${community.name} .`,
+        };
+      }
+      community.joined_users.push(user._id);
+      await community.save();
+      if (
+        !user.communities.some(
+          (c) => c.id.toString() === community._id.toString()
+        )
+      ) {
+        user.communities.push({
+          id: community._id,
+          favorite_flag: false,
+          disable_updates: false,
+        });
+        await user.save();
+      }
+
+      return {
+        success: true,
+        status: 200,
+        msg: `User ${user.username} joined community ${community.name} successfully.`,
+      };
     }
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -431,7 +473,7 @@ export async function clearHistory(request) {
       msg: "History cleared successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -479,7 +521,7 @@ export async function deleteAccount(request) {
       msg: "Account deleted successfully.",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,

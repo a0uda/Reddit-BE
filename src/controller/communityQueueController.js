@@ -9,12 +9,19 @@ import {
     
     removeItem,
     spamItem,
-    reportItem
+    reportItem,
+    approveItem
 } from '../services/communityQueueService.js';
+
+// This is a dummy change to test merging the ChatsFeature branch.
 
 export const getRemovedItemsController = async (req, res, next) => {
     try {
-        const { time_filter, posts_or_comments } = req.body;
+        console.log("Entered the controller")
+
+        // This attributes should be received as request Params not in the request body.
+        const { time_filter, posts_or_comments } = req.query;
+        console.log(time_filter, posts_or_comments);
         
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -45,7 +52,7 @@ export const getRemovedItemsController = async (req, res, next) => {
 
 export const getReportedItemsController = async (req, res, next) => {
     try {
-        const { time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.query;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -76,7 +83,7 @@ export const getReportedItemsController = async (req, res, next) => {
 
 export const getUnmoderatedItemsController = async (req, res, next) => {
     try {
-        const { time_filter, posts_or_comments } = req.body;
+        const { time_filter, posts_or_comments } = req.query;
 
         const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
         
@@ -194,6 +201,37 @@ export const reportItemController = async (req, res, next) => {
         const community_name = req.params.community_name;
 
         const { err, message } = await reportItem(item_id, item_type, authenticated_user, community_name);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(message);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+export const approveItemController = async (req, res, next) => {
+    try {
+        const { item_id, item_type } = req.body;
+
+        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
+        
+        if (!success) {
+            const err = { status: status, message: auth_error };
+            return next(err);
+        }
+
+        const community_name = req.params.community_name;
+
+        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
+        
+        if (!community) {
+            const err = { status: 403, message: "Access denied. You must be a moderator to approve items in this community." };
+            return next(err);
+        }
+
+        const { err, message } = await approveItem(item_id, item_type, authenticated_user);
 
         if (err) { return next(err) }
 

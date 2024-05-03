@@ -6,6 +6,7 @@ import {
 } from "../src/controller/comments";
 import { Comment } from "../src/db/models/Comment";
 import { User } from "../src/db/models/User";
+import { Post } from "../src/db/models/Post.js";
 import { getPost } from "../src/controller/posts";
 import jwt from "jsonwebtoken"; // Import jwt module
 import {
@@ -17,12 +18,12 @@ import {
 jest.mock("jsonwebtoken"); // Mock the jsonwebtoken module
 jest.mock("../src/db/models/Comment");
 jest.mock("../src/db/models/User");
+jest.mock("../src/db/models/Post");
 jest.mock("../src/services/posts.js");
 jest.mock("../src/controller/posts");
 
 describe("Get Comment", () => {
-  beforeEach(() => {
-  });
+  beforeEach(() => {});
 
   it("should return error if comment id is missing", async () => {
     const request = {
@@ -39,7 +40,12 @@ describe("Get Comment", () => {
     const request = {
       body: { id: "invalid_comment_id" },
     };
-    Comment.findById.mockResolvedValue(null);
+
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(null),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
 
     const result = await getComment(request, false);
     expect(result.success).toBe(false);
@@ -56,6 +62,7 @@ describe("Get Comment", () => {
     };
     const verifiedUser = {
       _id: "verified_user_id",
+      token: ["valid_token"],
       generateAuthToken: jest.fn(),
     };
     const mockComment = {
@@ -65,7 +72,11 @@ describe("Get Comment", () => {
     };
     User.mockImplementation(() => mockUser);
     User.findById = jest.fn().mockReturnValue(verifiedUser);
-    Comment.findById.mockResolvedValue(mockComment);
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(mockComment),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
     jwt.verify.mockReturnValue({ _id: verifiedUser._id });
 
     const result = await getComment(request, true);
@@ -84,7 +95,12 @@ describe("Get Comment", () => {
       text: "Test comment",
       user_id: "commenter_user_id",
     };
-    Comment.findById.mockResolvedValue(mockComment);
+
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue(mockComment),
+    };
+    Comment.findById = jest.fn().mockReturnValue(mockQuery);
 
     const result = await getComment(request, false);
     expect(result.success).toBe(true);
@@ -95,8 +111,7 @@ describe("Get Comment", () => {
 });
 
 describe("New Comment", () => {
-  beforeEach(() => {
-  });
+  beforeEach(() => {});
 
   it("should return error if post retrieval fails", async () => {
     const request = {};
@@ -135,6 +150,10 @@ describe("New Comment", () => {
       post: { locked_flag: true },
       user: {},
       message: "Post Retrieved successfully",
+    });
+
+    Post.mockReturnValueOnce({
+      save: jest.fn().mockResolvedValueOnce(true),
     });
 
     const result = await newComment(request);
@@ -181,6 +200,8 @@ describe("New Comment", () => {
       locked_flag: false,
       post_in_community_flag: false,
       description: "test",
+      comments_count: 0,
+      save: jest.fn(),
     };
     const mockUser = { _id: "user_id", username: "test_user" };
     getPost.mockResolvedValueOnce({
@@ -189,10 +210,14 @@ describe("New Comment", () => {
       user: mockUser,
       message: "Post Retrieved successfully",
     });
+    Post.findById = jest.fn().mockReturnValue(mockPost);
     Comment.mockReturnValueOnce({
       save: jest.fn().mockResolvedValueOnce(true),
     });
 
+    Post.mockReturnValueOnce({
+      save: jest.fn().mockResolvedValueOnce(true),
+    });
     const result = await newComment(request);
 
     expect(result.success).toBe(true);

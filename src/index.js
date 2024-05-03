@@ -3,33 +3,31 @@ import dotenv from "dotenv";
 import { usersRouter } from "./routers/users.js";
 import { communityRouter } from "./routers/communityRouter.js";
 import { listingPostsRouter } from "./routers/lisitng.js";
+import { searchRouter } from "./routers/search.js";
 import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
-dotenv.config();
+import { notificationsRouter } from "./routers/notifications.js";
+import { messageRouter } from "./routers/messageRouter.js";
+// import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
 
-// const connect_to_db = require("./db/mongoose")
+dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-
-//Connect to database
-console.log("port");
-console.log(process.env.PORT);
 
 try {
   connect_to_db();
 } catch (err) {
   console.log("Error, couldn't connect to database");
 }
-
 const port = process.env.PORT;
 
 // Abdullah & Mido
 app.use((req, res, next) => {
-  res.header('Access-Control-Expose-Headers', 'Authorization');
+  res.header("Access-Control-Expose-Headers", "Authorization");
   next();
 });
 
@@ -39,11 +37,15 @@ app.listen(port, () => {
 
 app.use([
   usersRouter,
-  communityRouter,
-  listingPostsRouter,
-  postsOrCommentsRouter,
   postsRouter,
   commentsRouter,
+  postsOrCommentsRouter,
+  listingPostsRouter,
+  notificationsRouter,
+  communityRouter,
+  messageRouter,
+  searchRouter,
+  // chatRouter,
 ]);
 
 // Error handling middleware

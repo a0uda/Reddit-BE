@@ -62,7 +62,7 @@ postsOrCommentsRouter.patch("/posts-or-comments/spoiler", async (req, res) => {
     });
   } catch (error) {
     // Handle unexpected errors with a 500 status code
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -106,7 +106,7 @@ postsOrCommentsRouter.patch(
       });
     } catch (error) {
       // Handle unexpected errors with a 500 status code
-      console.error("Error:", error);
+      //console.error("Error:", error);
       return res.status(500).json({
         success: false,
         error: "Internal Server Error",
@@ -146,7 +146,7 @@ postsOrCommentsRouter.patch(
       });
     } catch (error) {
       // Handle unexpected errors with a 500 status code
-      console.error("Error:", error);
+      //console.error("Error:", error);
       return res.status(500).json({
         success: false,
         error: "Internal Server Error",
@@ -184,7 +184,7 @@ postsOrCommentsRouter.post("/posts-or-comments/vote", async (req, res) => {
     });
   } catch (error) {
     // Handle unexpected errors with a 500 status code
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -221,7 +221,7 @@ postsOrCommentsRouter.patch("/posts-or-comments/save", async (req, res) => {
     });
   } catch (error) {
     // Handle unexpected errors with a 500 status code
-    console.error("Error:", error);
+    //console.error("Error:", error);
     return res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -235,7 +235,7 @@ postsOrCommentsRouter.post("/posts/approve", async (req, res) => {
     const result = await postApprove(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -249,7 +249,7 @@ postsOrCommentsRouter.post("/posts/remove", async (req, res) => {
     const result = await postRemove(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -263,7 +263,7 @@ postsOrCommentsRouter.post("/posts/report", async (req, res) => {
     const result = await postReport(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -277,7 +277,7 @@ postsOrCommentsRouter.post("/comments/approve", async (req, res) => {
     const result = await commentApprove(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -291,7 +291,7 @@ postsOrCommentsRouter.post("/comments/remove", async (req, res) => {
     const result = await commentRemove(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -305,7 +305,7 @@ postsOrCommentsRouter.post("/comments/report", async (req, res) => {
     const result = await commentReport(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -319,7 +319,7 @@ postsOrCommentsRouter.post("/posts/delete", async (req, res) => {
     const result = await postDelete(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",
@@ -333,7 +333,7 @@ postsOrCommentsRouter.post("/comments/delete", async (req, res) => {
     const result = await commentDelete(req);
     res.status(result.status).json(result);
   } catch (error) {
-    console.error("Error:", error);
+    //console.error("Error:", error);
     res.status(500).json({
       success: false,
       err: "Internal Server Error",

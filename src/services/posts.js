@@ -1,31 +1,10 @@
-import { Comment } from "../db/models/Comment.js";
 import { communityNameExists } from "../utils/communities.js";
 import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
-export async function getCommentRepliesHelper(comment) {
-  const replies = comment.replies_comments_ids;
-  comment.replies_comments_ids = [];
-  for (const reply of replies) {
-    const replyObject = await Comment.findById(reply);
-    comment.replies_comments_ids.push(replyObject);
-  }
-  return comment;
-}
-
-export async function getPostCommentsHelper(postId) {
-  const comments = await Comment.find({ post_id: postId }).exec();
-  if (!comments || comments.length === 0) return [];
-  const commentsWithReplies = [];
-  for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
-    console.log(commentResult);
-    commentsWithReplies.push(commentResult);
-  }
-  return commentsWithReplies;
-}
+import mongoose from "mongoose";
 
 export async function checkNewPostInput(requestBody) {
   const {
@@ -177,12 +156,12 @@ export async function checkPostSettings(post, community_name) {
   if (err2) {
     return next(err2);
   }
-  console.log(community_name);
   const type = post.type;
   const allowType = posts_and_comments.posts.post_type_options;
   const allowPolls = posts_and_comments.posts.allow_polls_posts;
   const allowMultipleImages =
     posts_and_comments.posts.allow_multiple_images_per_post;
+  console.log(`allowType: ${allowType}, type: ${type}`);
   if (
     (!allowPolls && post.polls.length > 0) ||
     (allowType == "Links Only" && type != "url" && type != "hybrid") ||
@@ -297,7 +276,6 @@ export async function checkContentSettings(post, community_name) {
         ","
       );
     const postDomain = new URL(post.link_url).hostname;
-    console.log(postDomain);
     if (
       (restrictionType === "Required domains" &&
         !requiredOrBlockedDomains.includes(postDomain)) ||
@@ -308,8 +286,9 @@ export async function checkContentSettings(post, community_name) {
         success: false,
         error: {
           status: 400,
-          message: `Posts must have links from ${restrictionType === "Required domains" ? "these" : "other"
-            } domains.`,
+          message: `Posts must have links from ${
+            restrictionType === "Required domains" ? "these" : "other"
+          } domains.`,
         },
       };
     }
@@ -345,4 +324,43 @@ export async function checkContentSettings(post, community_name) {
   return {
     success: true,
   };
+}
+
+export async function checkVotesMiddleware(currentUser, posts) {
+  // Assume currentUser is the authenticated user
+  if (currentUser) {
+    const currentUserId = currentUser._id; // Assuming userId is used for comparison
+    console.log(currentUserId && currentUser.saved_posts_ids.includes("j"));
+    // Fetch and populate posts with upvote/downvote status for the current user
+    posts = posts.map((post) => {
+      // Add isUpvoted and isDownvoted as temporary fields
+      const isUpvoted = currentUser.upvotes_posts_ids.includes(
+        post._id.toString()
+      );
+      const isDownvoted = currentUser.downvotes_posts_ids.includes(
+        post._id.toString()
+      );
+      var vote = 0;
+      if (isUpvoted) vote = 1;
+      else if (isDownvoted) vote = -1;
+      //add atribute for poll_vote
+      var poll_vote = null;
+      if (post.type == "polls") {
+        const option = post.polls.find((op) =>
+          op.users_ids.find(
+            (user) => user.toString() == currentUserId.toString()
+          )
+        );
+        if (option) {
+          poll_vote = option.id;
+        }
+      }
+      const saved = currentUser.saved_posts_ids.includes(post._id.toString());
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), vote, poll_vote, saved };
+      else return { ...post, vote, poll_vote, saved };
+    });
+    return posts;
+  }
+  return null;
 }

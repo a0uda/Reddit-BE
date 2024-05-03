@@ -96,7 +96,7 @@ const addNewRemovalReasonToCommunity = async (requestBody) => {
 
         if (!community) {
             return {
-                err: { status: 500, message: "community name does not exist " },
+                err: { status: 400, message: "community name does not exist " },
             };
         }
         community.removal_reasons.push({

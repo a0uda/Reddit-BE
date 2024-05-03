@@ -4,12 +4,9 @@ import { User } from "../db/models/User.js";
 import { Comment } from "../db/models/Comment.js";
 import { toggler } from "../utils/toggler.js";
 import { getPost } from "./posts.js";
-import {
-  checkBannedUser,
-  getCommentRepliesHelper,
-  getCommunity,
-} from "../services/posts.js";
-
+import { checkBannedUser, getCommunity } from "../services/posts.js";
+import { checkCommentVotesMiddleware } from "../services/comments.js";
+import { pushNotification } from "./notifications.js";
 export async function getComment(request, verifyUser) {
   let user;
   if (verifyUser) {
@@ -32,7 +29,9 @@ export async function getComment(request, verifyUser) {
       error: { status: 400, message: "Comment id is required" },
     };
   }
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId)
+    .populate("replies_comments_ids")
+    .exec();
   if (!comment) {
     return {
       success: false,
@@ -47,19 +46,25 @@ export async function getComment(request, verifyUser) {
   };
 }
 
-export async function getCommentWithReplies(request, verifyUser) {
-  const { success, error, comment, user, message } = await getComment(
-    request,
-    false
-  );
-  console.log(comment);
+export async function getCommentWithReplies(request) {
+  const { success, error, comment, message } = await getComment(request, false);
+  // console.log(comment);
   if (!success) {
     return { success, error };
   }
-  const commentWithReplies = await getCommentRepliesHelper(comment);
+  var commentWithReply = comment;
+  const { user } = await verifyAuthToken(request);
+  if (user) {
+    var res = await checkCommentVotesMiddleware(user, [commentWithReply]);
+    commentWithReply = res[0];
+    commentWithReply.replies_comments_ids = await checkCommentVotesMiddleware(
+      user,
+      commentWithReply.replies_comments_ids
+    );
+  }
   return {
     success: true,
-    comment: commentWithReplies,
+    comment: commentWithReply,
     user,
     message: "Comment Retrieved sucessfully",
   };
@@ -101,6 +106,7 @@ export async function newComment(request) {
   }
   const comment = new Comment({
     post_id: post._id,
+    post_title: post.title,
     user_id: user._id,
     username: user.username,
     parent_id: null, //i am a comment not a reply
@@ -117,6 +123,23 @@ export async function newComment(request) {
 
   await comment.save();
 
+  console.log(post);
+  const postObj = await Post.findById(post._id);
+  postObj.comments_count++;
+  await postObj.save();
+
+  //send notif
+
+  const userOfPost = await User.findById(post.user_id);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfPost,
+    user.username,
+    post,
+    comment,
+    "comments"
+  );
+  if (!succesNotif) console.log(errorNotif);
+
   return {
     success: true,
     error: {},
@@ -129,7 +152,7 @@ export async function replyToComment(request) {
     request,
     true
   );
-  console.log(comment);
+  // console.log(comment);
   if (!success) {
     return { success, error };
   }
@@ -169,8 +192,12 @@ export async function replyToComment(request) {
       };
     }
   }
+
+  const post = await Post.findById(comment.post_id);
+
   const reply = new Comment({
     post_id: comment.post_id,
+    post_title: post.title,
     user_id: user._id,
     username: user.username,
     parent_id: comment._id, //i am  a reply so my parent is another comment
@@ -178,17 +205,33 @@ export async function replyToComment(request) {
     is_reply: true, //reply so true
     created_at: Date.now(),
     description,
-    comment_in_community_flag: comment.post_in_community_flag, //same as post
+    comment_in_community_flag: comment.comment_in_community_flag, //same as post
     community_id: comment.community_id,
     community_name: comment.community_name,
     upvotes_count: 1, //when i first make comment
     spoiler_flag: comment.spoiler_flag,
   });
 
+  console.log("J");
   comment.replies_comments_ids.push(reply._id);
 
   await comment.save();
   await reply.save();
+  post.comments_count++;
+  await post.save();
+
+  console.log(comment);
+  //send notif
+  const userOfComment = await User.findById(comment.user_id);
+  console.log(userOfComment);
+  const { success: succesNotif, error: errorNotif } = await pushNotification(
+    userOfComment,
+    user.username,
+    null,
+    comment,
+    "replies"
+  );
+  if (!succesNotif) console.log(errorNotif);
 
   return {
     success: true,
@@ -203,7 +246,7 @@ export async function commentToggler(request, toToggle) {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
     // Handle comments
     const comment = await Comment.findOne({
@@ -216,7 +259,7 @@ export async function commentToggler(request, toToggle) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
@@ -232,11 +275,11 @@ export async function commentToggler(request, toToggle) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -249,7 +292,7 @@ export async function editCommentDescription(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -262,7 +305,7 @@ export async function editCommentDescription(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
@@ -277,11 +320,11 @@ export async function editCommentDescription(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -294,7 +337,7 @@ export async function commentVote(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -306,15 +349,56 @@ export async function commentVote(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to modify it.",
       };
     }
+
+    const downvoteIndex = comment.downvote_users.indexOf(user.username);
+    const upvoteIndex = comment.upvote_users.indexOf(user.username);
     if (request.body.vote == "1") {
-      comment.upvotes_count = comment.upvotes_count + 1;
+      //upvote
+      if (upvoteIndex != -1) {
+        //kan amel upvote -> toggle ysheel upvote
+        comment.upvote_users.splice(upvoteIndex, 1);
+        comment.upvotes_count--;
+      } else if (downvoteIndex != -1) {
+        //kan amel downvote-> ashelo mn downvote w ahoto f upvote
+        comment.downvote_users.splice(downvoteIndex, 1);
+        comment.downvotes_count--;
+        comment.upvotes_count++;
+        comment.upvote_users.push(user.username);
+      } else {
+        comment.upvotes_count++;
+        comment.upvote_users.push(user.username);
+        //send notif
+        const userOfComment = await User.findById(comment.user_id);
+        console.log(userOfComment);
+        const { success } = await pushNotification(
+          userOfComment,
+          user.username,
+          null,
+          comment,
+          "upvotes_comments"
+        );
+        if (!success) console.log("Error in sending notification");
+      }
       await comment.save();
+      await user.save();
     } else {
-      comment.downvotes_count = comment.downvotes_count + 1;
+      if (downvoteIndex != -1) {
+        comment.downvote_users.splice(downvoteIndex, 1);
+        comment.downvotes_count--;
+      } else if (upvoteIndex != -1) {
+        comment.upvote_users.splice(upvoteIndex, 1);
+        comment.upvotes_count--;
+        comment.downvotes_count++;
+        comment.downvote_users.push(user.username);
+      } else {
+        comment.downvotes_count++;
+        comment.downvote_users.push(user.username);
+      }
+      await user.save();
       await comment.save();
     }
 
@@ -325,11 +409,11 @@ export async function commentVote(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -342,7 +426,7 @@ export async function commentSave(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const commentId = request.body.id;
@@ -354,7 +438,7 @@ export async function commentSave(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found ",
+        error: "Comment Not Found ",
         msg: "Comment not found ",
       };
     }
@@ -366,7 +450,7 @@ export async function commentSave(request) {
       user.saved_comments_ids.splice(index, 1);
     } else {
       // If not found, add it to the array
-      user.saved_comments_ids.push(commentId);
+      user.saved_comments_ids.push(comment._id);
     }
 
     await user.save();
@@ -378,11 +462,11 @@ export async function commentSave(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -395,7 +479,7 @@ export async function commentApprove(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -408,7 +492,7 @@ export async function commentApprove(request) {
       return {
         success: false,
         status: 400,
-        err: "comment Not Found or User Not Authorized",
+        error: "comment Not Found or User Not Authorized",
         msg: "comment not found or user is not authorized to modify it.",
       };
     }
@@ -427,11 +511,11 @@ export async function commentApprove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -444,7 +528,7 @@ export async function commentRemove(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -457,7 +541,7 @@ export async function commentRemove(request) {
       return {
         success: false,
         status: 400,
-        err: "comment Not Found or User Not Authorized",
+        error: "comment Not Found or User Not Authorized",
         msg: "comment not found or user is not authorized to modify it.",
       };
     }
@@ -476,11 +560,11 @@ export async function commentRemove(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -493,7 +577,7 @@ export async function commentReport(request) {
 
     // If authentication fails, return the response
     if (!user) {
-      return { success, err, status, user, msg };
+      return { success, error: err, status, user, msg };
     }
 
     const comment = await Comment.findOne({
@@ -505,7 +589,7 @@ export async function commentReport(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to report it.",
       };
     }
@@ -518,11 +602,11 @@ export async function commentReport(request) {
     };
   } catch (error) {
     // Catch any errors that occur during the process
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
@@ -547,7 +631,7 @@ export async function commentDelete(request) {
       return {
         success: false,
         status: 400,
-        err: "Comment Not Found or User Not Authorized",
+        error: "Comment Not Found or User Not Authorized",
         msg: "Comment not found or user is not authorized to delete it.",
       };
     }
@@ -562,11 +646,11 @@ export async function commentDelete(request) {
       msg: "Comment deleted successfully",
     };
   } catch (error) {
-    console.error("Error:", error);
+    // //console.error("Error:", error);
     return {
       success: false,
       status: 500,
-      err: "Internal Server Error",
+      error: "Internal Server Error",
       msg: "An error occurred.",
     };
   }
