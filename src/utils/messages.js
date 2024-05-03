@@ -35,7 +35,9 @@ const mapMessageToFormat = async (message, user, which_function) => {
         senderVia_name = community.name;
     }
     //this part is not tested 
-    let isSent = message.sender_id === user._id ? true : false;
+    let isSent = message.sender_id.toString() === user._id.toString() ? true : false;
+
+
     //if the message is recieved by the user and the function is getUserSentMessages
     // remove all read messages and messages from blocked users and mjuted communities
     if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false ||
