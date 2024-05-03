@@ -286,15 +286,27 @@ export async function getAllSavedComments(request) {
     user = authenticatedUser;
     var comments = await Comment.find({
       _id: { $in: user.saved_comments_ids },
-    }).exec();
+    })
+      .populate("replies_comments_ids")
+      .exec();
 
-    comments = comments.filter((comment) => comment != null);
+    // comments = comments.filter((comment) => comment != null);
 
     comments = comments.map((comment) => {
-      return { ...comment.toObject(), is_post: false };
+      return { ...comment, is_post: false };
     });
 
     comments = await checkCommentVotesMiddleware(user, comments);
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          loggedInUser,
+          comment.replies_comments_ids
+        );
+      })
+    );
+
     console.log(comments);
 
     return {

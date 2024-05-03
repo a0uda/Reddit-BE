@@ -100,7 +100,6 @@ export async function getUserPostsHelper(
         pageSize
       );
 
-
       posts = await checkVotesMiddleware(loggedInUser, posts);
 
       const postIds = posts.map((post) => post._id);
@@ -114,7 +113,6 @@ export async function getUserPostsHelper(
           },
         }
       );
-      
     } else {
       posts = await paginateUserPosts(
         user._id,
@@ -178,7 +176,17 @@ export async function getUserCommentsHelper(
         sortCriteria,
         pageSize
       );
+
       comments = await checkCommentVotesMiddleware(loggedInUser, comments);
+
+      await Promise.all(
+        comments.map(async (comment) => {
+          comment.replies_comments_ids = await checkCommentVotesMiddleware(
+            loggedInUser,
+            comment.replies_comments_ids
+          );
+        })
+      );
     } else {
       comments = await paginateUserComments(
         user._id,
@@ -306,5 +314,5 @@ export async function getActiveCommunitiesHelper(communities) {
       }
     })
   );
-  return activeCommunities.filter((community) => community); 
+  return activeCommunities.filter((community) => community);
 }
