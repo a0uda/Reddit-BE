@@ -106,15 +106,12 @@ export async function loginUser(requestBody) {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return generateResponse(false, 400, "Username or password are incorrect");
   }
-
-  const refreshToken = await user.generateAuthToken();
+  
   await user.save();
-
   return {
     success: true,
     message: "User logged in successfully",
-    user,
-    refreshToken: refreshToken,
+    user
   };
 }
 
