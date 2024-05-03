@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { getRandomElement } from "../helpers/seedHelpers.js";
+import { getRandomElement, getRandomNumber } from "../helpers/seedHelpers.js";
 import { User } from "../../src/db/models/User.js";
 
 async function generateRandomBannedUsers(users) {
@@ -7,7 +7,7 @@ async function generateRandomBannedUsers(users) {
 
   for (let i = 6; i < 8; i++) {
     const permanentFlag = faker.datatype.boolean();
-    const banned_until = permanentFlag ? null : faker.number.between(1, 30);
+    const banned_until = permanentFlag ? null : getRandomNumber(0, 10);
 
     const fakeBannedUser = {
       username: getRandomElement(users).username,
