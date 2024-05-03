@@ -131,6 +131,12 @@ export async function createPost(request) {
   post.created_at = Date.now();
   post.upvotes_count++;
   user.upvotes_posts_ids.push(post._id);
+  
+  if (post.upvotes_count + post.downvotes_count != 0) {
+    post.user_details.upvote_rate =
+      (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100;
+  }
+
   await post.save();
   await user.save();
   console.log("HIIIIIIIIII", post._id);
