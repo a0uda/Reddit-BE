@@ -40,15 +40,33 @@ export async function verifyAuthToken(request) {
   }
   var userToken;
   try {
-     userToken = jwt.verify(token, process.env.JWT_SECRET);
+    userToken = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return { success: false, err, status: 400 };
+  }
+  if (!userToken) {
+    return {
+      success: false,
+      err: "Invalid token",
+      status: 400,
+    };
   }
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {
     return { success: false, err: "User not found", status: 404 };
   }
+
+  const inInTokenArray = user.token.includes(token);
+
+  if (!inInTokenArray) {
+    return {
+      success: false,
+      err: "Invalid token. User may have logged out",
+      status: 400,
+    };
+  }
+
   return { success: true, user: user };
 }
 
@@ -100,21 +118,17 @@ export async function loginUser(requestBody) {
   };
 }
 
-export async function logoutUser(requestBody) {
-  const { username, token } = requestBody;
-  if (!username || !token) {
-    return generateResponse(false, 400, "Missing required field");
-  }
-  const user = await User.findOne({ username });
-  if (!user || user.token != token) {
-    return generateResponse(
-      false,
-      400,
-      "Not a valid username or existing token"
-    );
+export async function logoutUser(request) {
+  const token = request.headers?.authorization?.split(" ")[1];
+  if (!token) return generateResponse(false, 400, "Missing token");
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  if (!user) {
+    return generateResponse(success, status, err);
   }
 
-  user.token = "";
+  const index = user.token.indexOf(token);
+  user.token.splice(index, 1);
+
   await user.save();
 
   return generateResponse(true, null, "Logged Out Successfully");

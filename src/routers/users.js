@@ -113,20 +113,7 @@ usersRouter.post("/users/login", async (req, res) => {
 
 usersRouter.post("/users/logout", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).send("Access Denied");
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).send("Access Denied: Expired token");
-      }
-    });
-
-    const { username } = req.body;
-
-    const { success, message, error } = await logoutUser({ token, username });
+    const { success, message, error } = await logoutUser(req);
 
     if (!success) {
       res.status(error.status).send({ error });
@@ -925,7 +912,6 @@ usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
 
 usersRouter.post("/users/join-community", async (req, res) => {
   try {
-
     const result = await joinCommunity(req);
     res.status(result.status).json(result);
   } catch (error) {

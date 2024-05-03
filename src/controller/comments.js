@@ -33,7 +33,9 @@ export async function getComment(request, verifyUser) {
       error: { status: 400, message: "Comment id is required" },
     };
   }
-  const comment = await Comment.findById(commentId);
+  const comment = await Comment.findById(commentId)
+    .populate("replies_comments_ids")
+    .exec();
   if (!comment) {
     return {
       success: false,
@@ -55,12 +57,10 @@ export async function getCommentWithReplies(request) {
     return { success, error };
   }
   const { user } = await verifyAuthToken(request);
-  var commentWithReplies = await getCommentRepliesHelper(comment);
+  // var commentWithReplies = await getCommentRepliesHelper(comment);
   if (user) {
-    var resultComment = await checkCommentVotesMiddleware(user, [
-      commentWithReplies,
-    ]);
-    commentWithReplies = resultComment[0];
+    var resultComment = await checkCommentVotesMiddleware(user, [comment]);
+    // commentWithReplies = resultComment[0];
     // commentWithReplies = commentWithReplies.toObject();
     // commentWithReplies.replies_comments_ids = await checkCommentVotesMiddleware(
     //   user,
@@ -69,7 +69,7 @@ export async function getCommentWithReplies(request) {
   }
   return {
     success: true,
-    comment: commentWithReplies,
+    comment: comment,
     user,
     message: "Comment Retrieved sucessfully",
   };
@@ -223,6 +223,7 @@ export async function replyToComment(request) {
   post.comments_count++;
   await post.save();
 
+  console.log(comment);
   //send notif
   const userOfComment = await User.findById(comment.user_id);
   console.log(userOfComment);

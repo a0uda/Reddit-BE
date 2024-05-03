@@ -34,14 +34,10 @@ export async function getCommentRepliesHelper(comment) {
 }
 
 export async function getPostCommentsHelper(postId) {
-  const comments = await Comment.find({ post_id: postId }).exec();
-  if (!comments || comments.length === 0) return [];
-  const commentsWithReplies = [];
-  for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
-    commentsWithReplies.push(commentResult);
-  }
-  return commentsWithReplies;
+  const comments = await Comment.find({ post_id: postId })
+    .populate("replies_comments_ids")
+    .exec();
+  return comments;
 }
 
 export async function checkNewPostInput(requestBody) {
