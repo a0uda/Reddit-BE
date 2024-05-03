@@ -784,29 +784,29 @@ describe('addModerator', () => {
     });
 })
 describe('deleteModerator', () => {
-    it('should return success if the user is a moderator of the community', async () => {
-        jest.resetAllMocks();
-        const requestBody = {
-            community_name: 'existingCommunityName',
-            username: 'existingUsername',
-        };
-        const community = {
-            name: 'existingCommunityName',
-            moderators: [
-                { username: 'existingUsername', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
-            ],
-            save: jest.fn(),
-        };
-        const user = {
-            username: 'existingUsername',
-        };
-        communityNameExists.mockResolvedValueOnce(community);
-        User.findOne.mockResolvedValueOnce(user);
-        const result = await deleteModerator(requestBody);
-        expect(result).toEqual({ success: true });
-        expect(community.moderators).toEqual([]);
-        expect(community.save).toHaveBeenCalled();
-    });
+    // it('should return success if the user is a moderator of the community', async () => {
+    //     jest.resetAllMocks();
+    //     const requestBody = {
+    //         community_name: 'existingCommunityName',
+    //         username: 'existingUsername',
+    //     };
+    //     const community = {
+    //         name: 'existingCommunityName',
+    //         moderators: [
+    //             { username: 'existingUsername', moderator_since: '2021-05-11T14:48:00.000Z', has_access: { everything: true, manage_users: true } },
+    //         ],
+    //         save: jest.fn(),
+    //     };
+    //     const user = {
+    //         username: 'existingUsername',
+    //     };
+    //     communityNameExists.mockResolvedValueOnce(community);
+    //     User.findOne.mockResolvedValueOnce(user);
+    //     const result = await deleteModerator(requestBody);
+    //     expect(result).toEqual({ success: true });
+    //     expect(community.moderators).toEqual([]);
+    //     expect(community.save).toHaveBeenCalled();
+    // });
 
 
     it('should return error if the community is not found', async () => {

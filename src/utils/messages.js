@@ -8,18 +8,16 @@ const mapMessageToFormat = async (message, user, which_function) => {
     if (message.receiver_type === "user") {
         const receiver = await User.findOne({ _id: message.receiver_id })
         if (!receiver) {
-            console.log("reciever not found hena ")
+            return null;
 
         }
         receiver_username = receiver.username;
-        console.log(receiver_username)
 
 
     }
     else //reciever type is moderator here is the bug 
     {
         const community = await Community.findOne({ _id: message.receiver_id }).select('name')
-        console.log(community.name)
         receiver_username = community.name;
 
 
@@ -40,15 +38,26 @@ const mapMessageToFormat = async (message, user, which_function) => {
 
     //if the message is recieved by the user and the function is getUserSentMessages
     // remove all read messages and messages from blocked users and mjuted communities
+    const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+        (user) => user.id
+    );
+
+    const muted_communities = user.safety_and_privacy_settings.muted_communities.map(
+        (user) => user.id
+    );
+    //
+    console.log("blockedUsers", blockedUsers);
+    console.log("muted_communities", muted_communities);
+
     if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false ||
-        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
-            (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
+        (blockedUsers.includes(message.sender_id) ||
+            (message.sender_type === "moderator" && muted_communities.includes(message.sender_via_id)))
     )) return null;
-    //if the message is sent by the user and the function is getUserUnreadMessages 
-    // remove all messages from blocked users and muted communities 
+    //if the message is sent by the user and the function is getUserUnreadMessages
+    // remove all messages from blocked users and muted communities  
     if (which_function === "getAllMessages" && (!isSent) && (
-        (user.safety_and_privacy_settings.blocked_users.includes(message.sender_id) ||
-            (message.sender_type === "moderator" && user.muted_communities.includes(message.sender_via_id)))
+        (blockedUsers.includes(message.sender_id) ||
+            (message.sender_type === "moderator" && muted_communities.includes(message.sender_via_id)))
     )) return null;
     //filter deleted messages
     //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
@@ -73,7 +82,6 @@ const mapMessageToFormat = async (message, user, which_function) => {
 }
 
 const mapUserMentionsToFormat = async (userMentions, user) => {
-    console.log("insise mapUserMentionsToFormat")
 
     const post = await Post.findOne({ _id: userMentions.post_id });
 
@@ -125,7 +133,6 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 }
 const mapPostRepliesToFormat = async (post, user) => {
 
-    //console.log("inside mapPostRepliesToFormat")
     const comment = await Comment.findOne({ post_id: post._id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
     if (comment) {
         const postCreator = user.username;
@@ -165,7 +172,6 @@ const mapPostRepliesToFormat = async (post, user) => {
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
         };
-        console.log("passed")
         return mappedMessages;
     } else {
         return null;
