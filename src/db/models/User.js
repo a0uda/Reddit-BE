@@ -62,11 +62,6 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
-  facebook_email: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
   display_name: {
     type: String,
     required: true,
@@ -373,18 +368,6 @@ const userSchema = new mongoose.Schema({
       ref: "User",
     },
   },
-  notifications_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Notification",
-    },
-  },
-  unread_notifications_count: {
-    type: Number,
-    min: 0,
-    default: 0,
-  },
   communities: {
     type: Array,
     items: {
@@ -450,13 +433,6 @@ const userSchema = new mongoose.Schema({
           default: true,
         },
       },
-    },
-  },
-  tickets_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Ticket",
     },
   },
 });
