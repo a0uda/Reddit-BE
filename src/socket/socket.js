@@ -5,15 +5,11 @@ import { stat } from "fs";
 import jwt from "jsonwebtoken";
 import { User } from "../db/models/User.js";
 
-const io = require("socket.io")(Server, {
-  path: "/socket.io",
-});
-
 // // This line creates a new Express application.
-// const app = express();
+const app = express();
 
 // // This line creates a new HTTP server that uses the Express application.
-// const server = http.createServer(app);
+const server = http.createServer(app);
 
 // // TODO: Uncomment.
 
@@ -75,7 +71,7 @@ io.on("connection", async (socket) => {
   });
 });
 
-// export { app, io, server };
+export { app, io, server };
 
 // // io.on:
 // // This is used to set up a listener for a specific event on the Socket.IO server.
