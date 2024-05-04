@@ -10,15 +10,15 @@ import {
   changeEmail,
   changeUsername,
   changePassword,
-} from "../src/controller/userAuth";
-import { User } from "../src/db/models/User";
-import { redirectToResetPassword } from "../src/utils/emailSending";
+} from "../../src/controller/userAuth";
+import { User } from "../../src/db/models/User";
+import { redirectToResetPassword } from "../../src/utils/emailSending";
 import jwt from "jsonwebtoken"; // Import jwt module
 import bcrypt from "bcryptjs";
 
 jest.mock("jsonwebtoken"); // Mock the jsonwebtoken module
-jest.mock("../src/db/models/User");
-jest.mock("../src/utils/emailSending");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/utils/emailSending");
 
 describe("User Signup", () => {
   beforeEach(() => {

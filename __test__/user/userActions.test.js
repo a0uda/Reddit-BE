@@ -5,13 +5,13 @@ import {
   addOrRemovePicture,
   muteCommunity,
   clearHistory,
-} from "../src/controller/userActions";
-import { User } from "../src/db/models/User";
-import { Community } from "../src/db/models/Community";
+} from "../../src/controller/userActions";
+import { User } from "../../src/db/models/User";
+import { Community } from "../../src/db/models/Community";
 import jwt from "jsonwebtoken";
 
-jest.mock("../src/db/models/User");
-jest.mock("../src/db/models/Community");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/db/models/Community");
 jest.mock("jsonwebtoken", () => ({
   verify: jest.fn(() => ({
     _id: "userId",

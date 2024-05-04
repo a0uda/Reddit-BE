@@ -34,7 +34,7 @@ export async function isEmailAvailable(email) {
 }
 
 export async function verifyAuthToken(request) {
-  const token = request.headers.authorization?.split(" ")[1];
+  const token = request?.headers?.authorization?.split(" ")[1];
   if (!token) {
     return { success: false, status: 401, err: "Access Denied" };
   }

@@ -1,10 +1,10 @@
 
-import { getCommunityRules, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule } from "../src/services/communityRulesAndRemovalReasons";
-import * as communityUtils from "../src/utils/communities"; // Import the entire module
-import { Rule } from "../src/db/models/Rule";
+import { getCommunityRules, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule } from "../../src/services/communityRulesAndRemovalReasons";
+import * as communityUtils from "../../src/utils/communities"; // Import the entire module
+import { Rule } from "../../src/db/models/Rule";
 // Mock the entire module
-jest.mock("../src/utils/communities");
-jest.mock("../src/db/models/Rule");
+jest.mock("../../src/utils/communities");
+jest.mock("../../src/db/models/Rule");
 
 describe('getCommunityRules', () => {
   it('should return community rules for a valid community name', async () => {

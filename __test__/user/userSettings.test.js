@@ -5,19 +5,19 @@ import {
   addSocialLink,
   editSocialLink,
   deleteSocialLink,
-} from "../src/controller/userSettings";
-import { User } from "../src/db/models/User";
+} from "../../src/controller/userSettings";
+import { User } from "../../src/db/models/User";
 import jwt from "jsonwebtoken"; // Import jwt module
-import * as userSettingUtils from "../src/utils/userSettings"; // Import the entire module
+import * as userSettingUtils from "../../src/utils/userSettings"; // Import the entire module
 import {
   getBlockedUserHelper,
   getMutedCommunitiesHelper,
-} from "../src/services/users";
+} from "../../src/services/users";
 
 jest.mock("jsonwebtoken"); // Mock the jsonwebtoken module
-jest.mock("../src/db/models/User");
-jest.mock("../src/utils/userSettings");
-jest.mock("../src/services/users.js", () => ({
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/utils/userSettings");
+jest.mock("../../src/services/users.js", () => ({
   getBlockedUserHelper: jest.fn(),
   getMutedCommunitiesHelper: jest.fn(),
 }));

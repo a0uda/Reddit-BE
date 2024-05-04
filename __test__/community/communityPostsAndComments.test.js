@@ -1,6 +1,6 @@
-import { getCommunityPostsAndComments, changeCommunityPostsAndComments } from '../src/services/communitySettingsService.js';
-import { Community } from '../src/db/models/Community.js';
-import { CommunityPostsAndComments } from '../src/db/models/communityPostsAndComments.js';
+import { getCommunityPostsAndComments, changeCommunityPostsAndComments } from '../../src/services/communitySettingsService.js';
+import { Community } from '../../src/db/models/Community.js';
+import { CommunityPostsAndComments } from '../../src/db/models/communityPostsAndComments.js';
 
 describe('getCommunityPostsAndComments', () => {
     it('should return posts and comments for a valid community name', async () => {
