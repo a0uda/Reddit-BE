@@ -130,7 +130,7 @@ const postScheduledPost = async (post_id) => {
 
 const getScheduledPosts = async () => {
     // Find all the scheduled posts in the database excluding the 'moderator_details' field.
-    const scheduled_posts = await scheduledPost.find({}).select('-moderator_details');
+    const scheduled_posts = await scheduledPost.find({}).select('-moderator_details').sort('-scheduling_details.schedule_date');
 
     // Filter the scheduled posts into recurring and non-recurring posts.
     const recurring_posts = scheduled_posts.filter(post => post.scheduling_details.repetition_option.toLowerCase() !== "none");
