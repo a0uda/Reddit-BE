@@ -1189,6 +1189,9 @@ const moderatorLeaveCommunity = async (request) => {
         }
         community.moderators.splice(moderatorIndex, 1);
         await community.save();
+        user.moderated_communities = user.moderated_communities.filter(
+            (moderated_community) => (moderated_community.id).toString() != community._id.toString()
+        )
         return { success: true };
     }
     catch (error) {
