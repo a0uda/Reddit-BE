@@ -577,3 +577,4 @@ describe("Get Active Communities", () => {
     expect(result).toEqual(expectedResult);
   });
 });
+
