@@ -368,9 +368,8 @@ export async function joinCommunity(request, leave = false) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log("debugging join community :", request.body.community_name);
     const community = await communityNameExists(request.body.community_name);
-
+    
     if (!community) {
       return {
         success: false,
@@ -378,11 +377,12 @@ export async function joinCommunity(request, leave = false) {
         status: 404,
       };
     }
-
+    
     if (leave) {
       const index = community.joined_users.indexOf(user._id);
       if (index !== -1) {
         community.joined_users.splice(index, 1);
+        community.members_count--;
         await community.save();
       }
       const communityIndex = user.communities.findIndex(
@@ -399,7 +399,7 @@ export async function joinCommunity(request, leave = false) {
       };
     } else {
       // Join the community
-
+      
       if (community.banned_users.includes(user._id)) {
         return {
           success: false,
@@ -407,12 +407,13 @@ export async function joinCommunity(request, leave = false) {
           msg: `User ${user.username} is banned from community ${community.name} .`,
         };
       }
-
+      
       console.log(
         community.joined_users.some(
-          (userObj) => userObj._id.toString() === user._id.toString()
+          (userObj) => userObj._id.toString() == user._id.toString()
         )
       );
+      console.log("testtt join community :", request.body.community_name);
       if (
         community.joined_users.some(
           (userObj) => userObj._id.toString() === user._id.toString()
@@ -425,6 +426,7 @@ export async function joinCommunity(request, leave = false) {
         };
       }
       community.joined_users.push(user._id);
+      community.members_count++;
       await community.save();
       if (
         !user.communities.some(
