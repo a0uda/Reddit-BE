@@ -17,7 +17,9 @@ const mapMessageToFormat = async (message, user, which_function) => {
     }
     else //reciever type is moderator here is the bug 
     {
+        console.log("message", message)
         const community = await Community.findOne({ _id: message.receiver_id }).select('name')
+        console.log("community", community)
         receiver_username = community.name;
 
 
@@ -61,10 +63,13 @@ const mapMessageToFormat = async (message, user, which_function) => {
     )) return null;
     //filter deleted messages
     //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
-
+    const sender = await User.findOne({ _id: message.sender_id });
+    if (!sender) {
+        return null;
+    }
     return {
         _id: message._id,
-        sender_username: user.username,
+        sender_username: sender.username,
         sender_type: message.sender_type,
         receiver_username,
         receiver_type: message.receiver_type,
@@ -78,6 +83,7 @@ const mapMessageToFormat = async (message, user, which_function) => {
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
         is_username_mention: false,
+        is_invitation: message.is_invitation
 
     }
 }
@@ -128,6 +134,7 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         downvotes_count: comment.downvotes_count,
         isSent: false,
         is_username_mention: false,
+
 
 
     };
