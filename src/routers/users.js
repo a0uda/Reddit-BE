@@ -125,6 +125,44 @@ usersRouter.post("/users/logout", async (req, res) => {
       .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
+usersRouter.post("/users/connect-to-google", async (req, res) => {
+  try {
+    const accessToken = req.body.access_token;
+    const { data: userData } = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    user.gmail = userData.email;
+    user.connected_google = true;
+
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      status: 200,
+      msg: "connected to google successfully.",
+    });
+  } catch (error) {
+    console.error("Google OAuth error:", error.message);
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
 
 usersRouter.post("/users/signup-google", async (req, res) => {
   try {
