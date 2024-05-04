@@ -10,15 +10,15 @@ async function generateRandomMessages() {
   const messages = [];
 
   // Fetching users
-  const heba = await User.findOne({ username: "heba" });
+  const reem = await User.findOne({ username: "reem" });
   const malak = await User.findOne({ username: "malak" });
-  console.log("heba", heba);
+  console.log("reem", reem);
   console.log("malak", malak);
 
-  //heba send 3 messages to malak
+  //reem send 3 messages to malak
   for (let i = 0; i < MESSAGES_COUNT; i++) {
     const fakeMessage = {
-      sender_id: heba._id,
+      sender_id: reem._id,
       sender_via_id: null,
       sender_type: "user",
       receiver_id: malak._id,
@@ -26,39 +26,36 @@ async function generateRandomMessages() {
       message: faker.lorem.sentences(),
       created_at: faker.date.past(),
       subject: faker.lorem.sentence(),
-      deleted_at: null,
-      unread_flag: faker.datatype.boolean(),
-      parent_message_id: null,
-      //is invitation = true of sender_via is not null
+
+
     };
     messages.push(fakeMessage);
   }
 
-  //malak send 3 messages to heba
+  //malak send 3 messages to reem
   for (let i = 0; i < MESSAGES_COUNT; i++) {
     const fakeMessage = {
       sender_id: malak._id,
-      sender_via_id: null,
+
       sender_type: "user",
-      receiver_id: heba._id,
+      receiver_id: reem._id,
       receiver_type: "user",
       message: faker.lorem.sentences(),
       created_at: faker.date.past(),
       subject: faker.lorem.sentence(),
       deleted_at: null,
-      unread_flag: faker.datatype.boolean(),
-      parent_message_id: null,
+
     };
     messages.push(fakeMessage);
   }
 
   // Finding community
-  const community = await Community.findOne({ name: "Legros_LLC" });
+  const community = await Community.findOne({ name: "Adams_Group" });
 
-  //heba send 3 messages to malak via community named Legros_LLC
+  //reem send 3 messages to malak via community named Legros_LLC
   for (let i = 0; i < MESSAGES_COUNT; i++) {
     const fakeMessage = {
-      sender_id: heba._id,
+      sender_id: reem._id,
       sender_via_id: community._id,
       sender_type: "moderator",
       receiver_id: malak._id,
@@ -67,8 +64,7 @@ async function generateRandomMessages() {
       created_at: faker.date.past(),
       subject: faker.lorem.sentence(),
       deleted_at: null,
-      unread_flag: faker.datatype.boolean(),
-      parent_message_id: null,
+
     };
     messages.push(fakeMessage);
   }
