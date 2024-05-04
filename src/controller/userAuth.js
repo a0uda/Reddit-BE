@@ -137,6 +137,38 @@ export async function logoutUser(request) {
   return generateResponse(true, null, "Logged Out Successfully");
 }
 
+export async function disconnectGoogle(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    if (!user.is_password_set_flag) {
+      return generateResponse(false, 400, "User must set his password first");
+    }
+
+    const { password } = request?.body;
+    if (!password) return generateResponse(false, 400, "Password is required");
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      return generateResponse(false, 400, "Password is incorrect");
+    }
+
+    user.connected_google = false;
+    user.gmail = null;
+    await user.save();
+
+    return generateResponse(
+      true,
+      null,
+      "Disconnected from google successfully"
+    );
+  } catch (error) {
+    console.log("Error:", error);
+    return generateResponse(false, 500, "Internal server error");
+  }
+}
+
 export async function verifyEmail(requestParams, isUserEmailVerify) {
   const token = await Token.findOne({
     token: requestParams.token,

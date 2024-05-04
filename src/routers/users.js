@@ -28,6 +28,7 @@ import {
   isUsernameAvailable,
   isEmailAvailable,
   changeUsername,
+  disconnectGoogle,
 } from "../controller/userAuth.js";
 
 import {
@@ -160,6 +161,19 @@ usersRouter.post("/users/connect-to-google", async (req, res) => {
     });
   } catch (error) {
     console.error("Google OAuth error:", error.message);
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
+
+usersRouter.post("/users/disconnect-google", async (req, res) => {
+  try {
+    const { success, error, message } = await disconnectGoogle(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (error) {
     res.status(500).json({ error: "Google OAuth error" });
   }
 });
