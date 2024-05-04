@@ -379,7 +379,11 @@ export async function joinCommunity(request, leave = false) {
     }
 
     if (leave) {
-      const index = community.joined_users.indexOf(user._id);
+      const index = community.joined_users.some(
+        (userObj) =>
+          userObj._id && userObj._id.toString() === user._id.toString()
+      );
+      console.log(index, "here");
       if (index !== -1) {
         community.joined_users.splice(index, 1);
         community.members_count--;
