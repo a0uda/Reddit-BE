@@ -80,7 +80,8 @@ const addNewCommunity = async (requestBody, creator) => {
 
     });
     await message.save();
-
+    creator.communities.push(savedCommunity._id);
+    await creator.save();
     return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
