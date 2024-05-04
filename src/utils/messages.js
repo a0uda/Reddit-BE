@@ -77,6 +77,7 @@ const mapMessageToFormat = async (message, user, which_function) => {
         parentMessageId: message.parent_message_id,
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
+        is_username_mention: false,
 
     }
 }
@@ -125,7 +126,9 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         rank: rank,
         upvotes_count: comment.upvotes_count,
         downvotes_count: comment.downvotes_count,
-        isSent: false
+        isSent: false,
+        is_username_mention: false,
+
 
     };
     return mappedMessages;
@@ -171,7 +174,9 @@ const mapPostRepliesToFormat = async (post, user) => {
             rank: rank,
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
+            is_username_mention: false,
         };
+
         return mappedMessages;
     } else {
         return null;
