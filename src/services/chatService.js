@@ -65,8 +65,9 @@ const sendMessage = async (sender, receiverUsername, message) => {
         }
     }
 
+    let savedChat, savedMessage;
     try {
-        const [savedChat, savedMessage] = await Promise.all([chat.save(), newMessage.save()]);
+        [savedChat, savedMessage] = await Promise.all([chat.save(), newMessage.save()]);
     } catch (error) {
         return { err: { status: 500, message: 'An error occurred while saving the chat or message' } };
     }
@@ -74,7 +75,7 @@ const sendMessage = async (sender, receiverUsername, message) => {
     const receiverSocketId = getReceiverSocketId(receiver._id);
     if (receiverSocketId) {
         // io.to(<socket_id>).emit() used to send events to specific client
-        io.to(receiverSocketId).emit("newMessage", newMessage);
+        io.to(receiverSocketId).emit("newMessage", savedMessage);
     }
 
     return { newMessage };
