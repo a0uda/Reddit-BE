@@ -7,21 +7,14 @@ import { CommunityGeneralSettings } from "../db/models/communityGeneralSettings.
 import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinimal.js";
 
 import { verifyAuthToken } from "../controller/userAuth.js";
-//import { CommunityAppearance } from "../db/models/communityAppearance.js";
-
-import { User } from "../db/models/User.js"; //delete this line
-import { Rule } from "../db/models/Rule.js";
-// import { TempComment } from "../db/models/temp-files/TempComment.js";
+import { Message } from "../db/models/Message.js";
 
 import {
-  isUserAlreadyApproved,
+
   communityNameExists,
-  getRuleByTitle,
-  getUsersByIds,
-  getRuleById,
-  deleteRule,
-  getApprovedUserView,
+
 } from "../utils/communities.js";
+import { ObjectId } from "mongodb";
 
 const addNewCommunity = async (requestBody, creator) => {
   const { name, type, nsfw_flag, category } = requestBody;
@@ -74,6 +67,17 @@ const addNewCommunity = async (requestBody, creator) => {
       favorite_flag: false,
     });
     await creator.save();
+    //add new message to the creator inbox
+    const message = new Message({
+      sender_id: new mongoose.Types.ObjectId('66356010be06bf92b669eda3'),
+      sender_type: "user",
+      subject: "You started a reddit community , now what ?:",
+      receiver_id: creator._id,
+      receiver_type: "user",
+      message: `Ay kalam , reem w mido el mfrod yhoto kalam w redirection links w harakat`,
+
+    });
+    await message.save();
 
     return { community: savedCommunity };
   } catch (error) {
@@ -398,7 +402,7 @@ const getCommunityNames = async () => {
     const community_names = await Community.find({}, { name: 1 });
     return { community_names };
   } catch (error) {
-    return { err: { status: 500, message: `Error while getting community names: ${error.message}`} };
+    return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
   }
 };
 
@@ -408,7 +412,7 @@ const getCommunityNamesByPopularity = async () => {
     const community_names = await Community.find({}, { name: 1, members_count: 1 }).sort({ members_count: -1 });
     return { community_names };
   } catch (error) {
-    return { err: { status: 500, message: `Error while getting community names: ${error.message}`} };
+    return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
   }
 };
 
@@ -422,8 +426,8 @@ export {
   editDetailsWidget,
   getMembersCount,
 
-//   getComments,
-//   addComment,
+  //   getComments,
+  //   addComment,
   getCommunity,
   getCommunityNames,
   getCommunityNamesByPopularity

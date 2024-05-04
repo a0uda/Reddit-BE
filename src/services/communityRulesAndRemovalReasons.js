@@ -1,5 +1,5 @@
 // Mod Tools --> Moderation --> Rules and Removal Reasons --> (Rules, Removal Reasons)
-// TODO: Implement the Remove Removal Reasons page.
+
 
 import { Rule } from "../db/models/Rule.js";
 
