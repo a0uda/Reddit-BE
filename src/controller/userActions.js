@@ -379,15 +379,20 @@ export async function joinCommunity(request, leave = false) {
     }
 
     if (leave) {
-      const index = community.joined_users.some(
-        (userObj) =>
-          userObj._id && userObj._id.toString() === user._id.toString()
+      const index = community.joined_users.findIndex(
+        (userObj) => userObj._id.toString() === user._id.toString()
       );
       console.log(index, "here");
       if (index !== -1) {
         community.joined_users.splice(index, 1);
         community.members_count--;
         await community.save();
+      } else {
+        return {
+          success: false,
+          status: 400,
+          msg: `User ${user.username} already left community ${community.name} .`,
+        };
       }
 
       const communityIndex = user.communities.findIndex(
