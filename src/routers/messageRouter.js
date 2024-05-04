@@ -1,5 +1,5 @@
 
-import { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
+import { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessagesCount, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -144,6 +144,19 @@ messageRouter.post("/messages/mark-all-as-read", async (req, res, next) => {
         if (err) { return next(err) }
 
         res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+//get unread messages count 
+messageRouter.get("/messages/unread-count", async (req, res, next) => {
+    try {
+        const { err, count } = await getUserUnreadMessagesCount(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ count });
 
     } catch (error) {
         next(error)

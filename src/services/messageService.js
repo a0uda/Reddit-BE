@@ -385,7 +385,19 @@ const markAllAsRead = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
-export { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
+const getUserUnreadMessagesCount = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user || err) {
+            return { success, err, status, user, msg };
+        }
+        const messages = await Message.find({ receiver_id: user._id, unread_flag: true });
+        return { status: 200, count: messages.length };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+export { markAllAsRead, getUserUnreadMessagesCount, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
 
 
 
