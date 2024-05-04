@@ -4,6 +4,7 @@ import {
   hideNotification,
   getNotifications,
   markAsRead,
+  getUnreadNotificationsCount
 } from "../controller/notifications.js";
 dotenv.config();
 
@@ -59,6 +60,21 @@ notificationsRouter.patch("/notifications/hide", async (req, res) => {
       return;
     }
     res.status(200).send({ message });
+  } catch (e) {
+    res.status(500).send({ error: e });
+  }
+});
+
+notificationsRouter.get("/notifications/unread-count", async (req, res) => {
+  try {
+    const { success, error, message, count } = await getUnreadNotificationsCount(
+      req
+    );
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message, count });
   } catch (e) {
     res.status(500).send({ error: e });
   }
