@@ -304,6 +304,7 @@ const getUserPostReplies = async (request) => {
 
         const posts = await Post.find({ user_id: user._id });
 
+
         const mappedReplies = await Promise.all(posts.map(async (post) => {
             return await mapPostRepliesToFormat(post, user);
         }));
