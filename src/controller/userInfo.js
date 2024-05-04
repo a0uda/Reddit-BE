@@ -487,7 +487,8 @@ export async function getAbout(request) {
       return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
-    const { user: loggedInUser } = await verifyAuthToken(request);
+    var { user: loggedInUser } = await verifyAuthToken(request);
+    if (!loggedInUser) loggedInUser = user;
     const moderatedCommunities = await getModeratedCommunitiesHelper(
       user,
       loggedInUser
@@ -498,7 +499,7 @@ export async function getAbout(request) {
       about: { ...about, moderatedCommunities },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
