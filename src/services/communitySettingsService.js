@@ -81,10 +81,11 @@ const getCommunityPostsAndComments = async (community_name) => {
     }
 
     try {
+        console.log(community_name)
         const community = await Community.findOne({ name: community_name })
             .populate("posts_and_comments")
             .exec();
-
+    
         if (!community) {
             return { err: { status: 404, message: 'Community not found' } };
         }

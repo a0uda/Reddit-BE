@@ -68,6 +68,7 @@ import {
 import {
     addNewCommunityController,
     schedulePostController,
+    getScheduledPostsController
 } from "../controller/communityController.js";
 
 import {
@@ -90,10 +91,17 @@ import {
     approveItemController
 } from '../controller/communityQueueController.js';
 
+import {
+    protectRoute,
+    protectModeratorRoute
+} from "../middleware/protectRoutes.js";
+
 
 const communityRouter = express.Router();
 
 
+// TODO: Validations.
+// communityRouter.use(protectRoute)
 
 //////////////////////////////////////////////////////////////////////// Add Community //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
@@ -118,7 +126,8 @@ communityRouter.post("/communities/report-item/:community_name", reportItemContr
 communityRouter.post("/communities/approve-item/:community_name", approveItemController);
 
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/schedule-post/:community_name", schedulePostController);
+communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
+communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
