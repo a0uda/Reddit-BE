@@ -167,10 +167,14 @@ const mapPostRepliesToFormat = async (post, user) => {
         } else {
             postCreatorType = "user";
         }
+        const sender = await User.findOne({ _id: comment.user_id });
+        if (!sender) {
+            return null;
+        }
 
         const mappedMessages = {
             created_at: comment.created_at,
-            senderUsername: user.username,
+            senderUsername: sender.username,
             postCreator: postCreator.username,
             postCreatorType: postCreatorType,
             postSubject: post.title,

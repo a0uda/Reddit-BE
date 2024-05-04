@@ -121,6 +121,7 @@ export async function newComment(request) {
     spoiler_flag: post.spoiler_flag,
   });
 
+  comment.upvote_users.push(user._id);
   await comment.save();
 
   console.log(post);
@@ -216,6 +217,7 @@ export async function replyToComment(request) {
   comment.replies_comments_ids.push(reply._id);
 
   await comment.save();
+  reply.upvote_users.push(user._id);
   await reply.save();
   post.comments_count++;
   await post.save();
