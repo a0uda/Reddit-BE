@@ -867,14 +867,7 @@ const addModerator = async (request) => {
 
         await community.save();
 
-        //add community id to user moderated communities
-        user.moderated_communities.push({
-            id: community._id,
-            favorite_flag: false,
-        });
-        user.communities.push({
-            id: community._id,
-        })
+
         await user.save();
 
         return { success: true };
@@ -916,7 +909,6 @@ const acceptModeratorInvitation = async (request) => {
             id: community._id,
             favorite_flag: false,
         });
-        community.joined_users.push({ _id: acceptingModerator._id })
         await acceptingModerator.save();
 
 

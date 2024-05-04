@@ -27,7 +27,6 @@ const addNewCommunity = async (requestBody, creator) => {
   communityGeneralSettings.type = type;
   communityGeneralSettings.nsfw_flag = nsfw_flag;
   communityGeneralSettings.description = description;
-
   const community = new Community({
     name,
     category,
@@ -35,6 +34,15 @@ const addNewCommunity = async (requestBody, creator) => {
     moderators: [
       {
         username: creator.username,
+        has_access: {
+          everything: true,
+          manage_users: true,
+          manage_settings: true,
+          manage_posts_and_comments: true,
+
+        },
+        pending_flag: false,
+
       },
     ],
     joined_users: [
