@@ -501,41 +501,46 @@ export async function deleteAccount(request) {
 
     const username = user.username;
     if (username != request.body.username) {
-      return {
-        success: false,
-        status: 400,
-        err: "Incorrect Username",
-      };
+      return generateResponse(false, 400, "Incorrect Username");
     }
 
     const result = await bcrypt.compare(request.body.password, user.password);
     if (!result) {
-      return {
-        success: false,
-        status: 400,
-        err: "Incorrect Password",
-      };
+      return generateResponse(false, 400, "Incorrect Password");
     }
 
-    user.username = "[deleted]";
+    if (user.deleted)
+      return generateResponse(false, 400, "User already deleted");
+    // user.username = "[deleted]";
+    user.profile_picture = "";
     user.deleted = true;
     user.deleted_at = Date.now();
 
     await user.save();
 
-    return {
-      success: true,
-      status: 200,
-      msg: "Account deleted successfully.",
-    };
+    const deletedUserId = user._id;
+    // Update blocked_users, followers_ids, following_ids for all users
+    await User.updateMany(
+      {
+        $or: [
+          { "safety_and_privacy_settings.blocked_users": deletedUserId },
+          { followers_ids: deletedUserId },
+          { following_ids: deletedUserId },
+        ],
+      },
+      {
+        $pull: {
+          "safety_and_privacy_settings.blocked_users": deletedUserId,
+          followers_ids: deletedUserId,
+          following_ids: deletedUserId,
+        },
+      }
+    );
+
+    return generateResponse(true, 200, "Account deleted successfully.");
   } catch (error) {
-    // //console.error("Error:", error);
-    return {
-      success: false,
-      status: 500,
-      err: "Internal Server Error",
-      msg: "An error occurred while clearing history.",
-    };
+    console.log("Error:", error);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
 

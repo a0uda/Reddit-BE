@@ -107,6 +107,9 @@ export async function loginUser(requestBody) {
     return generateResponse(false, 400, "Username or password are incorrect");
   }
 
+  if (user.deleted) {
+    return generateResponse(false, 400, "User is deleted");
+  }
   const token = await user.generateAuthToken();
   await user.save();
 
