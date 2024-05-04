@@ -1,10 +1,10 @@
-import { approveUser, getApprovedUsers, muteUser, getMutedUsers, banUser, getBannedUsers, getModerators, getEditableModerators, moderatorLeaveCommunity, addModerator, deleteModerator } from '../src/services/communityUserManagement';
-import { User } from '../src/db/models/User';
-import { communityNameExists, isUserAlreadyApproved, getApprovedUserView } from '../src/utils/communities';
-import { verifyAuthToken } from '../src/controller/userAuth';
-jest.mock("../src/utils/communities");
-jest.mock("../src/db/models/User");
-jest.mock("../src/controller/userAuth");
+import { approveUser, getApprovedUsers, muteUser, getMutedUsers, banUser, getBannedUsers, getModerators, getEditableModerators, moderatorLeaveCommunity, addModerator, deleteModerator } from '../../src/services/communityUserManagement';
+import { User } from '../../src/db/models/User';
+import { communityNameExists, isUserAlreadyApproved, getApprovedUserView } from '../../src/utils/communities';
+import { verifyAuthToken } from '../../src/controller/userAuth';
+jest.mock("../../src/utils/communities");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/controller/userAuth");
 //contents:
 //1. Test the approveUser function
 //2. Test the getApprovedUsers function
