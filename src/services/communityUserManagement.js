@@ -488,7 +488,7 @@ const getMutedUsers = async (community_name) => {
 };
 
 //////////////////////////////////////////////////////////////////////// Approved /////////////////////////////////////////////////////////////////////////
-// TODO: Validation - User already approved.
+
 /**
  *
  * @param {Object} requestBody
@@ -796,7 +796,7 @@ const getApprovedUsers = async (community_name) => {
  * @returns
  */
 const addModerator = async (request) => {
-    //TODO: INVITATION EMAIL SHOULD BE SENT TO THE USER
+
     try {
 
         const { success, err, status, user: invitingModerator, msg } = await verifyAuthToken(request);
