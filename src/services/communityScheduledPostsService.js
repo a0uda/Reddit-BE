@@ -140,4 +140,33 @@ const getScheduledPosts = async () => {
     return { recurring_posts, non_recurring_posts };
 }
 
-export { savePostForScheduling, postScheduledPost, getScheduledPosts };
+const editScheduledPost = async (post_id, new_description) => {
+    try {
+        // Get the post with the given id.
+        let post;
+        try {
+            post = await scheduledPost.findById({ _id: post_id }).select('-moderator_details');
+        } catch (error) {
+            return { err: { status: 500, message: `Error while finding a scheduled post with the given id: ${error.message}` } };
+        }
+
+        // Update the description of the post.
+        post.description = new_description;
+        post.edited_at = Date.now();
+
+        console.log(post)
+        
+        try{
+            await post.save();
+        } catch (error) {
+            return { err: { status: 500, message: `Error while saving the edited scheduled post: ${error.message}` } };
+        }
+
+        // Return the edited post.
+        return { edited_post: post };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+
+export { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost };

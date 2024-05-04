@@ -66,9 +66,13 @@ import {
 } from "../services/communityProfileAndBannerPictures.js";
 
 import {
-    addNewCommunityController,
     schedulePostController,
-    getScheduledPostsController
+    getScheduledPostsController,
+    editScheduledPostController,
+
+    addNewCommunityController,
+    getCommunityNamesController,
+    getCommunityNamesByPopularityController
 } from "../controller/communityController.js";
 
 import {
@@ -105,6 +109,8 @@ const communityRouter = express.Router();
 
 //////////////////////////////////////////////////////////////////////// Add Community //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
+communityRouter.get("/communities/get-community-names", protectRoute, getCommunityNamesController);
+communityRouter.get("/communities/get-community-names-by-popularity", protectRoute, getCommunityNamesByPopularityController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/get-general-settings/:community_name", getCommunityGeneralSettingsController);
@@ -128,6 +134,7 @@ communityRouter.post("/communities/approve-item/:community_name", approveItemCon
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
+communityRouter.post("/communities/edit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, editScheduledPostController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {

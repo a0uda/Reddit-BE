@@ -1,7 +1,7 @@
 import { verifyAuthToken } from "./userAuth.js";
 
-import { addNewCommunity } from "../services/communityService.js";
-import { savePostForScheduling, postScheduledPost, getScheduledPosts } from "../services/communityScheduledPostsService.js";
+import { addNewCommunity, getCommunityNames, getCommunityNamesByPopularity } from "../services/communityService.js";
+import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost } from "../services/communityScheduledPostsService.js";
 
 import { scheduledPostSchema } from "../db/models/scheduledPosts.js";
 
@@ -27,7 +27,33 @@ export const addNewCommunityController = async (req, res, next) => {
     }
 }
 
+export const getCommunityNamesController = async (req, res, next) => {
+    try {
+        const {err, community_names} = await getCommunityNames();
 
+        if (err) { return next(err) }
+
+        return res.status(200).send(community_names);
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const getCommunityNamesByPopularityController = async (req, res, next) => {
+    try {
+        const {err, community_names} = await getCommunityNamesByPopularity();
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(community_names);
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+//////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 export const schedulePostController = async (req, res, next) => {
     // All posts should be saved in the schedulePost collection as soon as they are scheduled.
     // This is done using the savePostForScheduling function from the communityScheduledPostsService.
@@ -40,17 +66,17 @@ export const schedulePostController = async (req, res, next) => {
     try {
         // Get the necessary attributes from the request body.
         let { submit_time, repetition_option, postInput } = req.body;
-        
+
         // Set the schedule date properly using the submit_time attribute.
         const { date, hours, minutes } = submit_time;
         const [year, month, day] = date.split('-').map(Number);
         const schedule_date = new Date(year, month - 1, day, Number(hours), Number(minutes));
-        
+
         // Check if the schedule_date is in the past
         if (schedule_date < new Date()) {
             return res.status(400).send({ err: { status: 400, message: 'The input date is in the past.' } });
         }
-        
+
         // Get the valid repetition options from the schema and convert them to lower case
         const validRepetitionOptions = scheduledPostSchema.obj.scheduling_details.repetition_option.enum;
         repetition_option = repetition_option.toLowerCase();
@@ -126,6 +152,22 @@ export const getScheduledPostsController = async (req, res, next) => {
         const { recurring_posts, non_recurring_posts } = await getScheduledPosts();
 
         return res.status(200).send({ recurring_posts, non_recurring_posts });
+
+    } catch (error) {
+        const err = { status: 500, message: error.message };
+        return next(err);
+    }
+}
+
+export const editScheduledPostController = async (req, res, next) => {
+    try {
+        const { post_id, new_description } = req.body;
+
+        const { err, edited_post } = await editScheduledPost(post_id, new_description);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(edited_post);
 
     } catch (error) {
         const err = { status: 500, message: error.message };
