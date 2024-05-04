@@ -487,7 +487,11 @@ export async function getAbout(request) {
       return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
-    const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    const moderatedCommunities = await getModeratedCommunitiesHelper(
+      user,
+      loggedInUser
+    );
     return {
       success: true,
       message: "About retrieved successfully",
@@ -512,7 +516,10 @@ export async function getCommunities(request, communityType) {
       return { success, err, status, user, msg };
     }
     if (communityType == "moderated") {
-      const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+      const moderatedCommunities = await getModeratedCommunitiesHelper(
+        user,
+        user
+      );
       return {
         success: true,
         status: 200,
@@ -529,7 +536,7 @@ export async function getCommunities(request, communityType) {
       };
     }
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,
