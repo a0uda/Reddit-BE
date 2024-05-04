@@ -8,7 +8,7 @@ import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 import { notificationsRouter } from "./routers/notifications.js";
 import { messageRouter } from "./routers/messageRouter.js";
-// import chatRouter from "./routers/chatRouter.js";
+import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
 
@@ -23,7 +23,7 @@ try {
 } catch (err) {
   console.log("Error, couldn't connect to database");
 }
-const port = process.env.PORT;
+const port = process.env.PORT || 3001;
 
 // Abdullah & Mido
 app.use((req, res, next) => {
@@ -45,7 +45,7 @@ app.use([
   communityRouter,
   messageRouter,
   searchRouter,
-  // chatRouter,
+  chatRouter,
 ]);
 
 // Error handling middleware
