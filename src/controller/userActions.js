@@ -10,6 +10,8 @@ import { getPost } from "./posts.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { communityNameExists } from "../utils/communities.js";
 import { pushNotification } from "./notifications.js";
+import { newFollowerFormatEmail } from "../templates/email.js";
+import { sendEmail } from "../utils/emailSending.js";
 
 export async function blockUser(request) {
   try {
@@ -308,6 +310,20 @@ export async function followUser(request) {
       //   await userToFollow.save();
       // }
 
+      //send email
+      console.log(userToFollow.email_settings.new_follower_email);
+      console.log(userToFollow.email_settings.unsubscribe_from_all_emails);
+      if (userToFollow.email_settings.new_follower_email) {
+        if (!userToFollow.email_settings.unsubscribe_from_all_emails) {
+          let message = newFollowerFormatEmail(
+            userToFollow.email,
+            user.username
+          );
+          sendEmail(message);
+          console.log("New follower email sent");
+        }
+      }
+
       //send notif
       console.log(userToFollow);
       const { success: succesNotif, error: errorNotif } =
@@ -352,7 +368,6 @@ export async function joinCommunity(request, leave = false) {
     if (!user) {
       return { success, err, status, user, msg };
     }
-    console.log("debugging join community :", request.body.community_name)
     const community = await communityNameExists(request.body.community_name);
 
     if (!community) {
@@ -367,8 +382,10 @@ export async function joinCommunity(request, leave = false) {
       const index = community.joined_users.indexOf(user._id);
       if (index !== -1) {
         community.joined_users.splice(index, 1);
+        community.members_count--;
         await community.save();
       }
+
       const communityIndex = user.communities.findIndex(
         (c) => c.id.toString() === community._id.toString()
       );
@@ -392,15 +409,30 @@ export async function joinCommunity(request, leave = false) {
         };
       }
 
-      console.log(community.joined_users.some(userObj => userObj._id.toString() === user._id.toString()))
-      if (community.joined_users.some(userObj => userObj._id.toString() === user._id.toString())) {
+      console.log(
+        community.joined_users.some(
+          (userObj) =>
+            userObj._id && userObj._id.toString() == user._id.toString()
+        )
+      );
+      console.log("testtt join community :", request.body.community_name);
+
+      console.log(community.joined_users);
+      if (
+        community.joined_users.some(
+          (userObj) =>
+            userObj._id && userObj._id.toString() === user._id.toString()
+        )
+      ) {
         return {
           success: false,
           status: 400,
           msg: `User ${user.username} already joined community ${community.name} .`,
         };
       }
+      console.log("hii");
       community.joined_users.push(user._id);
+      community.members_count++;
       await community.save();
       if (
         !user.communities.some(
@@ -469,41 +501,46 @@ export async function deleteAccount(request) {
 
     const username = user.username;
     if (username != request.body.username) {
-      return {
-        success: false,
-        status: 400,
-        err: "Incorrect Username",
-      };
+      return generateResponse(false, 400, "Incorrect Username");
     }
 
     const result = await bcrypt.compare(request.body.password, user.password);
     if (!result) {
-      return {
-        success: false,
-        status: 400,
-        err: "Incorrect Password",
-      };
+      return generateResponse(false, 400, "Incorrect Password");
     }
 
-    user.username = "[deleted]";
+    if (user.deleted)
+      return generateResponse(false, 400, "User already deleted");
+    // user.username = "[deleted]";
+    user.profile_picture = "";
     user.deleted = true;
     user.deleted_at = Date.now();
 
     await user.save();
 
-    return {
-      success: true,
-      status: 200,
-      msg: "Account deleted successfully.",
-    };
+    const deletedUserId = user._id;
+    // Update blocked_users, followers_ids, following_ids for all users
+    await User.updateMany(
+      {
+        $or: [
+          { "safety_and_privacy_settings.blocked_users": deletedUserId },
+          { followers_ids: deletedUserId },
+          { following_ids: deletedUserId },
+        ],
+      },
+      {
+        $pull: {
+          "safety_and_privacy_settings.blocked_users": deletedUserId,
+          followers_ids: deletedUserId,
+          following_ids: deletedUserId,
+        },
+      }
+    );
+
+    return generateResponse(true, 200, "Account deleted successfully.");
   } catch (error) {
-    // //console.error("Error:", error);
-    return {
-      success: false,
-      status: 500,
-      err: "Internal Server Error",
-      msg: "An error occurred while clearing history.",
-    };
+    console.log("Error:", error);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
 

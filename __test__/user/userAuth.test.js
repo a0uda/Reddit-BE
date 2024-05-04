@@ -10,15 +10,15 @@ import {
   changeEmail,
   changeUsername,
   changePassword,
-} from "../src/controller/userAuth";
-import { User } from "../src/db/models/User";
-import { redirectToResetPassword } from "../src/utils/emailSending";
+} from "../../src/controller/userAuth";
+import { User } from "../../src/db/models/User";
+import { redirectToResetPassword } from "../../src/utils/emailSending";
 import jwt from "jsonwebtoken"; // Import jwt module
 import bcrypt from "bcryptjs";
 
 jest.mock("jsonwebtoken"); // Mock the jsonwebtoken module
-jest.mock("../src/db/models/User");
-jest.mock("../src/utils/emailSending");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/utils/emailSending");
 
 describe("User Signup", () => {
   beforeEach(() => {
@@ -195,65 +195,75 @@ describe("User Logout", () => {
   });
 
   it("should log out a user with correct credentials", async () => {
-    const requestBody = {
-      username: "testUser",
-      token: "validToken",
+    const request = {
+      headers: {
+        authorization: "Bearer valid_token",
+      },
     };
 
     const mockUser = {
-      username: requestBody.username,
-      token: requestBody.token,
+      _id: "userId",
+      username: "malak",
+      token: ["valid_token"],
       save: jest.fn(),
     };
-    User.findOne = jest.fn().mockReturnValue(mockUser);
 
-    const result = await logoutUser(requestBody);
+    jwt.verify.mockReturnValue({ _id: mockUser._id });
+    User.findOne = jest.fn().mockReturnValue(mockUser);
+    User.findById.mockResolvedValue(mockUser);
+    const result = await logoutUser(request);
 
     expect(result.success).toBe(true);
     expect(result.message).toBe("Logged Out Successfully");
   });
 
   it("should not log out a user with missing fields", async () => {
-    const requestBody = {
-      username: "testUser",
+    const request = {
+      
     };
 
-    const result = await logoutUser(requestBody);
+    const result = await logoutUser(request);
 
     expect(result.success).toBe(false);
-    expect(result.error.message).toBe("Missing required field");
+    expect(result.error.message).toBe("Missing token");
     expect(result.error.status).toBe(400);
   });
 
   it("should not log out a user with invalid credentials", async () => {
-    const requestBody = {
-      username: "testUser",
-      token: "invalidToken",
+    const request = {
+      headers: {
+        authorization: "wrong token",
+      },
     };
-
+    jwt.verify.mockReturnValue(null);
     User.findOne = jest.fn().mockReturnValue(null);
-
-    const result = await logoutUser(requestBody);
+    User.findById.mockResolvedValue(null);
+    const result = await logoutUser(request);
 
     expect(result.success).toBe(false);
-    expect(result.error.message).toBe("Not a valid username or existing token");
+    expect(result.error.message).toBe("Invalid token");
     expect(result.error.status).toBe(400);
   });
 
   it("should not log out an unauthenticated user", async () => {
-    const requestBody = {
-      username: "testUser",
-      token: "asdasdasd",
+    const request = {
+      headers: {
+        authorization: "Bearer valid_token",
+      },
     };
     const mockUser = {
-      username: requestBody.username,
-      token: "requestBody.token",
+      _id: "user_id",
+      token: [""],
+      save: jest.fn(),
     };
+
+    jwt.verify.mockReturnValue({ _id: mockUser._id });
     User.findOne = jest.fn().mockReturnValue(mockUser);
-    const result = await logoutUser(requestBody);
+    User.findById.mockResolvedValue(mockUser);
+    const result = await logoutUser(request);
 
     expect(result.success).toBe(false);
-    expect(result.error.message).toBe("Not a valid username or existing token");
+    expect(result.error.message).toBe("Invalid token. User may have logged out");
     expect(result.error.status).toBe(400);
   });
 });
@@ -598,6 +608,7 @@ describe("Reset Password", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "existing_email@example.com",
       verified_email_flag: false,
     };
@@ -623,6 +634,7 @@ describe("Reset Password", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "existing_email@example.com",
       verified_email_flag: false,
     };
@@ -648,6 +660,7 @@ describe("Reset Password", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "existing_email@example.com",
       verified_email_flag: true,
       save: jest.fn(),
@@ -707,6 +720,7 @@ describe("Change Email", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       password: await bcrypt.hash("wrong_password", 8), // Hash the password before assigning
       generateAuthToken: jest.fn(),
       save: jest.fn(),
@@ -732,6 +746,7 @@ describe("Change Email", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: request.body.new_email,
       password: await bcrypt.hash(request.body.password, 8), // Hash the password before assigning
       generateAuthToken: jest.fn(),
@@ -759,6 +774,7 @@ describe("Change Email", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "existing_email@example.com",
       username: "example_username",
       verified_email_flag: true,
@@ -829,6 +845,7 @@ describe("Change Password", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       password: await bcrypt.hash("current_password", 8),
     };
     User.findById.mockResolvedValue(mockUser);
@@ -855,6 +872,7 @@ describe("Change Password", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       password: await bcrypt.hash("current_password", 8),
     };
     User.findById.mockResolvedValue(mockUser);
@@ -879,6 +897,7 @@ describe("Change Password", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       password: await bcrypt.hash("current_password", 8),
     };
     User.findById.mockResolvedValue(mockUser);
@@ -906,6 +925,7 @@ describe("Change Password", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       password: await bcrypt.hash("current_password", 8),
       is_password_set_flag: true,
       save: jest.fn(),
@@ -967,6 +987,7 @@ describe("Change Username", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       username: request.body.username, // Same as new username
     };
     User.findById.mockResolvedValue(mockUser);
@@ -989,6 +1010,7 @@ describe("Change Username", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "existing_email@example.com",
       username: "current_username",
       verified_email_flag: true,

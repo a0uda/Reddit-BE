@@ -1,4 +1,5 @@
 import { User } from "../db/models/User.js";
+import mongoose from "mongoose";
 import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
@@ -18,6 +19,11 @@ import { checkCommentVotesMiddleware } from "../services/comments.js";
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 import { Community } from "../db/models/Community.js";
+/**
+ * Retrieves followers of the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, message, and list of user followers.
+ */
 export async function getFollowers(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -39,7 +45,11 @@ export async function getFollowers(request) {
     users: followerDetails,
   };
 }
-
+/**
+ * Retrieves users followed by the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, message, and list of users followed by the authenticated user.
+ */
 export async function getFollowing(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
@@ -63,6 +73,11 @@ export async function getFollowing(request) {
   };
 }
 
+/**
+ * Retrieves the count of followers for the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, message, and the count of followers for the authenticated user.
+ */
 export async function getFollowersCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
@@ -76,7 +91,11 @@ export async function getFollowersCount(request) {
     count: followersUsers.length,
   };
 }
-
+/**
+ * Retrieves the count of users followed by the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, message, and the count of users followed by the authenticated user.
+ */
 export async function getFollowingCount(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
 
@@ -91,7 +110,14 @@ export async function getFollowingCount(request) {
     count: followingUsers.length,
   };
 }
-
+/**
+ * Retrieves posts for a specific user based on the provided username.
+ * @param {Object} request The incoming request object containing authentication data and username parameter.
+ * @param {number} pageNumber The page number for pagination (default: 1).
+ * @param {number} pageSize The size of each page for pagination (default: 10).
+ * @param {string} sortBy The field to sort the posts by (optional).
+ * @returns {Promise<Object>} An object containing the success status, status code, posts content, and a message indicating the posts were retrieved successfully or an error occurred.
+ */
 export async function getUserPosts(
   request,
   pageNumber = 1,
@@ -134,7 +160,15 @@ export async function getUserPosts(
     };
   }
 }
-
+/**
+ * Retrieves posts based on the specified type (e.g., user's posts, global posts, etc.).
+ * @param {Object} request The incoming request object containing authentication data and parameters.
+ * @param {string} postsType The type of posts to retrieve (e.g., "user", "global","saved" etc.).
+ * @param {number} pageNumber The page number for pagination (default: 1).
+ * @param {number} pageSize The size of each page for pagination (default: 10).
+ * @param {string} sortBy The field to sort the posts by (optional).
+ * @returns {Promise<Object>} An object containing the success status, status code, posts content, and a message indicating the posts were retrieved successfully or an error occurred.
+ */
 export async function getPosts(
   request,
   postsType,
@@ -181,6 +215,14 @@ export async function getPosts(
   }
 }
 
+/**
+ * Retrieves comments made by a specific user based on the provided username.
+ * @param {Object} request The incoming request object containing authentication data and username parameter.
+ * @param {number} pageNumber The page number for pagination (default: 1).
+ * @param {number} pageSize The size of each page for pagination (default: 10).
+ * @param {string} sortBy The field to sort the comments by (optional).
+ * @returns {Promise<Object>} An object containing the success status, status code, comments content, and a message indicating the comments were retrieved successfully or an error occurred.
+ */
 export async function getUserComments(
   request,
   pageNumber = 1,
@@ -223,7 +265,15 @@ export async function getUserComments(
     };
   }
 }
-
+/**
+ * Retrieves comments based on the specified type (e.g., user's saved comments, global comments, etc.).
+ * @param {Object} request The incoming request object containing authentication data and parameters.
+ * @param {string} commentsType The type of comments to retrieve (e.g., "saved", "global", etc.).
+ * @param {number} pageNumber The page number for pagination (default: 1).
+ * @param {number} pageSize The size of each page for pagination (default: 10).
+ * @param {string} sortBy The field to sort the comments by (optional).
+ * @returns {Promise<Object>} An object containing the success status, status code, comments content, and a message indicating the comments were retrieved successfully or an error occurred.
+ */
 export async function getComments(
   request,
   commentsType,
@@ -244,7 +294,7 @@ export async function getComments(
       return { success, err, status, user: authenticatedUser, msg };
     }
     user = authenticatedUser;
-
+    console.log("SAVED", user.saved_comments_ids);
     const comments = await getCommentsHelper(
       user,
       commentsType,
@@ -268,7 +318,11 @@ export async function getComments(
     };
   }
 }
-
+/**
+ * Retrieves all saved comments of the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, status code, saved comments content, and a message indicating the saved comments were retrieved successfully or an error occurred.
+ */
 export async function getAllSavedComments(request) {
   let user = null;
   try {
@@ -285,17 +339,27 @@ export async function getAllSavedComments(request) {
     user = authenticatedUser;
     var comments = await Comment.find({
       _id: { $in: user.saved_comments_ids },
-    }).exec();
+    })
+      .populate("replies_comments_ids")
+      .exec();
 
-    comments = comments.filter((comment) => comment != null);
+    // comments = comments.filter((comment) => comment != null);
 
     comments = comments.map((comment) => {
       return { ...comment.toObject(), is_post: false };
     });
 
     comments = await checkCommentVotesMiddleware(user, comments);
-    console.log(comments);
-    
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
+
     return {
       success: true,
       status: 200,
@@ -354,7 +418,11 @@ export async function getAllSavedPosts(request) {
     };
   }
 }
-
+/**
+ * Retrieves all saved posts of the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, status code, saved posts content, and a message indicating the saved posts were retrieved successfully or an error occurred.
+ */
 export async function getOverview(request, pageNumber, pageSize, sortBy) {
   try {
     const { username } = request.params;
@@ -382,11 +450,15 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
     );
     //add is post flag
     posts = posts.map((post) => {
-      return { ...post, is_post: true };
+      if (post instanceof mongoose.Document)
+        return { ...post.toObject(), is_post: true };
+      else return { ...post, is_post: true };
     });
     console.log(posts);
     comments = comments.map((comment) => {
-      return { ...comment, is_post: false };
+      if (comment instanceof mongoose.Document)
+        return { ...comment.toObject(), is_post: false };
+      else return { ...comment, is_post: false };
     });
 
     return {
@@ -395,11 +467,15 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
       content: { posts, comments },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
-
+/**
+ * Retrieves information about a user's profile.
+ * @param {Object} request The incoming request object containing username parameter.
+ * @returns {Promise<Object>} An object containing the success status, message, and about information including moderated communities or an error message.
+ */
 export async function getAbout(request) {
   try {
     const { username } = request.params;
@@ -422,7 +498,12 @@ export async function getAbout(request) {
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
-
+/**
+ * Retrieves communities associated with the authenticated user based on the specified community type.
+ * @param {Object} request The incoming request object containing authentication data and communityType parameter.
+ * @param {string} communityType The type of communities to retrieve ("moderated" or other).
+ * @returns {Promise<Object>} An object containing the success status, status code, message, and communities content or an error message.
+ */
 export async function getCommunities(request, communityType) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -457,7 +538,11 @@ export async function getCommunities(request, communityType) {
     };
   }
 }
-
+/**
+ * Retrieves the list of blocked users for the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, status code, message, and the list of blocked users or an error message.
+ */
 export async function getBlockedUsers(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -484,7 +569,11 @@ export async function getBlockedUsers(request) {
     };
   }
 }
-
+/**
+ * Retrieves the list of muted communities for the authenticated user.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, status code, message, and the list of muted communities or an error message.
+ */
 export async function getMutedCommunities(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -510,7 +599,12 @@ export async function getMutedCommunities(request) {
     };
   }
 }
-
+/**
+ * Retrieves the list of active communities for the authenticated user.
+ * Active communities are those in which the user has either posted or commented.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status, status code, message, and the list of active communities or an error message.
+ */
 export async function getActiveCommunities(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -567,7 +661,7 @@ export async function getActiveCommunities(request) {
       content: active_communities,
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,

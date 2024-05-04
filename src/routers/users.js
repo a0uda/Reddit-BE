@@ -28,6 +28,7 @@ import {
   isUsernameAvailable,
   isEmailAvailable,
   changeUsername,
+  disconnectGoogle,
 } from "../controller/userAuth.js";
 
 import {
@@ -92,19 +93,18 @@ usersRouter.post("/users/signup", async (req, res) => {
 
 usersRouter.post("/users/login", async (req, res) => {
   try {
-    const { success, error, message, user, refreshToken } = await loginUser(
-      req.body
-    );
+    const { success, error, message, user, token } = await loginUser(req.body);
     if (!success) {
       res.status(error.status).send({ error });
       return;
     }
     // Set the token in the response header
-    res.header("Authorization", `Bearer ${user.token} `);
-    res.setHeader("RefreshToken", refreshToken);
+    res.header("Authorization", `Bearer ${token} `);
+    // res.setHeader("RefreshToken", refreshToken);
 
     res.status(200).send({ message });
   } catch (e) {
+    console.log(e);
     res
       .status(500)
       .send({ error: { status: 500, message: "Internal server error." } });
@@ -113,20 +113,7 @@ usersRouter.post("/users/login", async (req, res) => {
 
 usersRouter.post("/users/logout", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).send("Access Denied");
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).send("Access Denied: Expired token");
-      }
-    });
-
-    const { username } = req.body;
-
-    const { success, message, error } = await logoutUser({ token, username });
+    const { success, message, error } = await logoutUser(req);
 
     if (!success) {
       res.status(error.status).send({ error });
@@ -139,26 +126,61 @@ usersRouter.post("/users/logout", async (req, res) => {
       .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
-
-usersRouter.get("/users/signup-google/callback", async (req, res) => {
-  const { code } = req.query;
-
+usersRouter.post("/users/connect-to-google", async (req, res) => {
   try {
-    const { data } = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      null,
+    const accessToken = req.body.access_token;
+    const { data: userData } = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
       {
-        params: {
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-          code,
-          redirect_uri: REDIRECT_URI,
-          grant_type: "authorization_code",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
 
-    const accessToken = data.access_token;
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    user.gmail = userData.email;
+    user.connected_google = true;
+
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      status: 200,
+      msg: "connected to google successfully.",
+    });
+  } catch (error) {
+    console.error("Google OAuth error:", error.message);
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
+
+usersRouter.post("/users/disconnect-google", async (req, res) => {
+  try {
+    const { success, error, message } = await disconnectGoogle(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (error) {
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
+
+usersRouter.post("/users/signup-google", async (req, res) => {
+  try {
+    const accessToken = req.body.access_token;
     const { data: userData } = await axios.get(
       "https://www.googleapis.com/oauth2/v3/userinfo",
       {
@@ -181,9 +203,12 @@ usersRouter.get("/users/signup-google/callback", async (req, res) => {
         is_password_set_flag: false,
       });
     }
-    await user.generateAuthToken();
+    const refreshToken = await user.generateAuthToken();
+    const token = await user.generateAuthToken();
     await user.save();
-    res.send(user);
+    res.header("Authorization", `Bearer ${token} `);
+    res.setHeader("RefreshToken", refreshToken);
+    res.status(200).send({ username: user.username });
   } catch (error) {
     console.error("Google OAuth error:", error.message);
     res.status(500).json({ error: "Google OAuth error" });
@@ -312,7 +337,7 @@ usersRouter.get("/users/internal-verify-email/:token", async (req, res) => {
     }
     // res.status(200).send(msg);
     console.log(msg);
-    res.redirect("/homepage"); //frontend
+    res.redirect("https://redditech.me"); //frontend
   } catch (error) {
     res.status(500).json({ error: "Internal server error." });
   }
@@ -925,7 +950,6 @@ usersRouter.post("/users/follow-unfollow-user", async (req, res) => {
 
 usersRouter.post("/users/join-community", async (req, res) => {
   try {
-
     const result = await joinCommunity(req);
     res.status(result.status).json(result);
   } catch (error) {

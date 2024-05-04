@@ -34,21 +34,39 @@ export async function isEmailAvailable(email) {
 }
 
 export async function verifyAuthToken(request) {
-  const token = request.headers.authorization?.split(" ")[1];
+  const token = request?.headers?.authorization?.split(" ")[1];
   if (!token) {
     return { success: false, status: 401, err: "Access Denied" };
   }
   var userToken;
   try {
-     userToken = jwt.verify(token, process.env.JWT_SECRET);
+    userToken = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return { success: false, err, status: 400 };
+  }
+  if (!userToken) {
+    return {
+      success: false,
+      err: "Invalid token",
+      status: 400,
+    };
   }
   const userId = userToken._id;
   const user = await User.findById(userId);
   if (!user) {
     return { success: false, err: "User not found", status: 404 };
   }
+
+  const inInTokenArray = user.token.includes(token);
+
+  if (!inInTokenArray) {
+    return {
+      success: false,
+      err: "Invalid token. User may have logged out",
+      status: 400,
+    };
+  }
+
   return { success: true, user: user };
 }
 
@@ -89,35 +107,66 @@ export async function loginUser(requestBody) {
     return generateResponse(false, 400, "Username or password are incorrect");
   }
 
-  const refreshToken = await user.generateAuthToken();
+  if (user.deleted) {
+    return generateResponse(false, 400, "User is deleted");
+  }
+  const token = await user.generateAuthToken();
   await user.save();
 
   return {
     success: true,
     message: "User logged in successfully",
     user,
-    refreshToken: refreshToken,
+    token,
   };
 }
 
-export async function logoutUser(requestBody) {
-  const { username, token } = requestBody;
-  if (!username || !token) {
-    return generateResponse(false, 400, "Missing required field");
-  }
-  const user = await User.findOne({ username });
-  if (!user || user.token != token) {
-    return generateResponse(
-      false,
-      400,
-      "Not a valid username or existing token"
-    );
+export async function logoutUser(request) {
+  const token = request.headers?.authorization?.split(" ")[1];
+  if (!token) return generateResponse(false, 400, "Missing token");
+  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  if (!user) {
+    return generateResponse(success, status, err);
   }
 
-  user.token = "";
+  const index = user.token.indexOf(token);
+  user.token.splice(index, 1);
+
   await user.save();
 
   return generateResponse(true, null, "Logged Out Successfully");
+}
+
+export async function disconnectGoogle(request) {
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    if (!user.is_password_set_flag) {
+      return generateResponse(false, 400, "User must set his password first");
+    }
+
+    const { password } = request?.body;
+    if (!password) return generateResponse(false, 400, "Password is required");
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      return generateResponse(false, 400, "Password is incorrect");
+    }
+
+    user.connected_google = false;
+    user.gmail = null;
+    await user.save();
+
+    return generateResponse(
+      true,
+      null,
+      "Disconnected from google successfully"
+    );
+  } catch (error) {
+    console.log("Error:", error);
+    return generateResponse(false, 500, "Internal server error");
+  }
 }
 
 export async function verifyEmail(requestParams, isUserEmailVerify) {

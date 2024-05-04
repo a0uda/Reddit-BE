@@ -1,7 +1,7 @@
-import { addCommunityBannerPicture, addCommunityProfilePicture, deleteCommunityBannerPicture, deleteCommunityProfilePicture } from "../src/services/communityProfileAndBannerPictures";
-import { communityNameExists } from "../src/utils/communities";
-jest.mock("../src/utils/communities");
-jest.mock("../src/utils/communities");
+import { addCommunityBannerPicture, addCommunityProfilePicture, deleteCommunityBannerPicture, deleteCommunityProfilePicture } from "../../src/services/communityProfileAndBannerPictures";
+import { communityNameExists } from "../../src/utils/communities";
+jest.mock("../../src/utils/communities");
+jest.mock("../../src/utils/communities");
 
 describe("Community Profile Picture", () => {
     it("should add a community profile picture", async () => {

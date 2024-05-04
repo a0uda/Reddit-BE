@@ -1,48 +1,10 @@
-import { Comment } from "../db/models/Comment.js";
 import { communityNameExists } from "../utils/communities.js";
 import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
-import { checkCommentVotesMiddleware } from "./comments.js";
 import mongoose from "mongoose";
-
-export async function getCommentRepliesHelper(comment) {
-  const replies = comment.replies_comments_ids;
-  comment.replies_comments_ids = [];
-  for (const reply of replies) {
-    const replyObject = await Comment.findById(reply);
-    comment.replies_comments_ids.push(replyObject);
-  }
-  return comment;
-
-  // const replies = comment.replies_comments_ids;
-  // comment.replies_comments_ids = [];
-  // for (const reply of replies) {
-  //   const replyObject = await Comment.findById(reply);
-  //   comment.replies_comments_ids.push(replyObject);
-  // }
-  // console.log(user);
-  // let x = comment.replies_comments_ids;
-  // if (user) {
-  //   x = await checkCommentVotesMiddleware(user, comment.replies_comments_ids);
-  // }
-  // comment.replies_comments_ids = x;
-  // console.log(comment.replies_comments_ids);
-  // return comment;
-}
-
-export async function getPostCommentsHelper(postId) {
-  const comments = await Comment.find({ post_id: postId }).exec();
-  if (!comments || comments.length === 0) return [];
-  const commentsWithReplies = [];
-  for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
-    commentsWithReplies.push(commentResult);
-  }
-  return commentsWithReplies;
-}
 
 export async function checkNewPostInput(requestBody) {
   const {
@@ -199,7 +161,7 @@ export async function checkPostSettings(post, community_name) {
   const allowPolls = posts_and_comments.posts.allow_polls_posts;
   const allowMultipleImages =
     posts_and_comments.posts.allow_multiple_images_per_post;
-    console.log(`allowType: ${allowType}, type: ${type}`)
+  console.log(`allowType: ${allowType}, type: ${type}`);
   if (
     (!allowPolls && post.polls.length > 0) ||
     (allowType == "Links Only" && type != "url" && type != "hybrid") ||
@@ -368,15 +330,16 @@ export async function checkVotesMiddleware(currentUser, posts) {
   // Assume currentUser is the authenticated user
   if (currentUser) {
     const currentUserId = currentUser._id; // Assuming userId is used for comparison
+    console.log(currentUserId && currentUser.saved_posts_ids.includes("j"));
     // Fetch and populate posts with upvote/downvote status for the current user
     posts = posts.map((post) => {
       // Add isUpvoted and isDownvoted as temporary fields
-      const isUpvoted =
-        currentUserId &&
-        currentUser.upvotes_posts_ids.includes(post._id.toString());
-      const isDownvoted =
-        currentUserId &&
-        currentUser.downvotes_posts_ids.includes(post._id.toString());
+      const isUpvoted = currentUser.upvotes_posts_ids.includes(
+        post._id.toString()
+      );
+      const isDownvoted = currentUser.downvotes_posts_ids.includes(
+        post._id.toString()
+      );
       var vote = 0;
       if (isUpvoted) vote = 1;
       else if (isDownvoted) vote = -1;
@@ -392,9 +355,10 @@ export async function checkVotesMiddleware(currentUser, posts) {
           poll_vote = option.id;
         }
       }
+      const saved = currentUser.saved_posts_ids.includes(post._id.toString());
       if (post instanceof mongoose.Document)
-        return { ...post.toObject(), vote, poll_vote };
-      else return { ...post, vote, poll_vote };
+        return { ...post.toObject(), vote, poll_vote, saved };
+      else return { ...post, vote, poll_vote, saved };
     });
     return posts;
   }

@@ -53,8 +53,8 @@ const communitySchema = new mongoose.Schema({
   // Initialized to zero on creation and incremented when a user joins the community and decremented when a user leaves the community.
   members_count: {
     type: Number,
-    min: 0,
-    default: 0,
+    min: 1,
+    default: 1,
   },
 
   // TODO: Should be set to the user who created the community.
@@ -91,22 +91,7 @@ const communitySchema = new mongoose.Schema({
 
     },
   ],
-  /*
-  muted_users: [
-    {
-      username: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      muted_by_username: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-      mute_date: Date,
-      mute_reason: String,
-    },
-],
-   */
+
   muted_users: [
     {
       username: {

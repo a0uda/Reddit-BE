@@ -157,16 +157,15 @@ export const postSchema = new mongoose.Schema({
     },
   },
 });
-postSchema.pre("find", function (next) {
-  // Define the projection based on whether the post is deleted or not
-  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+// postSchema.pre("find", function (next) {
+//   // Define the projection based on whether the post is deleted or not
+//   const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
 
-  // Set the projection to the query
-  this.select(projection);
+//   // Set the projection to the query
+//   this.select(projection);
 
-  next();
-});
-export const Post = mongoose.model("Post", postSchema);
+//   next();
+// });
 
 postSchema.pre("find", function () {
   this.where({ deleted: false });
@@ -188,3 +187,14 @@ postSchema.pre("find", function () {
     }
   }
 });
+
+postSchema.pre("save", function () {
+  this.user_details.total_views = this.views_count;
+  this.user_details.total_shares = this.shares_count;
+  if (this.upvotes_count + this.downvotes_count != 0) {
+    this.user_details.upvote_rate =
+      (this.upvotes_count / (this.upvotes_count + this.downvotes_count)) * 100;
+  }
+});
+
+export const Post = mongoose.model("Post", postSchema);

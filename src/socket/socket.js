@@ -5,16 +5,17 @@ import { stat } from "fs";
 import jwt from "jsonwebtoken";
 import { User } from "../db/models/User.js";
 
-// This line creates a new Express application.
-const app = express();
+const io = require("socket.io")(Server, {
+  path: "/socket.io",
+});
 
-// This line creates a new HTTP server that uses the Express application.
-const server = http.createServer(app);
+// // This line creates a new Express application.
+// const app = express();
 
-// TODO: Uncomment.
+// // This line creates a new HTTP server that uses the Express application.
+// const server = http.createServer(app);
 
-// This line creates a new Socket.IO server that uses the HTTP server.
-// It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
+// // TODO: Uncomment.
 
 const io = new Server(server, {
   cors: {
@@ -74,28 +75,28 @@ io.on("connection", async (socket) => {
   });
 });
 
-export { app, io, server };
+// export { app, io, server };
 
-// io.on:
-// This is used to set up a listener for a specific event on the Socket.IO server.
-// The listener will be called whenever that event is emitted by any client.
-// For example, io.on('connection', callback) sets up a listener for the 'connection' event,
-// which is emitted whenever a client connects to the server.
+// // io.on:
+// // This is used to set up a listener for a specific event on the Socket.IO server.
+// // The listener will be called whenever that event is emitted by any client.
+// // For example, io.on('connection', callback) sets up a listener for the 'connection' event,
+// // which is emitted whenever a client connects to the server.
 
-// socket.on:
-// This is used to set up a listener for a specific event on a specific socket.
-// The listener will be called whenever that event is emitted by the client associated with that socket.
-// For example, socket.on('disconnect', callback) sets up a listener for the 'disconnect' event,
-// which is emitted when the client associated with the socket disconnects.
+// // socket.on:
+// // This is used to set up a listener for a specific event on a specific socket.
+// // The listener will be called whenever that event is emitted by the client associated with that socket.
+// // For example, socket.on('disconnect', callback) sets up a listener for the 'disconnect' event,
+// // which is emitted when the client associated with the socket disconnects.
 
-// io.emit:
-// This is used to emit an event to all connected clients.
+// // io.emit:
+// // This is used to emit an event to all connected clients.
 
-// socket.emit:
-// This is used to emit an event to the client associated with that socket.
+// // socket.emit:
+// // This is used to emit an event to the client associated with that socket.
 
-// io.to.emit:
-// This is used to emit an event to all clients in a specific room.
+// // io.to.emit:
+// // This is used to emit an event to all clients in a specific room.
 
-// socket.to.emit:
-// This is used to emit an event to all clients in a specific room, excluding the client associated with the socket.
+// // socket.to.emit:
+// // This is used to emit an event to all clients in a specific room, excluding the client associated with the socket.

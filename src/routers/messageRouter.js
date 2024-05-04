@@ -1,11 +1,11 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox } from "../services/messageService.js";
+import { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessagesCount, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
     try {
-        console.log("debugging composeNewMessage")
-        const { err, message } = await composeNewMessage(req)
+
+        const { err, message } = await composeNewMessage(req, false)
 
         if (err) { return next(err) }
 
@@ -17,7 +17,6 @@ messageRouter.post("/messages/compose", async (req, res, next) => {
 })
 messageRouter.get("/messages/sent", async (req, res, next) => {
     try {
-        console.log("debugging getUserSentMessages")
         const { err, messages } = await getUserSentMessages(req)
 
         if (err) { return next(err) }
@@ -30,7 +29,7 @@ messageRouter.get("/messages/sent", async (req, res, next) => {
 })
 messageRouter.get("/messages/unread", async (req, res, next) => {
     try {
-        console.log("debugging getUserUnreadMessages")
+
         const { err, messages } = await getUserUnreadMessages(req)
 
         if (err) { return next(err) }
@@ -114,7 +113,7 @@ messageRouter.get("/messages/inbox", async (req, res, next) => {
 messageRouter.post("/messages/reply", async (req, res, next) => {
     try {
 
-        const { err, message } = await composeNewMessage(req)
+        const { err, message } = await composeNewMessage(req, true)
 
         if (err) { return next(err) }
 
@@ -124,4 +123,44 @@ messageRouter.post("/messages/reply", async (req, res, next) => {
         next(error)
     }
 })
+messageRouter.post("/messages/mark-as-read", async (req, res, next) => {
+    try {
+
+        const { err, message } = await markMessageAsRead(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+////////////mark ALL as read ////////// 
+messageRouter.post("/messages/mark-all-as-read", async (req, res, next) => {
+    try {
+        const { err, message } = await markAllAsRead(req, true)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+//get unread messages count 
+messageRouter.get("/messages/unread-count", async (req, res, next) => {
+    try {
+        const { err, count } = await getUserUnreadMessagesCount(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ count });
+
+    } catch (error) {
+        next(error)
+    }
+})
 export { messageRouter };
+////////////mark as read //////////

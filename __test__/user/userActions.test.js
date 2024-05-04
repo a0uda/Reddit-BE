@@ -5,13 +5,13 @@ import {
   addOrRemovePicture,
   muteCommunity,
   clearHistory,
-} from "../src/controller/userActions";
-import { User } from "../src/db/models/User";
-import { Community } from "../src/db/models/Community";
+} from "../../src/controller/userActions";
+import { User } from "../../src/db/models/User";
+import { Community } from "../../src/db/models/Community";
 import jwt from "jsonwebtoken";
 
-jest.mock("../src/db/models/User");
-jest.mock("../src/db/models/Community");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/db/models/Community");
 jest.mock("jsonwebtoken", () => ({
   verify: jest.fn(() => ({
     _id: "userId",
@@ -39,6 +39,7 @@ describe("User Blocking", () => {
       safety_and_privacy_settings: { blocked_users: [] },
       followers_ids: [],
       following_ids: [],
+      token: ["validToken"],
       save: jest.fn(),
     };
     const mockUserToBlock = {
@@ -72,6 +73,7 @@ describe("User Blocking", () => {
       safety_and_privacy_settings: {
         blocked_users: [{ id: 1234 }],
       },
+      token: ["validToken"],
       save: jest.fn(),
     };
     const mockUserToUnBlock = {
@@ -100,10 +102,12 @@ describe("User Blocking", () => {
     };
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       username: "unblockingUser",
       safety_and_privacy_settings: {
         blocked_users: [{ _id: 1234 }],
       },
+      token: ["validToken"],
       save: jest.fn(),
     };
     User.findById = jest.fn().mockReturnValueOnce(mockUser);
@@ -127,10 +131,12 @@ describe("User Blocking", () => {
     };
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       username: "unblockingUser",
       safety_and_privacy_settings: {
         blocked_users: [{ _id: 1234 }],
       },
+      token: ["validToken"],
       save: jest.fn(),
     };
     User.findById = jest.fn().mockReturnValueOnce(mockUser);
@@ -167,8 +173,10 @@ describe("User Reporting", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       username: "reportingUser",
       reported_users: [],
+      token: ["validToken"],
       save: jest.fn(), // Mock the save function
     };
     const mockUserToReport = {
@@ -195,8 +203,10 @@ describe("User Reporting", () => {
     };
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       username: "reportingUser",
       reported_users: [],
+      token: ["validToken"],
       save: jest.fn(), // Mock the save function
     };
     User.findById = jest.fn().mockReturnValueOnce(mockUser);
@@ -220,6 +230,7 @@ describe("User Reporting", () => {
     };
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       username: "reportingUser",
       reported_users: [],
       save: jest.fn(), // Mock the save function
@@ -258,6 +269,7 @@ describe("User Picture Management", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       profile_settings: {},
       save: jest.fn(), // Mock the save function
     };
@@ -282,6 +294,7 @@ describe("User Picture Management", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       profile_settings: {
         profile_picture: "existingProfilePictureURL",
       },
@@ -310,6 +323,7 @@ describe("User Picture Management", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       profile_settings: {},
       save: jest.fn().mockImplementation(() => {
         throw new Error("Internal Server Error");
@@ -343,6 +357,7 @@ describe("Community Muting", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       safety_and_privacy_settings: {
         muted_communities: [],
       },
@@ -375,6 +390,7 @@ describe("Community Muting", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       safety_and_privacy_settings: {
         muted_communities: [{ id: "communityId" }],
       },
@@ -407,6 +423,7 @@ describe("Community Muting", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       safety_and_privacy_settings: {
         muted_communities: [],
       },
@@ -435,6 +452,7 @@ describe("Community Muting", () => {
 
     const mockUser = {
       _id: "userId",
+      token: ["validToken"],
       safety_and_privacy_settings: {
         muted_communities: [],
       },
@@ -475,6 +493,7 @@ describe("Clearing History", () => {
     const mockUser = {
       _id: "userId",
       history_posts_ids: ["postId1", "postId2"],
+      token: ["validToken"],
       save: jest.fn(), // Mock the save function
     };
     User.findById = jest.fn().mockReturnValueOnce(mockUser);

@@ -10,10 +10,10 @@ import {
   getRandomBool,
   getRandomElement,
   getRandomNumber,
-} from "./seedHelpers.js";
+} from "./helpers/seedHelpers.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const USERS_COUNT = 2;
+const USERS_COUNT = 20;
 
 async function generateRandomUsers() {
   const users = [];
@@ -23,15 +23,14 @@ async function generateRandomUsers() {
       deleted_at: null,
       deleted: false,
       username: faker.internet.userName(),
-      token: "",
+      token: [],
       //password: faker.internet.password(8),
-      password: "hamada123",
-      is_password_set_flag: false,
+      password: "testing123",
+      is_password_set_flag: true,
       connected_google: false,
       email: faker.internet.email(),
-      verified_email_flag: false,
+      verified_email_flag: faker.datatype.boolean(),
       gmail: faker.internet.email(),
-      facebook_email: faker.internet.email(),
       display_name: faker.person.fullName(),
       about: faker.lorem.sentences(),
       social_links: [
@@ -59,18 +58,18 @@ async function generateRandomUsers() {
       profile_picture: faker.image.avatar(),
       banner_picture: faker.image.url(),
       profile_settings: {
-        nsfw_flag: false,
-        allow_followers: true,
-        content_visibility: true,
-        active_communities_visibility: true,
+        nsfw_flag: faker.datatype.boolean(),
+        allow_followers: faker.datatype.boolean(),
+        content_visibility: faker.datatype.boolean(),
+        active_communities_visibility: faker.datatype.boolean(),
       },
       safety_and_privacy_settings: {
         blocked_users: [],
         muted_communities: [],
       },
       feed_settings: {
-        Adult_content_flag: false,
-        autoplay_media: true,
+        Adult_content_flag: faker.datatype.boolean(),
+        autoplay_media: faker.datatype.boolean(),
         communitiy_content_sort: {
           type: getRandomElement(["top", "hot", "new", "rising"]),
           duration: getRandomElement([
@@ -91,21 +90,21 @@ async function generateRandomUsers() {
           ]),
           global_remember_per_community: false,
         },
-        Open_posts_in_new_tab: false,
-        community_themes: true,
+        Open_posts_in_new_tab: faker.datatype.boolean(),
+        community_themes: faker.datatype.boolean(),
       },
       notifications_settings: {
-        mentions: true,
-        comments: true,
-        upvotes_posts: true,
-        upvotes_comments: true,
-        replies: true,
-        new_followers: true,
-        invitations: true,
-        posts: true,
-        private_messages: true,
-        chat_messages: true,
-        chat_requests: true,
+        mentions: faker.datatype.boolean(),
+        comments: faker.datatype.boolean(),
+        upvotes_posts: faker.datatype.boolean(),
+        upvotes_comments: faker.datatype.boolean(),
+        replies: faker.datatype.boolean(),
+        new_followers: faker.datatype.boolean(),
+        invitations: faker.datatype.boolean(),
+        posts: faker.datatype.boolean(),
+        private_messages: faker.datatype.boolean(),
+        chat_messages: faker.datatype.boolean(),
+        chat_requests: faker.datatype.boolean(),
       },
       chat_and_messaging_settings: {
         who_send_chat_requests_flag: getRandomElement([
@@ -120,9 +119,9 @@ async function generateRandomUsers() {
         ]),
       },
       email_settings: {
-        new_follower_email: true,
-        chat_request_email: true,
-        unsubscribe_from_all_emails: false,
+        new_follower_email: faker.datatype.boolean(),
+        chat_request_email: faker.datatype.boolean(),
+        unsubscribe_from_all_emails: faker.datatype.boolean(),
       },
 
       followed_posts_ids: [],
@@ -138,13 +137,10 @@ async function generateRandomUsers() {
       gender: getRandomElement(["Male", "Female"]),
       followers_ids: [],
       following_ids: [],
-      notifications_ids: [],
-      unread_notifications_count: 0,
       communities: [],
       moderated_communities: [],
       reported_users: [],
-      user_mentions: [],
-      tickets_ids: [],
+      user_mentions: [], //TODO: This should be seeded with real users because its referenced in messages , I need an extra attribute: unread
     };
 
     const salt = await bcrypt.genSalt(10);
@@ -156,10 +152,77 @@ async function generateRandomUsers() {
   return users;
 }
 
+export async function seedUserMentions(users, posts, comments) {
+  for (let i = 0; i < users.length; i++) {
+    let user = users[i];
+    let randomPost;
+    let randomComment;
+    let randomUser;
+    do {
+      randomUser = getRandomElement(users).username;
+    } while (randomUser == user.username);
+
+    if (i % 2 == 0) {
+      randomPost = null;
+      randomComment = getRandomElement(comments)._id;
+    } else {
+      randomPost = getRandomElement(posts)._id;
+      randomComment = null;
+    }
+    user.user_mentions.push({
+      post_id: randomPost,
+      comment_id: randomComment,
+      sender_username: randomUser,
+    });
+    await user.save();
+  }
+}
+// export async function completeUserSeed(users) {
+//   const blocked_users = users.slice(0, 10);
+//   for (let i = 0; i < users.length; i++) {
+//     const user = users[i];
+//     for (let j = 0; j < blocked_users.length; j++) {
+//       if (i == j) continue;
+//       user.safety_and_privacy_settings,
+//         blocked_users.push({
+//           id: user[j]._id,
+//           blocked_date: faker.date.past(),
+//         });
+//       break;
+//     }
+
+//     const blockedUserIds = user.safety_and_privacy_settings.blocked_users.map(
+//       (user) => user.id
+//     );
+
+//     for (let j = 0; j < 5; j++) {
+//       let randomIndex;
+//       do {
+//         randomIndex = Math.floor(Math.random() * users.length);
+//       } while (
+//         randomIndex == i ||
+//         blockedUserIds.includes(users[randomIndex].id)
+//       );
+
+//       const randomUser = users[randomIndex];
+//       user.following_ids.push(randomUser._id);
+//       const blockedUsersFollower =
+//         randomUser.safety_and_privacy_settings.blocked_users.map(
+//           (user) => user.id
+//         );
+//       if (!blockedUsersFollower.includes(user._id))
+//         user.followers_ids.push(randomUser._id);
+//     }
+//   }
+//   return users;
+// }
+
 export async function seedUsers() {
   await User.deleteMany({});
   const users = await generateRandomUsers();
   const options = { timeout: 30000 };
   const usersInserted = await User.insertMany(users, options);
+  // const editedUsers = await completeUserSeed(usersInserted);
+  // const finalUsers = await User.updateMany(editedUsers, options);
   return usersInserted;
 }
