@@ -17,7 +17,7 @@ import {
 import { ObjectId } from "mongodb";
 
 const addNewCommunity = async (requestBody, creator) => {
-  const { name, type, nsfw_flag, category } = requestBody;
+  const { name, type, nsfw_flag, category, description } = requestBody;
 
   const communityGeneralSettings = new CommunityGeneralSettings();
   const communityContentControls = new CommunityContentControls();
@@ -26,6 +26,7 @@ const addNewCommunity = async (requestBody, creator) => {
   communityGeneralSettings.title = name;
   communityGeneralSettings.type = type;
   communityGeneralSettings.nsfw_flag = nsfw_flag;
+  communityGeneralSettings.description = description;
 
   const community = new Community({
     name,
@@ -38,12 +39,13 @@ const addNewCommunity = async (requestBody, creator) => {
     ],
     joined_users: [
       {
-        username: creator.username,
+        _id: creator._id,
       },
     ],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
+
   });
 
   try {
@@ -353,7 +355,7 @@ const getCommunity = async (request) => {
       return { err: { status: status, message: msg } };
     }
     //check if user username exist in the community.approved_users.username 
-    const joined_flag = await Community.findOne({ name: community_name, approved_users: { $elemMatch: { username: user.username } } });
+    const joined_flag = await Community.findOne({ name: community_name, joined_users: { $elemMatch: { _id: user._id } } });
     const community = await Community.findOne({ name: community_name });
     if (!community) {
       return { err: { status: 400, message: "community does not exist " } };
@@ -361,11 +363,14 @@ const getCommunity = async (request) => {
     const general_settings_id = community.general_settings;
     const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
 
-    // These flags are requested by the front-end team.
-    const moderator_flag = user.moderated_communities.some(community => community.id === community._id);
-    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(community => community.id === community._id);
-    const favorite_flag = user.communities.some(community => community.id.toString() === community._id && community.favorite_flag) ||
-      user.moderated_communities.some(community => community.id.toString() === community._id && community.favorite_flag);
+    // These flags are requested by the front-end team.  
+    console.log(user)
+    console.log(user.moderated_communities);
+    const moderator_flag = user.moderated_communities.some(community => community.id == community.id);
+    console.log(moderator_flag)
+    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(community => community.id == community.id);
+    const favorite_flag = user.communities.some(community => community.id == community.id && community.favorite_flag) ||
+      user.moderated_communities.some(community => community.id == community.id && community.favorite_flag);
 
     const returned_community = {
       community: {
