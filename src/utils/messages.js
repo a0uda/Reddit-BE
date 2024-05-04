@@ -100,8 +100,8 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
     let postCreatorType = null;
     let rank;
     //check if user._id some of comment.upvoted_users 
-    const upvoted = comment.upvote_users.includes(user._id);
-    const downvoted = comment.downvote_users.includes(user._id);
+    const upvoted = comment.upvote_users.includes(user.username);
+    const downvoted = comment.downvote_users.includes(user.username);
     if (upvoted)
         rank = 1;
     else if (downvoted)
@@ -143,14 +143,23 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 }
 const mapPostRepliesToFormat = async (post, user) => {
 
-    const comment = await Comment.findOne({ post_id: post._id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
+    const comment = await Comment.findOne({ post_id: post._id });
+    console.log("post", post.title)
+
+
+
+
     if (comment) {
-        const postCreator = user.username;
+        console.log("comment", comment)
+        const sender = comment.username
         let postCreatorType = null;
+        let postCreator = null;
         let rank;
         //check if user._id some of comment.upvoted_users 
-        const upvoted = comment.upvote_users.includes(user._id);
-        const downvoted = comment.downvote_users.includes(user._id);
+        const upvoted = comment.upvote_users.includes(user.username);
+
+        const downvoted = comment.downvote_users.includes(user.username);
+        console.log("comment text", comment.description)
         if (upvoted)
             rank = 1;
         else if (downvoted)
@@ -158,25 +167,23 @@ const mapPostRepliesToFormat = async (post, user) => {
         else
             rank = -1;
 
-
         if (post.post_in_community_flag) {
-            const community = await Community.findOne({ _id: post.community_id }).select('moderators');
+            const community = await Community.findOne({ _id: post.community_id })
             //check if post creator is in moderators 
-            postCreatorType = community.moderators.includes(postCreator.username) ? "moderator" : "user";
+            postCreatorType = "moderator"
+            postCreator = community.name
 
         } else {
             postCreatorType = "user";
+            postCreator = comment.username;
         }
-        const sender = await User.findOne({ _id: comment.user_id });
-        if (!sender) {
-            return null;
-        }
+
 
         const mappedMessages = {
             created_at: comment.created_at,
-            senderUsername: sender.username,
-            postCreator: postCreator.username,
-            postCreatorType: postCreatorType,
+            senderUsername: comment.username,
+            postCreator,
+            postCreatorType,
             postSubject: post.title,
             replyContent: comment.description,
             _id: comment._id,
