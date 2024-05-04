@@ -467,7 +467,7 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
       content: { posts, comments },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -487,14 +487,19 @@ export async function getAbout(request) {
       return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
-    const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+    var { user: loggedInUser } = await verifyAuthToken(request);
+    if (!loggedInUser) loggedInUser = user;
+    const moderatedCommunities = await getModeratedCommunitiesHelper(
+      user,
+      loggedInUser
+    );
     return {
       success: true,
       message: "About retrieved successfully",
       about: { ...about, moderatedCommunities },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -512,7 +517,10 @@ export async function getCommunities(request, communityType) {
       return { success, err, status, user, msg };
     }
     if (communityType == "moderated") {
-      const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+      const moderatedCommunities = await getModeratedCommunitiesHelper(
+        user,
+        user
+      );
       return {
         success: true,
         status: 200,
@@ -529,7 +537,7 @@ export async function getCommunities(request, communityType) {
       };
     }
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -661,7 +669,7 @@ export async function getActiveCommunities(request) {
       content: active_communities,
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,

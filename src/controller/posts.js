@@ -129,15 +129,17 @@ export async function createPost(request) {
   post.user_id = user._id;
   post.username = user.username;
   post.created_at = Date.now();
-  post.upvotes_count++;
-  user.upvotes_posts_ids.push(post._id);
-  
+
   if (post.upvotes_count + post.downvotes_count != 0) {
     post.user_details.upvote_rate =
       (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100;
   }
 
-  await post.save();
+  const savedPost = await post.save();
+  savedPost.upvotes_count++;
+  user.upvotes_posts_ids.push(savedPost._id);
+  await savedPost.save();
+
   await user.save();
   console.log("HIIIIIIIIII", post._id);
   return {
@@ -269,7 +271,12 @@ export async function sharePost(request) {
       shared_post.community_id = community._id;
     }
 
-    await shared_post.save();
+    const savedSharedPost = await shared_post.save();
+    savedSharedPost.upvotes_count++;
+    user.upvotes_posts_ids.push(savedSharedPost._id);
+    await user.save();
+    await savedSharedPost.save();
+
     const postObj = await Post.findById(post._id);
     postObj.shares_count++;
     postObj.user_details.total_shares++;

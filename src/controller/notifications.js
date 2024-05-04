@@ -193,3 +193,22 @@ export async function hideNotification(request) {
     return generateResponse(false, 500, "Internal Server error");
   }
 }
+//get unread notifications count : Heba 
+export async function getUnreadNotificationsCount(request) {
+
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+    const notifications = await Notification.find({ user_id: user._id, unread_flag: true }).exec();
+    return {
+      success: true,
+      message: "Notifications retrieved successfully",
+      count: notifications.length
+    };
+  }
+  catch (e) {
+    return generateResponse(false, 500, "Internal Server error");
+  }
+}
