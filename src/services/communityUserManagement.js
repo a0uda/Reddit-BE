@@ -872,6 +872,9 @@ const addModerator = async (request) => {
             id: community._id,
             favorite_flag: false,
         });
+        user.communities.push({
+            id: community._id,
+        })
         await user.save();
 
         return { success: true };
