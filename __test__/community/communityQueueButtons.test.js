@@ -1,11 +1,11 @@
-import { removeItem, spamItem, reportItem, approveItem } from '../src/services/communityQueueService.js';
-import { Post } from '../src/db/models/Post.js';
-import { Comment } from '../src/db/models/Comment.js';
-import { Community } from '../src/db/models/Community.js';
+import { removeItem, spamItem, reportItem, approveItem } from '../../src/services/communityQueueService.js';
+import { Post } from '../../src/db/models/Post.js';
+import { Comment } from '../../src/db/models/Comment.js';
+import { Community } from '../../src/db/models/Community.js';
 
-jest.mock('../src/db/models/Post.js');
-jest.mock('../src/db/models/Comment.js');
-jest.mock('../src/db/models/Community.js');
+jest.mock('../../src/db/models/Post.js');
+jest.mock('../../src/db/models/Comment.js');
+jest.mock('../../src/db/models/Community.js');
 
 describe('removeItem', () => {
     it('should return error for invalid input parameters', async () => {

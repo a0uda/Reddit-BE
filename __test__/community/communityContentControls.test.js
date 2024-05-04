@@ -1,6 +1,6 @@
-import { getCommunityContentControls, changeCommunityContentControls } from '../src/services/communitySettingsService.js';
-import { Community } from '../src/db/models/Community.js';
-import { CommunityContentControls } from '../src/db/models/communityContentControls.js';
+import { getCommunityContentControls, changeCommunityContentControls } from '../../src/services/communitySettingsService.js';
+import { Community } from '../../src/db/models/Community.js';
+import { CommunityContentControls } from '../../src/db/models/communityContentControls.js';
 
 describe('getCommunityContentControls', () => {
     it('should return content controls for a valid community name', async () => {

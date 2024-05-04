@@ -467,7 +467,7 @@ export async function getOverview(request, pageNumber, pageSize, sortBy) {
       content: { posts, comments },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -661,7 +661,7 @@ export async function getActiveCommunities(request) {
       content: active_communities,
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,
