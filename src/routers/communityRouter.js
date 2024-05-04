@@ -57,14 +57,22 @@ import {
 import {
     addCommunityProfilePicture,
     deleteCommunityProfilePicture,
+    getCommunityProfilePicture,
+    getCommunityBannerPicture,
+
 
     addCommunityBannerPicture,
     deleteCommunityBannerPicture,
 } from "../services/communityProfileAndBannerPictures.js";
 
 import {
-    addNewCommunityController,
     schedulePostController,
+    getScheduledPostsController,
+    editScheduledPostController,
+
+    addNewCommunityController,
+    getCommunityNamesController,
+    getCommunityNamesByPopularityController
 } from "../controller/communityController.js";
 
 import {
@@ -87,13 +95,22 @@ import {
     approveItemController
 } from '../controller/communityQueueController.js';
 
+import {
+    protectRoute,
+    protectModeratorRoute
+} from "../middleware/protectRoutes.js";
+
 
 const communityRouter = express.Router();
 
 
+// TODO: Validations.
+// communityRouter.use(protectRoute)
 
 //////////////////////////////////////////////////////////////////////// Add Community //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
+communityRouter.get("/communities/get-community-names", protectRoute, getCommunityNamesController);
+communityRouter.get("/communities/get-community-names-by-popularity", protectRoute, getCommunityNamesByPopularityController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/get-general-settings/:community_name", getCommunityGeneralSettingsController);
@@ -115,7 +132,9 @@ communityRouter.post("/communities/report-item/:community_name", reportItemContr
 communityRouter.post("/communities/approve-item/:community_name", approveItemController);
 
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
-communityRouter.post("/communities/schedule-post/:community_name", schedulePostController);
+communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
+communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
+communityRouter.post("/communities/edit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, editScheduledPostController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
@@ -406,7 +425,32 @@ communityRouter.post("/communities/delete-profile-picture", async (req, res, nex
         next(error)
     }
 })
+//get profile picture 
+communityRouter.get("/communities/get-profile-picture/:community_name", async (req, res, next) => {
+    try {
+        const { err, picture } = await getCommunityProfilePicture(req.params.community_name)
 
+        if (err) { return next(err) }
+
+        res.status(200).send(picture);
+
+    } catch (error) {
+        next(error)
+    }
+})
+//get banner picture 
+communityRouter.get("/communities/get-banner-picture/:community_name", async (req, res, next) => {
+    try {
+        const { err, picture } = await getCommunityBannerPicture(req.params.community_name)
+
+        if (err) { return next(err) }
+
+        res.status(200).send(picture);
+
+    } catch (error) {
+        next(error)
+    }
+})
 //////////////////////////////////////////////////////////////////////// Profile Picture //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/delete-banner-picture", async (req, res, next) => {
     try {

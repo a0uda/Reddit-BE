@@ -167,10 +167,41 @@ const deleteCommunityBannerPicture = async (requestBody) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+//GET /communities/:community_name/profile_picture 
+const getCommunityProfilePicture = async (community_name) => {
 
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return {
+                err: { status: 400, message: "community name does not exist " },
+            };
+        }
+        return { picture: community.profile_picture };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+//GET /communities/:community_name/banner_picture 
+const getCommunityBannerPicture = async (community_name) => {
+
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return {
+                err: { status: 400, message: "community name does not exist " },
+            };
+        }
+        return { picture: community.banner_picture };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
 export {
     addCommunityProfilePicture,
     deleteCommunityProfilePicture,
+    getCommunityProfilePicture,
+    getCommunityBannerPicture,
 
     addCommunityBannerPicture,
     deleteCommunityBannerPicture,
