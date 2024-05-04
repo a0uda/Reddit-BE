@@ -1,6 +1,6 @@
-import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../src/services/communitySettingsService.js';
-import { Community } from '../src/db/models/Community.js';
-import { CommunityGeneralSettings } from '../src/db/models/communityGeneralSettings.js';
+import { getCommunityGeneralSettings, changeCommunityGeneralSettings } from '../../src/services/communitySettingsService.js';
+import { Community } from '../../src/db/models/Community.js';
+import { CommunityGeneralSettings } from '../../src/db/models/communityGeneralSettings.js';
 
 describe('getCommunityGeneralSettings', () => {
     it('should return general settings for a valid community name', async () => {

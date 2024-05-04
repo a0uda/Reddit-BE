@@ -17,7 +17,9 @@ const mapMessageToFormat = async (message, user, which_function) => {
     }
     else //reciever type is moderator here is the bug 
     {
+        console.log("message", message)
         const community = await Community.findOne({ _id: message.receiver_id }).select('name')
+        console.log("community", community)
         receiver_username = community.name;
 
 
@@ -61,10 +63,13 @@ const mapMessageToFormat = async (message, user, which_function) => {
     )) return null;
     //filter deleted messages
     //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
-
+    const sender = await User.findOne({ _id: message.sender_id });
+    if (!sender) {
+        return null;
+    }
     return {
         _id: message._id,
-        sender_username: user.username,
+        sender_username: sender.username,
         sender_type: message.sender_type,
         receiver_username,
         receiver_type: message.receiver_type,
@@ -77,6 +82,8 @@ const mapMessageToFormat = async (message, user, which_function) => {
         parentMessageId: message.parent_message_id,
         subject: message.subject,
         isReply: message.parent_message_id ? true : false,
+        is_username_mention: false,
+        is_invitation: message.is_invitation
 
     }
 }
@@ -125,7 +132,10 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         rank: rank,
         upvotes_count: comment.upvotes_count,
         downvotes_count: comment.downvotes_count,
-        isSent: false
+        isSent: false,
+        is_username_mention: false,
+
+
 
     };
     return mappedMessages;
@@ -157,10 +167,14 @@ const mapPostRepliesToFormat = async (post, user) => {
         } else {
             postCreatorType = "user";
         }
+        const sender = await User.findOne({ _id: comment.user_id });
+        if (!sender) {
+            return null;
+        }
 
         const mappedMessages = {
             created_at: comment.created_at,
-            senderUsername: user.username,
+            senderUsername: sender.username,
             postCreator: postCreator.username,
             postCreatorType: postCreatorType,
             postSubject: post.title,
@@ -171,7 +185,9 @@ const mapPostRepliesToFormat = async (post, user) => {
             rank: rank,
             upvotes_count: comment.upvotes_count,
             downvotes_count: comment.downvotes_count,
+            is_username_mention: false,
         };
+
         return mappedMessages;
     } else {
         return null;

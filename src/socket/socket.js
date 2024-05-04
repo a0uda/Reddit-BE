@@ -1,6 +1,9 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
+import { stat } from "fs";
+import jwt from "jsonwebtoken";
+import { User } from "../db/models/User.js";
 
 const io = require("socket.io")(Server, {
   path: "/socket.io",
@@ -14,44 +17,63 @@ const io = require("socket.io")(Server, {
 
 // // TODO: Uncomment.
 
-// // This line creates a new Socket.IO server that uses the HTTP server.
-// // It also sets up Cross-Origin Resource Sharing (CORS) to allow requests from "http://localhost:3000" using the GET and POST methods.
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  },
+});
 
-// // const io = new Server(server, {
-// //     cors: {
-// //         origin: ["http://localhost:2998", "http://localhost:2999", "http://localhost:3000"],
-// //         methods: ["GET", "POST", "PUT", "PATCH","DELETE"],
-// //     },
-// // });
 
-// const io = new Server(server)
+// This function is exported so it can be used in other files.
+// It takes a receiverId and returns the corresponding socket ID from userSocketMap.
+export const getReceiverSocketId = (receiverId) => {
+  return userSocketMap[receiverId];
+};
 
-// // This function is exported so it can be used in other files.
-// // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
-// export const getReceiverSocketId = (receiverId) => {
-//   return userSocketMap[receiverId];
-// };
+// This object maps user IDs to socket IDs.
+// It's used to keep track of which socket belongs to which user.
+const userSocketMap = {}; // {user_id: socketId}
 
-// // This object maps user IDs to socket IDs.
-// // It's used to keep track of which socket belongs to which user.
-// const userSocketMap = {}; // {userId: socketId}
+// This sets up an event listener for the "connection" event, which is emitted whenever a client connects to the server.
+// Inside the event listener, it logs the socket ID,
+// stores the socket ID in userSocketMap if the user ID is defined,
+// and sets up an event listener for the "disconnect" event.
+io.on("connection", async (socket) => {
+  console.log("a user connected", socket.id);
 
-// // This sets up an event listener for the "connection" event, which is emitted whenever a client connects to the server.
-// // Inside the event listener, it logs the socket ID,
-// // stores the socket ID in userSocketMap if the user ID is defined,
-// // and sets up an event listener for the "disconnect" event.
-// io.on("connection", (socket) => {
-//   console.log("a user connected", socket.id);
+  // Get the user from the procided token to fill the userSocketMap.
 
-//   const userId = socket.handshake.query.userId;
-//   if (userId != "undefined") userSocketMap[userId] = socket.id;
+  // Extract the token from the query parameter.
+  const token = socket.handshake.query.token.split(" ")[1];
 
-//   // socket.on() is used to listen to the events. can be used both on client and server side
-//   socket.on("disconnect", () => {
-//     console.log("user disconnected", socket.id);
-//     delete userSocketMap[userId];
-//   });
-// });
+  // Verify the token.
+  let user_token;
+
+  try {
+    user_token = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    console.log({ err: { status: 401, message: `Invalid Token: ${err.message}` } });
+  }
+
+  // Get the user id from the token.
+  const user_id = user_token._id;
+
+  // Get the user from the id.
+  const user = await User.findById(user_id);
+
+  if (!user) {
+    console.log({ err: { status: 404, message: "User not found" } });
+  } else {
+    userSocketMap[user_id] = socket.id;
+  }
+
+  // socket.on() is used to listen to the events. can be used both on client and server side
+  socket.on("disconnect", () => {
+    console.log("user disconnected", socket.id);
+    delete userSocketMap[user_id];
+  });
+});
 
 // export { app, io, server };
 
