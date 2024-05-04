@@ -12,8 +12,8 @@ import {
     getMembersCount,
 
 
-    getComments,
-    addComment,
+    // getComments,
+    // addComment,
     getCommunity,
 
 } from "../services/communityService.js";
@@ -481,31 +481,31 @@ communityRouter.post("/communities/add-banner-picture", async (req, res, next) =
 
 ////////////////////////////////COMMENTS////////////////////////////////////////////////////////////
 //this API should be completely changed , this was just a tool to test moderation it has nothing todo with comments
-communityRouter.post("/communities/add-comment", async (req, res, next) => {
-    try {
-        const { err, success } = await addComment(req.body)
+// communityRouter.post("/communities/add-comment", async (req, res, next) => {
+//     try {
+//         const { err, success } = await addComment(req.body)
 
-        if (err) { return next(err) }
+//         if (err) { return next(err) }
 
-        res.status(200).json({ message: 'OK' });
+//         res.status(200).json({ message: 'OK' });
 
-    } catch (error) {
-        next(error)
-    }
-})
+//     } catch (error) {
+//         next(error)
+//     }
+// })
 //GET COMMENT 
-communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
-    try {
-        const { err, comments } = await getComments()
+// communityRouter.get("/communities/get-all-comments", async (req, res, next) => {
+//     try {
+//         const { err, comments } = await getComments()
 
-        if (err) { return next(err) }
+//         if (err) { return next(err) }
 
-        return res.status(200).send(comments)
+//         return res.status(200).send(comments)
 
-    } catch (error) {
-        next(error)
-    }
-})
+//     } catch (error) {
+//         next(error)
+//     }
+// })
 ////////////////////////////////////////////////////MUTE USERS///////////////////////////////////////////////
 communityRouter.post("/communities/mute-user", async (req, res, next) => {
     try {

@@ -1,4 +1,5 @@
 import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import {
@@ -11,7 +12,6 @@ import {
   checkApprovedUser,
   checkBannedUser,
   checkNewPostInput,
-  getPostCommentsHelper,
   getCommunity,
   checkPostSettings,
   checkContentSettings,
@@ -263,11 +263,11 @@ export async function sharePost(request) {
       shared_post.community_id = community._id;
     }
 
-    post.shares_count++;
-    post.user_details.total_shares++;
-
     await shared_post.save();
-    await post.save();
+    const postObj = await Post.findById(post._id);
+    postObj.shares_count++;
+    postObj.user_details.total_shares++;
+    await postObj.save();
 
     return {
       success: true,
@@ -312,11 +312,11 @@ export async function getPost(request, verifyUser) {
       error: { status: 404, message: "Post Not found" },
     };
   }
-  // if (user) {
-  //   var result = await checkVotesMiddleware(user, [post]);
-
-  //   post = result[0];
-  // }
+  const { user: loggedInUser } = await verifyAuthToken(request);
+  if (loggedInUser) {
+    var result = await checkVotesMiddleware(loggedInUser, [post]);
+    post = result[0];
+  }
 
   return {
     success: true,
@@ -332,8 +332,21 @@ export async function getPostComments(request) {
     return { success, error };
   }
   const { user } = await verifyAuthToken(request);
-  var comments = await getPostCommentsHelper(post._id);
-  if (user) comments = await checkCommentVotesMiddleware(user, comments);
+  var comments = await Comment.find({ post_id: post._id })
+    .populate("replies_comments_ids")
+    .exec();
+  if (user) {
+    comments = await checkCommentVotesMiddleware(user, comments);
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
+  }
   return {
     success: true,
     comments,
@@ -367,12 +380,13 @@ export async function marknsfw(request) {
     if (!success) {
       return { success, error };
     }
-    post.nsfw_flag = !post.nsfw_flag;
-    await post.save();
+    const postObj = await Post.findById(post._id);
+    postObj.nsfw_flag = !postObj.nsfw_flag;
+    await postObj.save();
     return {
       success: true,
       error: {},
-      message: "Post nsfw_flag updated sucessfully to " + post.nsfw_flag,
+      message: "Post nsfw_flag updated sucessfully to " + postObj.nsfw_flag,
     };
   } catch (e) {
     return {
@@ -388,14 +402,15 @@ export async function allowReplies(request) {
     if (!success) {
       return { success, error };
     }
-    post.allowreplies_flag = !post.allowreplies_flag;
-    await post.save();
+    const postObj = await Post.findById(post._id);
+    postObj.allowreplies_flag = !postObj.allowreplies_flag;
+    await postObj.save();
     return {
       success: true,
       error: {},
       message:
         "Post allowreplies_flag updated sucessfully to " +
-        post.allowreplies_flag,
+        postObj.allowreplies_flag,
     };
   } catch (e) {
     return {
@@ -432,14 +447,15 @@ export async function setSuggestedSort(request) {
         },
       };
     }
-    post.set_suggested_sort = request.body.set_suggested_sort;
-    await post.save();
+    const postObj = await Post.findById(post._id);
+    postObj.set_suggested_sort = request.body.set_suggested_sort;
+    await postObj.save();
     return {
       success: true,
       error: {},
       message:
         "Post set_suggested_sort updated sucessfully to " +
-        post.set_suggested_sort,
+        postObj.set_suggested_sort,
     };
   } catch (e) {
     return {
@@ -924,29 +940,31 @@ export async function pollVote(request) {
     if (post.polls_voting_is_expired_flag)
       return generateResponse(false, 400, "Post poll vote is expired");
 
+    const postObj = await Post.findById(post._id);
     const expirationDate = new Date(post.created_at);
     expirationDate.setDate(expirationDate.getDate() + post.polls_voting_length);
     const currentDate = new Date();
     if (currentDate > expirationDate) {
-      post.polls_voting_is_expired_flag = true;
-      await post.save();
+      postObj.polls_voting_is_expired_flag = true;
+      await postObj.save();
       return generateResponse(false, 400, "Post poll vote is expired");
     }
 
-    const index = post.polls.findIndex(
+    const index = postObj.polls.findIndex(
       (option) => option._id.toString() == option_id.toString()
     );
     if (index == -1)
       return generateResponse(false, 400, "Option not found in post poll");
 
-    post.polls[index].votes++;
-    post.polls[index].users_ids.push(user._id);
+    postObj.polls[index].votes++;
+    postObj.polls[index].users_ids.push(user._id);
 
-    await post.save();
+    await postObj.save();
     return {
       success: true,
       error: {},
-      message: "Voted to option " + post.polls[index].options + " sucessfully",
+      message:
+        "Voted to option " + postObj.polls[index].options + " sucessfully",
     };
   } catch (e) {
     return {

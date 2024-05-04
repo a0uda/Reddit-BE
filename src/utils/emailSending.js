@@ -68,7 +68,7 @@ export async function redirectToVerifyEmail(userId, userEmail) {
   const link = `https://redditech.me/backend/users/internal-verify-email/${token.token}`;
   // DEVOPS
   let message = verifyEmailFormatEmail(link, userEmail);
-  await sendEmail(message);
+  sendEmail(message);
   console.log("email sent pt2");
 }
 
@@ -96,7 +96,7 @@ export async function redirectToResetPassword(userId, userEmail) {
  * @param {string} username - The username of the user.
  */
 export async function redirectToForgetUsername(userId, userEmail, username) {
-  const link = `https://redditech.me/userprofilepage/${username}`;
+  const link = `https://redditech.me/${username}`;
   // DEVOPS
   let message = forgetUsernameFormatEmail(link, userEmail, username);
   await sendEmail(message);

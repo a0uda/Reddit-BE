@@ -1,48 +1,10 @@
-import { Comment } from "../db/models/Comment.js";
 import { communityNameExists } from "../utils/communities.js";
 import {
   getCommunityGeneralSettings,
   getCommunityPostsAndComments,
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
-import { checkCommentVotesMiddleware } from "./comments.js";
 import mongoose from "mongoose";
-
-export async function getCommentRepliesHelper(comment) {
-  const replies = comment.replies_comments_ids;
-  comment.replies_comments_ids = [];
-  for (const reply of replies) {
-    const replyObject = await Comment.findById(reply);
-    comment.replies_comments_ids.push(replyObject);
-  }
-  return comment;
-
-  // const replies = comment.replies_comments_ids;
-  // comment.replies_comments_ids = [];
-  // for (const reply of replies) {
-  //   const replyObject = await Comment.findById(reply);
-  //   comment.replies_comments_ids.push(replyObject);
-  // }
-  // console.log(user);
-  // let x = comment.replies_comments_ids;
-  // if (user) {
-  //   x = await checkCommentVotesMiddleware(user, comment.replies_comments_ids);
-  // }
-  // comment.replies_comments_ids = x;
-  // console.log(comment.replies_comments_ids);
-  // return comment;
-}
-
-export async function getPostCommentsHelper(postId) {
-  const comments = await Comment.find({ post_id: postId }).exec();
-  if (!comments || comments.length === 0) return [];
-  const commentsWithReplies = [];
-  for (const comment of comments) {
-    const commentResult = await getCommentRepliesHelper(comment);
-    commentsWithReplies.push(commentResult);
-  }
-  return commentsWithReplies;
-}
 
 export async function checkNewPostInput(requestBody) {
   const {

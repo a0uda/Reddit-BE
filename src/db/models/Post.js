@@ -157,15 +157,15 @@ export const postSchema = new mongoose.Schema({
     },
   },
 });
-postSchema.pre("find", function (next) {
-  // Define the projection based on whether the post is deleted or not
-  const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
+// postSchema.pre("find", function (next) {
+//   // Define the projection based on whether the post is deleted or not
+//   const projection = this.getQuery().deleted ? "deleted deleted_at title" : "";
 
-  // Set the projection to the query
-  this.select(projection);
+//   // Set the projection to the query
+//   this.select(projection);
 
-  next();
-});
+//   next();
+// });
 export const Post = mongoose.model("Post", postSchema);
 
 postSchema.pre("find", function () {

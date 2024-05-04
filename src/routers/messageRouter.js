@@ -1,5 +1,5 @@
 
-import { composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
+import { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -123,8 +123,6 @@ messageRouter.post("/messages/reply", async (req, res, next) => {
         next(error)
     }
 })
-export { messageRouter };
-////////////mark as read //////////
 messageRouter.post("/messages/mark-as-read", async (req, res, next) => {
     try {
 
@@ -138,3 +136,18 @@ messageRouter.post("/messages/mark-as-read", async (req, res, next) => {
         next(error)
     }
 })
+////////////mark ALL as read ////////// 
+messageRouter.post("/messages/mark-all-as-read", async (req, res, next) => {
+    try {
+        const { err, message } = await markAllAsRead(req, true)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
+
+    } catch (error) {
+        next(error)
+    }
+})
+export { messageRouter };
+////////////mark as read //////////

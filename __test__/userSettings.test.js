@@ -41,6 +41,7 @@ describe("Get Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(null);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -56,6 +57,7 @@ describe("Get Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email: "test@example.com",
       verified_email_flag: true,
       country: "US",
@@ -94,6 +96,7 @@ describe("Get Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       display_name: "Test User",
       about: "This is a test user",
       social_links: [
@@ -157,6 +160,7 @@ describe("Get Settings", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       feed_settings: {
         Adult_content_flag: false,
         autoplay_media: true,
@@ -216,6 +220,7 @@ describe("Get Settings", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       notifications_settings: {
         mentions: true,
         comments: true,
@@ -266,6 +271,7 @@ describe("Get Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       chat_and_messaging_settings: {
         who_send_chat_requests_flag: true,
         who_send_private_messages_flag: false,
@@ -298,6 +304,7 @@ describe("Get Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email_settings: {
         new_follower_email: true,
         chat_request_email: false,
@@ -346,6 +353,7 @@ describe("Get Safety Settings", () => {
 
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       safety_and_privacy_settings: {
         blocked_users: [
           {
@@ -438,6 +446,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       gender: "Male",
       country: "US",
     };
@@ -466,6 +475,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       display_name: "Old display name",
       about: "Old about",
       nsfw_flag: false,
@@ -505,6 +515,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       feed_settings: {
         Adult_content_flag: false,
         autoplay_media: false,
@@ -544,6 +555,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       notifications_settings: {
         mentions: false,
         comments: false,
@@ -580,6 +592,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       email_settings: {
         new_follower_email: false,
         chat_request_email: false,
@@ -607,6 +620,7 @@ describe("Set Settings", () => {
     };
     const mockUser = {
       _id: "mockUserId",
+      token: ["valid_token"],
       chat_and_messaging_settings: {
         who_send_chat_requests_flag: "Nobody",
         who_send_private_messages_flag: "Nobody",

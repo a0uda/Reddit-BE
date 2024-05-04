@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "jest ./__test__/moderatorUserManagement.test.js",
+    "test": "jest ./__test__",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
-    "seed": "node ./seeds/seed.js"
+    "seed": "node ./seeds/seed.js",
+    "coverage": "jest --coverage"
   },
   "type": "module",
   "author": "",

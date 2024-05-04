@@ -19,7 +19,7 @@ export async function pushNotification(
         (community) => community.id
       );
 
-    console.log(post.community_id.toString());
+    // console.log(post.community_id.toString());
     if (post) {
       if (post.post_in_community_flag) {
         community_name = post.community_name;
@@ -42,8 +42,8 @@ export async function pushNotification(
       }
     }
 
-    console.log("hi", user, notifType);
-    console.log(user.username, sending_user_username);
+    // console.log("hi", user, notifType);
+    // console.log(user.username, sending_user_username);
     if (user.username != sending_user_username) {
       if (user.notifications_settings[notifType]) {
         const notification = new Notification({

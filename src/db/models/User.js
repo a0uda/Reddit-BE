@@ -21,10 +21,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  token: {
-    type: String,
-    default: null,
-  },
+  token: [
+    {
+      type: String,
+      default: null,
+    },
+  ],
   password: {
     type: String,
     minlength: 8,
@@ -56,11 +58,6 @@ const userSchema = new mongoose.Schema({
   },
 
   gmail: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
-  facebook_email: {
     type: String,
     unique: true,
     sparse: true,
@@ -220,7 +217,6 @@ const userSchema = new mongoose.Schema({
       default: true,
     },
 
-
     comments: {
       type: Boolean,
       default: true,
@@ -372,18 +368,6 @@ const userSchema = new mongoose.Schema({
       ref: "User",
     },
   },
-  notifications_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Notification",
-    },
-  },
-  unread_notifications_count: {
-    type: Number,
-    min: 0,
-    default: 0,
-  },
   communities: {
     type: Array,
     items: {
@@ -446,20 +430,12 @@ const userSchema = new mongoose.Schema({
         },
         unread_flag: {
           type: Boolean,
-          default: true
-        }
+          default: true,
+        },
       },
     },
   },
-  tickets_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Ticket",
-    },
-  },
 });
-
 
 userSchema.pre("save", async function (next) {
   const user = this;
@@ -488,7 +464,7 @@ userSchema.pre("find", function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token = jwt.sign(
+  const token = jwt.sign(
     {
       _id: user._id.toString(),
       username: user.username,
@@ -499,12 +475,8 @@ userSchema.methods.generateAuthToken = async function () {
       expiresIn: "1d",
     }
   );
-  const refreshToken = jwt.sign(
-    { _id: user._id.toString() },
-    process.env.JWT_SECRET,
-    { expiresIn: "8d" }
-  );
-  return refreshToken;
+  user.token.push(token);
+  return token;
 };
 
 export const User = mongoose.model("User", userSchema);

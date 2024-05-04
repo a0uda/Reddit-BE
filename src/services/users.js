@@ -100,7 +100,6 @@ export async function getUserPostsHelper(
         pageSize
       );
 
-
       posts = await checkVotesMiddleware(loggedInUser, posts);
 
       const postIds = posts.map((post) => post._id);
@@ -114,7 +113,16 @@ export async function getUserPostsHelper(
           },
         }
       );
-      
+      if (loggedInUser._id.toString() != user._id.toString()) {
+        const postIdsSet = new Set(posts.map((post) => post._id));
+        loggedInUser.history_posts_ids.push(
+          ...[...postIdsSet].filter(
+            (postId) => !loggedInUser.history_posts_ids.includes(postId)
+          )
+        );
+        console.log(loggedInUser.history_posts_ids.length);
+        await loggedInUser.save();
+      }
     } else {
       posts = await paginateUserPosts(
         user._id,
@@ -150,7 +158,16 @@ export async function getCommentsHelper(
       sortCriteria,
       pageSize
     );
-    if (user) comments = await checkCommentVotesMiddleware(user, comments);
+    comments = await checkCommentVotesMiddleware(user, comments);
+
+    await Promise.all(
+      comments.map(async (comment) => {
+        comment.replies_comments_ids = await checkCommentVotesMiddleware(
+          user,
+          comment.replies_comments_ids
+        );
+      })
+    );
     return comments;
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -178,7 +195,17 @@ export async function getUserCommentsHelper(
         sortCriteria,
         pageSize
       );
+
       comments = await checkCommentVotesMiddleware(loggedInUser, comments);
+
+      await Promise.all(
+        comments.map(async (comment) => {
+          comment.replies_comments_ids = await checkCommentVotesMiddleware(
+            loggedInUser,
+            comment.replies_comments_ids
+          );
+        })
+      );
     } else {
       comments = await paginateUserComments(
         user._id,
@@ -306,5 +333,5 @@ export async function getActiveCommunitiesHelper(communities) {
       }
     })
   );
-  return activeCommunities.filter((community) => community); 
+  return activeCommunities.filter((community) => community);
 }
