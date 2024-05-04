@@ -22,6 +22,7 @@ commentsRouter.get("/comments/get-comment", async (req, res) => {
     res.status(200).send({ message, content: comment });
   } catch (e) {
     res.status(500).send({ error: e });
+    console.log(e);
   }
 });
 
@@ -34,6 +35,7 @@ commentsRouter.post("/comments/new-comment", async (req, res) => {
     }
     res.status(200).send({ message });
   } catch (e) {
+    console.log(e);
     res.status(500).send({ error: e });
   }
 });

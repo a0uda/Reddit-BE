@@ -62,11 +62,6 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
-  facebook_email: {
-    type: String,
-    unique: true,
-    sparse: true,
-  },
   display_name: {
     type: String,
     required: true,
@@ -373,18 +368,6 @@ const userSchema = new mongoose.Schema({
       ref: "User",
     },
   },
-  notifications_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Notification",
-    },
-  },
-  unread_notifications_count: {
-    type: Number,
-    min: 0,
-    default: 0,
-  },
   communities: {
     type: Array,
     items: {
@@ -452,13 +435,6 @@ const userSchema = new mongoose.Schema({
       },
     },
   },
-  tickets_ids: {
-    type: Array,
-    items: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Ticket",
-    },
-  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -488,25 +464,19 @@ userSchema.pre("find", function () {
 
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
-  this.token.push(
-    jwt.sign(
-      {
-        _id: user._id.toString(),
-        username: user.username,
-        profile_picture: user.profile_picture,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      }
-    )
-  );
-  const refreshToken = jwt.sign(
-    { _id: user._id.toString() },
+  const token = jwt.sign(
+    {
+      _id: user._id.toString(),
+      username: user.username,
+      profile_picture: user.profile_picture,
+    },
     process.env.JWT_SECRET,
-    { expiresIn: "8d" }
+    {
+      expiresIn: "1d",
+    }
   );
-  return refreshToken;
+  user.token.push(token);
+  return token;
 };
 
 export const User = mongoose.model("User", userSchema);

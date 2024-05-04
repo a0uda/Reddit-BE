@@ -1,73 +1,82 @@
 import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
 import { Comment } from "../src/db/models/Comment.js";
-import { Community } from "../src/db/models/Community.js";
-import { User } from "../src/db/models/User.js";
+
 import {
   getRandomBool,
   getRandomNumber,
   getRandomUserId,
   getRandomElement,
-} from "./seedHelpers.js";
+} from "./helpers/seedHelpers.js";
 
 const COMMENTS_COUNT = 20;
 
-async function generateRandomComments(posts, users) {
+async function generateRandomComments(communities, posts, users) {
   const comments = [];
-  const community = await Community.findOne();
-  const moderator = await User.findOne();
 
   for (let i = 0; i < COMMENTS_COUNT; i++) {
-    const randomPost = getRandomElement(posts);
+    const community = getRandomElement(communities);
+    const moderator = getRandomElement(community.moderators);
+    let randomPost= getRandomElement(posts);
+    // do {
+    //   randomPost = getRandomElement(posts);
+    // } while (randomPost.locked_flag);
     const randomUser = getRandomElement(users);
+
+    const comment_in_community_flag = getRandomBool();
+    const approved_flag = faker.datatype.boolean();
+    const removed_flag = !approved_flag ? faker.datatype.boolean() : null;
+    const spammed_flag = faker.datatype.boolean();
+    const reported_flag = faker.datatype.boolean();
 
     const fakeComment = {
       post_id: randomPost._id,
-      post_title: randomPost.post_title,
+      post_title: randomPost.title,
       user_id: randomUser._id,
       username: randomUser.username,
+      is_reply: false,
       parent_id: null,
       replies_comments_ids: [],
       created_at: faker.date.past(),
       edited_at: null,
       deleted_at: null,
-      approved: getRandomBool(),
       deleted: false,
+      comment_in_community_flag,
       description: faker.lorem.sentences(),
       upvotes_count: getRandomNumber(0, 10),
       downvotes_count: getRandomNumber(0, 10),
       allowreplies_flag: getRandomBool(),
+      spoiler_flag: getRandomBool(),
       spam_flag: getRandomBool(),
       locked_flag: getRandomBool(),
       show_comment_flag: true,
 
-      // TODO:Comment from community & moderation: we interact with posts using community_name, so If you don't use the community_id you can delete it. I will populate the community_name.
-      community_id: null,
-      community_name: community.name,
+      community_id: comment_in_community_flag ? community._id : null,
+      community_name: comment_in_community_flag ? community.name : null,
 
       moderator_details: {
-        approved_flag: faker.datatype.boolean(),
-        approved_by: moderator._id,
-        approved_date: faker.date.past(),
-        approved_count: 0,
+        approved_flag,
+        approved_by: approved_flag ? moderator._id : null,
+        approved_date: approved_flag ? faker.date.past() : null,
 
-        removed_flag: faker.datatype.boolean(),
-        removed_by: moderator._id,
-        removed_date: faker.date.past(),
-        removed_removal_reason: faker.lorem.sentence(),
-        removed_count: 0,
-        //
-        spammed_flag: faker.datatype.boolean(),
-        spammed_by: moderator._id,
-        spammed_type: faker.lorem.word(),
-        spammed_date: faker.date.past(),
-        spammed_removal_reason: faker.lorem.sentence(),
+        removed_flag,
+        removed_by: removed_flag ? moderator._id : null,
+        removed_date: removed_flag ? faker.date.past() : null,
+        removed_removal_reason: removed_flag ? faker.lorem.sentence() : null,
 
-        reported_flag: faker.datatype.boolean(),
-        reported_by: moderator._id,
-        reported_type: faker.lorem.word(),
-        reported_date: faker.date.past(),
+        spammed_flag,
+        spammed_type: spammed_flag ? faker.lorem.word() : null,
+        spammed_date: spammed_flag ? faker.date.past() : null,
+        spammed_removal_reason: spammed_flag ? faker.lorem.sentence() : null,
+        spammed_by: spammed_flag ? moderator._id : null,
+
+        reported_flag,
+        reported_by: reported_flag ? moderator._id : null,
+        reported_type: reported_flag ? faker.lorem.word() : null,
+        reported_date: reported_flag ? faker.date.past() : null,
       },
+      upvote_users: [],
+      downvote_users: [],
     };
 
     comments.push(fakeComment);
@@ -76,10 +85,23 @@ async function generateRandomComments(posts, users) {
   return comments;
 }
 
-export async function seedComments(posts, users) {
+export async function seedComments(communities, posts, users) {
   await Comment.deleteMany({});
-  const comments = await generateRandomComments(posts, users);
+  const comments = await generateRandomComments(communities, posts, users);
   const options = { timeout: 30000 }; // 30 seconds timeout
+  for (let i = 0; i < comments.length; i++) {
+    let comment = comments[i];
+    let upvoteUsers = users.slice(0, 10);
+    for (let j = 0; j < comment.upvotes_count; j++) {
+      const user = getRandomElement(upvoteUsers);
+      comment.upvote_users.push(user._id);
+    }
+    let downvoteUsers = users.slice(10, 20);
+    for (let j = 0; j < comment.downvotes_count; j++) {
+      const user = getRandomElement(downvoteUsers);
+      comment.downvote_users.push(user._id);
+    }
+  }
   const commentsInserted = await Comment.insertMany(comments, options);
   return commentsInserted;
 }

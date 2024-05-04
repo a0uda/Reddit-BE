@@ -200,6 +200,7 @@ describe("New Comment", () => {
       locked_flag: false,
       post_in_community_flag: false,
       description: "test",
+      comments_count: 0,
       save: jest.fn(),
     };
     const mockUser = { _id: "user_id", username: "test_user" };
@@ -209,6 +210,7 @@ describe("New Comment", () => {
       user: mockUser,
       message: "Post Retrieved successfully",
     });
+    Post.findById = jest.fn().mockReturnValue(mockPost);
     Comment.mockReturnValueOnce({
       save: jest.fn().mockResolvedValueOnce(true),
     });
@@ -216,7 +218,6 @@ describe("New Comment", () => {
     Post.mockReturnValueOnce({
       save: jest.fn().mockResolvedValueOnce(true),
     });
-
     const result = await newComment(request);
 
     expect(result.success).toBe(true);

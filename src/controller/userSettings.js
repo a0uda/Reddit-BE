@@ -20,7 +20,12 @@ import {
 
 import { verifyAuthToken } from "./userAuth.js";
 import { generateResponse } from "../utils/generalUtils.js";
-
+/**
+ * Retrieves user settings based on the specified flag value.
+ * @param {Object} request The incoming request object.
+ * @param {string} flag Specifies the type of settings to retrieve (e.g., "Account", "Profile", "Feed", etc.).
+ * @returns {Promise<Object>} An object containing the success status, message, and settings data.
+ */
 export async function getSettings(request, flag) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -41,10 +46,14 @@ export async function getSettings(request, flag) {
       settings: settings,
     };
   } catch (error) {
-    return generateResponse(false, 400, error.message);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
-
+/**
+ * Retrieves safety settings for a user based on their authentication token.
+ * @param {Object} request The incoming request object containing authentication data.
+ * @returns {Promise<Object>} An object containing the success status and safety settings data.
+ */
 export async function getSafetySettings(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -58,43 +67,56 @@ export async function getSafetySettings(request) {
     const settings = getSafetySettingsFormat(blockedUsers, mutedCommunities);
     return { success: true, settings };
   } catch (error) {
-    return generateResponse(false, 400, error.message);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
-
+/**
+ * Updates user settings based on the specified flag value.
+ * @param {Object} request The incoming request object containing authentication data and settings.
+ * @param {string} flag Specifies the type of settings to update (e.g., "Account", "Profile", "Feed", etc.).
+ * @returns {Promise<Object>} An object containing the success status and a message indicating the settings were updated successfully.
+ */
 export async function setSettings(request, flag) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
-  if (!user) {
-    return generateResponse(success, status, err);
+  try {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+
+    const settings = request.body;
+    var updatedUser;
+    if (flag == "Account")
+      updatedUser = setAccountSettings(user, settings.account_settings);
+    else if (flag == "Profile")
+      updatedUser = setProfileSettings(user, settings.profile_settings);
+    else if (flag == "Feed")
+      updatedUser = setFeedSettings(user, settings.feed_settings);
+    else if (flag == "Notification")
+      updatedUser = setNotificationSettings(
+        user,
+        settings.notifications_settings
+      );
+    else if (flag == "Email")
+      updatedUser = setEmailSettings(user, settings.email_settings);
+    else if (flag == "Chat")
+      updatedUser = setChatSettings(user, settings.chat_and_messaging_settings);
+
+    // console.log("HIII", x);
+    await updatedUser.save();
+
+    return {
+      success: true,
+      message: "Settings set successfully",
+    };
+  } catch (error) {
+    return generateResponse(false, 500, "Internal server error");
   }
-
-  const settings = request.body;
-  var updatedUser;
-  if (flag == "Account")
-    updatedUser = setAccountSettings(user, settings.account_settings);
-  else if (flag == "Profile")
-    updatedUser = setProfileSettings(user, settings.profile_settings);
-  else if (flag == "Feed")
-    updatedUser = setFeedSettings(user, settings.feed_settings);
-  else if (flag == "Notification")
-    updatedUser = setNotificationSettings(
-      user,
-      settings.notifications_settings
-    );
-  else if (flag == "Email")
-    updatedUser = setEmailSettings(user, settings.email_settings);
-  else if (flag == "Chat")
-    updatedUser = setChatSettings(user, settings.chat_and_messaging_settings);
-
-  // console.log("HIII", x);
-  await updatedUser.save();
-
-  return {
-    success: true,
-    message: "Settings set successfully",
-  };
 }
-
+/**
+ * Adds a social link to the user's profile based on the provided request data.
+ * @param {Object} request The incoming request object containing authentication data and social link details.
+ * @returns {Promise<Object>} An object containing the success status and a message indicating the social link was added successfully.
+ */
 export async function addSocialLink(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -139,10 +161,14 @@ export async function addSocialLink(request) {
     await user.save();
     return generateResponse(true, null, "Added social link successfully");
   } catch (error) {
-    return generateResponse(false, 400, error.message);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
-
+/**
+ * Edits an existing social link in the user's profile based on the provided request data.
+ * @param {Object} request The incoming request object containing authentication data and social link details.
+ * @returns {Promise<Object>} An object containing the success status and a message indicating the social link was edited successfully.
+ */
 export async function editSocialLink(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -177,10 +203,14 @@ export async function editSocialLink(request) {
       return generateResponse(false, 400, "Social link id not found");
     }
   } catch (error) {
-    return generateResponse(false, 400, error.message);
+    return generateResponse(false, 500, "Internal server error");
   }
 }
-
+/**
+ * Deletes an existing social link from the user's profile based on the provided request data.
+ * @param {Object} request The incoming request object containing authentication data and social link ID.
+ * @returns {Promise<Object>} An object containing the success status and a message indicating the social link was deleted successfully.
+ */
 export async function deleteSocialLink(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -206,6 +236,6 @@ export async function deleteSocialLink(request) {
       return generateResponse(false, 400, "Social link id not found");
     }
   } catch (error) {
-    return generateResponse(false, 400, error.message);
+    return generateResponse(false, 500, "Internal server error");
   }
 }

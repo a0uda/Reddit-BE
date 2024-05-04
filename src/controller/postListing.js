@@ -46,8 +46,18 @@ export async function getPostsPaginated(
         },
       }
     );
-    
-    if (user) posts = await checkVotesMiddleware(user, posts);
+
+    if (user) {
+      posts = await checkVotesMiddleware(user, posts);
+      const postIdsSet = new Set(posts.map((post) => post._id));
+      user.history_posts_ids.push(
+        ...[...postIdsSet].filter(
+          (postId) => !user.history_posts_ids.includes(postId)
+        )
+      );
+      console.log(user.history_posts_ids.length);
+      await user.save();
+    }
     return {
       success: true,
       status: 200,

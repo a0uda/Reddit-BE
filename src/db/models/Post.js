@@ -166,7 +166,6 @@ export const postSchema = new mongoose.Schema({
 
 //   next();
 // });
-export const Post = mongoose.model("Post", postSchema);
 
 postSchema.pre("find", function () {
   this.where({ deleted: false });
@@ -188,3 +187,14 @@ postSchema.pre("find", function () {
     }
   }
 });
+
+postSchema.pre("save", function () {
+  this.user_details.total_views = this.views_count;
+  this.user_details.total_shares = this.shares_count;
+  if (this.upvotes_count + this.downvotes_count != 0) {
+    this.user_details.upvote_rate =
+      (this.upvotes_count / (this.upvotes_count + this.downvotes_count)) * 100;
+  }
+});
+
+export const Post = mongoose.model("Post", postSchema);
