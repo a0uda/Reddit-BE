@@ -11,10 +11,10 @@ import { messageRouter } from "./routers/messageRouter.js";
 import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-
+import { app } from "./socket/socket.js";
 dotenv.config();
 
-const app = express();
+// const app = express();
 
 app.use(express.json());
 
