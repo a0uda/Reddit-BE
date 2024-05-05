@@ -111,6 +111,7 @@ export const postSchema = new mongoose.Schema({
   scheduled_flag: { type: Boolean, default: false },
 
   //if in my own profile then Im the moderator
+  // The edited_at attribute is meaningless if the post is in a community, the edit history is stored in the moderator_details object.
   moderator_details: {
     approved_flag: { type: Boolean, default: false },
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -132,6 +133,14 @@ export const postSchema = new mongoose.Schema({
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String, default: null },
     reported_date: { type: Date },
+
+    edit_history: [
+      {
+        edited_at: { type: Date },
+        approved_edit_flag: { type: Boolean, default: false },
+        removed_edit_flag: { type: Boolean, default: false },
+      },
+    ],
   },
 
   user_details: {
