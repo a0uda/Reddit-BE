@@ -14,12 +14,12 @@ const server = http.createServer(app);
 // // TODO: Uncomment.
 
 const io = new Server(server, {
+  path: "/socket.io",
   cors: {
     origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   },
 });
-
 
 // This function is exported so it can be used in other files.
 // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
@@ -49,7 +49,9 @@ io.on("connection", async (socket) => {
   try {
     user_token = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
-    console.log({ err: { status: 401, message: `Invalid Token: ${err.message}` } });
+    console.log({
+      err: { status: 401, message: `Invalid Token: ${err.message}` },
+    });
   }
 
   // Get the user id from the token.

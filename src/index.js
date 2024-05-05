@@ -11,7 +11,7 @@ import { messageRouter } from "./routers/messageRouter.js";
 import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-import { app } from "./socket/socket.js";
+import { app, server } from "./socket/socket.js";
 dotenv.config();
 
 // const app = express();
@@ -31,10 +31,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.listen(port, () => {
-  console.log("Server is Up");
-});
-
 app.use([
   usersRouter,
   postsRouter,
@@ -47,6 +43,10 @@ app.use([
   searchRouter,
   chatRouter,
 ]);
+
+server.listen(port, () => {
+  console.log("Server is Up on port " + port);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
