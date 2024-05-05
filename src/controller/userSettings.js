@@ -152,7 +152,7 @@ export async function addSocialLink(request) {
       );
     }
     user.social_links.push({
-      username: user.username,
+      username,
       display_text: display_text ? display_text : null,
       custom_url,
       type,
