@@ -105,7 +105,14 @@ const getMessages = async (sender, receiverUsername) => {
     try {
         chat = await ChatModel.findOne({
             participants: { $all: [sender._id, receiver._id] },
-        }).populate("messages");
+        }).populate({
+            path: "messages",
+            populate: [
+                { path: 'senderId', select: 'username profile_picture' },
+                { path: 'receiverId', select: 'username profile_picture' }
+            ]
+        });
+        
     } catch (error) {
         return { err: { status: 500, message: 'An error occurred while trying to find the chat between the sender and receiver' } };
     }
@@ -129,7 +136,7 @@ const getSideBarChats = async (loggedInUserId) => {
             .populate({
                 path: "participants",
                 match: { _id: { $ne: loggedInUserId } }, // Exclude logged-in user
-                select: "username", // Only select username from participants
+                select: "username profile_picture", // Only select username from participants
             })
             .populate({
                 path: "lastMessage",
@@ -168,6 +175,7 @@ const getSideBarChats = async (loggedInUserId) => {
         return {
             _id: chat._id, // Include chat ID for identification
             otherUsername: otherParticipant.username,
+            otherProfilePicture: otherParticipant.profile_picture,
             lastMessageSender, // Username of the last message sender
             lastMessageText, // Text of the last message
             lastMessageTimestamp, // Timestamp of the last message

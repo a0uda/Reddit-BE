@@ -242,7 +242,7 @@ const removeItem = async (item_id, item_type, removed_by, removed_removal_reason
       if (!post) {
         return { err: { status: 404, message: 'Post not found' } };
       }
-      if(post.moderator_details.removed_flag){
+      if (post.moderator_details.removed_flag) {
         return { err: { status: 400, message: 'Post already removed' } };
       }
     }
@@ -251,7 +251,7 @@ const removeItem = async (item_id, item_type, removed_by, removed_removal_reason
       if (!comment) {
         return { err: { status: 404, message: 'Comment not found' } };
       }
-      if(comment.moderator_details.removed_flag){
+      if (comment.moderator_details.removed_flag) {
         return { err: { status: 400, message: 'Comment already removed' } };
       }
     }
@@ -386,7 +386,7 @@ const reportItem = async (item_id, item_type, reported_by) => {
       if (!post) {
         return { err: { status: 404, message: 'Post not found' } };
       }
-      if(post.moderator_details.reported_flag){
+      if (post.moderator_details.reported_flag) {
         return { err: { status: 400, message: 'Post already reported' } };
       }
     }
@@ -395,7 +395,7 @@ const reportItem = async (item_id, item_type, reported_by) => {
       if (!comment) {
         return { err: { status: 404, message: 'Comment not found' } };
       }
-      if(comment.moderator_details.reported_flag){
+      if (comment.moderator_details.reported_flag) {
         return { err: { status: 400, message: 'Comment already reported' } };
       }
     }
@@ -489,13 +489,227 @@ const approveItem = async (item_id, item_type, approved_by) => {
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////////// New Phase 3 Endpoints ///////////////////////////////////////////////////////////////////////////////////
+
+const editItem = async (item_id, item_type, new_content, editing_user) => {
+  try {
+
+    // Validate that the new_content is provided and of type string.
+    if (typeof new_content !== 'string') {
+      return { err: { status: 400, message: 'Invalid new content' } };
+    }
+
+    // Validate the the editting user is the same as the user who created the post or comment.
+
+    // If the item type is 'post', edit the post.
+    if (item_type.toLowerCase() === 'post') {
+      try {
+        // Validate that the post exists in the database.
+        const post = await Post.findById(item_id)
+        if (!post) {
+          return { err: { status: 404, message: 'Post not found' } };
+        }
+        if (post.username !== editing_user.username) {
+          return { err: { status: 403, message: 'Access denied. You must be the author of the post to edit it.' } };
+        }
+        // Update the post with the new content and add a new entry to the edit history
+        await Post.findByIdAndUpdate(item_id, {
+          description: new_content,
+          $push: {
+            'moderator_details.edit_history': {
+              edited_at: new Date(),
+            }
+          }
+        });
+      } catch (error) {
+        return { err: { status: 500, message: error.message } };
+      }
+    }
+
+    // If the item type is 'comment', edit the comment.
+    if (item_type.toLowerCase() === 'comment') {
+      try {
+        // Validate that the comment exists in the database.
+        const comment = await Comment.findById(item_id)
+        if (!comment) {
+          return { err: { status: 404, message: 'Comment not found' } };
+        }
+        if (comment.username !== editing_user.username) {
+          return { err: { status: 403, message: 'Access denied. You must be the author of the comment to edit it.' } };
+        }
+        if (comment.moderator_details.removed_flag) {
+          return { err: { status: 400, message: 'Comment already removed' } };
+        }
+
+        // Update the comment with the new content and add a new entry to the edit history
+        await Comment.findByIdAndUpdate(item_id, {
+          description: new_content,
+          $push: {
+            'moderator_details.edit_history': {
+              edited_at: new Date(),
+            }
+          }
+        });
+      } catch (error) {
+        return { err: { status: 500, message: error.message } };
+      }
+    }
+
+    // Return a success message.
+    return { message: 'Item edited successfully' };
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+const getEditedItems = async (community_name, time_filter, posts_or_comments) => {
+  try {
+    // Determine the sort order based on the time_filter. If it's 'Newest First', sort in descending order (-1). Otherwise, sort in ascending order (1).
+    const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+
+    // Initialize the query object. This will be used to fetch the posts and comments.
+
+    // This query uses the $expr operator to perform a query on the edit_history array. 
+    // The $let operator is used to define a variable lastEdit that represents the last element in the edit_history array. 
+    // The $arrayElemAt operator is used to get the last element in the array. 
+    // The query then checks if both approved_edit_flag and removed_edit_flag of the last edit are false. 
+    // If they are, the document matches the query.
+    let query = {
+      $expr: {
+        $let: {
+          vars: {
+            lastEdit: { $arrayElemAt: ['$moderator_details.edit_history', -1] }
+          },
+          in: {
+            $and: [
+              { $eq: ['$$lastEdit.approved_edit_flag', false] },
+              { $eq: ['$$lastEdit.removed_edit_flag', false] }
+            ]
+          }
+        }
+      }
+    };
+
+    // If a specific community is specified, add it to the query. This will fetch posts and comments from that community only.
+    if (community_name !== 'All Subreddits' && community_name != null) {
+      query.community_name = community_name;
+    }
+
+    let [editedPosts, editedComments] = await Promise.all([
+      (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }) : [],
+      (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }) : []
+    ]);
+
+    // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
+    let editedItems = [...editedPosts, ...editedComments];
+    editedItems.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
+
+    // Return the sorted array of edited posts and comments.
+    return { editedItems };
+
+  } catch (error) {
+    // If an error occurs, return an error object with the status code and message.
+    return { err: { status: 500, message: error.message } };
+  }
+}
+
+// Check if the last elemnt in the edit_history array has approved_edit_flag set to false and removed_edit_flag set to false
+// If so, set approved_edit_flag to true
+const approveEdit = async (item_id, item_type) => {
+  // Determine the model based on the item_type
+  const Model = item_type === 'post' ? Post : Comment;
+
+  let item;
+  try {
+    // Fetch the item
+    item = await Model.findById(item_id);
+
+    // Check if the item exists
+    if (!item) {
+      return { err: { status: 404, message: 'Item not found' } };
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
+  // Get the last edit
+  const lastEdit = item.moderator_details.edit_history[item.moderator_details.edit_history.length - 1];
+
+  // Check if the last edit is not approved and not removed
+  if (lastEdit && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
+    // Approve the last edit
+    lastEdit.approved_edit_flag = true;
+
+    try {
+      // Save the item
+      await item.save();
+    } catch (error) {
+      return { err: { status: 500, message: `Error while saving the item after approving its edit: ${error.message}` } };
+    }
+
+  } else {
+    return { err: { status: 400, message: 'The last edit is already approved or removed' } };
+  } 
+  
+  return { message: 'Edit approved successfully' };
+
+};
+
+const removeEdit = async (item_id, item_type) => {
+  // Determine the model based on the item_type
+  const Model = item_type === 'post' ? Post : Comment;
+
+  let item;
+  try {
+    // Fetch the item
+    item = await Model.findById(item_id);
+
+    // Check if the item exists
+    if (!item) {
+      return { err: { status: 404, message: 'Item not found' } };
+    }
+  } catch (error) {
+    return { err: { status: 500, message: error.message } };
+  }
+
+  // Get the last edit
+  const lastEdit = item.moderator_details.edit_history[item.moderator_details.edit_history.length - 1];
+
+  // Check if the last edit is not approved and not removed
+  if (lastEdit && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
+    // Approve the last edit
+    lastEdit.removed_edit_flag = true;
+
+    try {
+      // Save the item
+      await item.save();
+    } catch (error) {
+      return { err: { status: 500, message: `Error while saving the item after removing its edit: ${error.message}` } };
+    }
+
+  } else {
+    return { err: { status: 400, message: 'The last edit is already approved or removed' } };
+  } 
+  
+  return { message: 'Edit removed successfully' };
+
+};
+
+
+
+
 export {
   getRemovedItems,
   getReportedItems,
   getUnmoderatedItems,
+  getEditedItems,
 
   removeItem,
   spamItem,
   reportItem,
-  approveItem
+  approveItem,
+  editItem,
+  approveEdit,
+  removeEdit
 };

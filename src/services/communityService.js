@@ -27,7 +27,6 @@ const addNewCommunity = async (requestBody, creator) => {
   communityGeneralSettings.type = type;
   communityGeneralSettings.nsfw_flag = nsfw_flag;
   communityGeneralSettings.description = description;
-
   const community = new Community({
     name,
     category,
@@ -35,6 +34,15 @@ const addNewCommunity = async (requestBody, creator) => {
     moderators: [
       {
         username: creator.username,
+        has_access: {
+          everything: true,
+          manage_users: true,
+          manage_settings: true,
+          manage_posts_and_comments: true,
+
+        },
+        pending_flag: false,
+
       },
     ],
     joined_users: [
@@ -80,7 +88,8 @@ const addNewCommunity = async (requestBody, creator) => {
 
     });
     await message.save();
-
+    creator.communities.push(savedCommunity._id);
+    await creator.save();
     return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };

@@ -6,11 +6,15 @@ import {
     getRemovedItems, 
     getReportedItems, 
     getUnmoderatedItems,
+    getEditedItems,
     
     removeItem,
     spamItem,
     reportItem,
-    approveItem
+    approveItem,
+    editItem,
+    approveEdit,
+    removeEdit
 } from '../services/communityQueueService.js';
 
 // This is a dummy change to test merging the ChatsFeature branch.
@@ -232,6 +236,71 @@ export const approveItemController = async (req, res, next) => {
         }
 
         const { err, message } = await approveItem(item_id, item_type, authenticated_user);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(message);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////// New Phase 3 Endpoints ///////////////////////////////////////////////////////////////////////////////////
+
+export const editItemController = async (req, res, next) => {
+    try {
+        const { item_id, item_type, new_content } = req.body;
+        const editing_user = req.user;
+        
+        const { err, message } = await editItem(item_id, item_type, new_content, editing_user);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(message);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+export const getEditedItemsController = async (req, res, next) => {
+    try {
+        const { time_filter, posts_or_comments } = req.query;
+
+        const community_name = req.params.community_name;
+
+        const { err, editedItems } = await getEditedItems(community_name, time_filter, posts_or_comments);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(editedItems);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+export const approveEditController = async (req, res, next) => {
+    try {
+        const { item_id, item_type } = req.body;
+
+        const { err, message } = await approveEdit(item_id, item_type);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(message);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+
+export const removeEditController = async (req, res, next) => {
+    try {
+        const { item_id, item_type } = req.body;
+
+        const { err, message } = await removeEdit(item_id, item_type);
 
         if (err) { return next(err) }
 

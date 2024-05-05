@@ -88,16 +88,22 @@ import {
     getRemovedItemsController,
     getReportedItemsController,
     getUnmoderatedItemsController,
+    getEditedItemsController,
 
     removeItemController,
     spamItemController,
     reportItemController,
-    approveItemController
+    approveItemController,
+    editItemController,
+    approveEditController,
+    removeEditController
 } from '../controller/communityQueueController.js';
 
 import {
     protectRoute,
-    protectModeratorRoute
+    protectModeratorRoute,
+    protectQueueActionsRoutes,
+    protectQueuePagesRoutes
 } from "../middleware/protectRoutes.js";
 
 
@@ -130,6 +136,11 @@ communityRouter.post("/communities/remove-item/:community_name", removeItemContr
 communityRouter.post("/communities/spam-item/:community_name", spamItemController);
 communityRouter.post("/communities/report-item/:community_name", reportItemController);
 communityRouter.post("/communities/approve-item/:community_name", approveItemController);
+
+communityRouter.get("/communities/about/edited/:community_name", protectRoute, protectQueuePagesRoutes, getEditedItemsController);
+communityRouter.post("/communities/edit-item/:community_name", protectRoute, protectQueueActionsRoutes, editItemController);
+communityRouter.post("/communities/approve-edit/:community_name", protectRoute, protectQueueActionsRoutes, approveEditController);
+communityRouter.post("/communities/remove-edit/:community_name", protectRoute, protectQueueActionsRoutes, removeEditController);
 
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);

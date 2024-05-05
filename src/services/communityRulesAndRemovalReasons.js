@@ -91,6 +91,7 @@ const addNewRemovalReasonToCommunity = async (requestBody) => {
         removal_reason,
     } = requestBody;
     try {
+        console.log(removal_reason_title, removal_reason)
         const community = await communityNameExists(community_name);
         console.log(community);
 
@@ -101,10 +102,11 @@ const addNewRemovalReasonToCommunity = async (requestBody) => {
         }
         community.removal_reasons.push({
             removal_reason_title,
-            removal_reason,
+            reason_message: removal_reason,
         });
         await community.save();
         console.log(community.removal_reasons);
+
         return { success: true };
 
     } catch (error) {
@@ -141,7 +143,7 @@ const editRemovalReason = async (requestBody) => {
         }
         removal_reasons[removal_reason_index].removal_reason_title =
             removal_reason_title;
-        removal_reasons[removal_reason_index].removal_reason = removal_reason;
+        removal_reasons[removal_reason_index].reason_message = removal_reason;
         await community.save();
         return { success: true };
     } catch (error) {
