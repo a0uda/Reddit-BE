@@ -353,17 +353,19 @@ const markMessageAsRead = async (request) => {
         if (!user || err) {
             return { success, err, status, user, msg };
         }
-        const { _id } = request.body;
-        const message = await Message.findById(_id);
-        if (!message) {
-            return { err: { status: 400, message: "Message not found" } };
+        const { Messages } = request.body;
+        const messages = await Message.find({ _id: { $in: Messages } });
+        if (messages.length === 0) {
+            return { err: { status: 400, message: "Messages not found" } };
         }
-        // if (message.receiver_id.toString() !== user._id.toString()) {
-        //     return { err: { status: 401, message: "you are not the reciever of this message to mark as read :) " } };
-        // }
-        message.unread_flag = false;
-        await message.save();
-        return { status: 200, message: "Message marked as read" };
+        const updatedMessages = await Promise.all(messages.map(async (message) => {
+            if (message.receiver_id.toString() == user._id.toString()) {
+                message.unread_flag = false;
+                await message.save();
+            }
+        }));
+        return { status: 200, messages: updatedMessages };
+
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
