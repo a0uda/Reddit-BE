@@ -42,6 +42,12 @@ export async function pushNotification(
       }
     }
 
+    //check if blocked sending user
+    const sendingUser = await User.findOne({ username: sending_user_username });
+    const index = user.safety_and_privacy_settings.blocked_users.findIndex(
+      (blockedUser) => blockedUser.id.toString() == sendingUser._id.toString()
+    );
+    if (index != -1) return { success: false, error: "User blocked" };
     // console.log("hi", user, notifType);
     // console.log(user.username, sending_user_username);
     if (user.username != sending_user_username) {
@@ -193,22 +199,23 @@ export async function hideNotification(request) {
     return generateResponse(false, 500, "Internal Server error");
   }
 }
-//get unread notifications count : Heba 
+//get unread notifications count : Heba
 export async function getUnreadNotificationsCount(request) {
-
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
       return generateResponse(success, status, err);
     }
-    const notifications = await Notification.find({ user_id: user._id, unread_flag: true }).exec();
+    const notifications = await Notification.find({
+      user_id: user._id,
+      unread_flag: true,
+    }).exec();
     return {
       success: true,
       message: "Notifications retrieved successfully",
-      count: notifications.length
+      count: notifications.length,
     };
-  }
-  catch (e) {
+  } catch (e) {
     return generateResponse(false, 500, "Internal Server error");
   }
 }
