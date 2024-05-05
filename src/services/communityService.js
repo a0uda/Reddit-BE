@@ -9,11 +9,7 @@ import { DiscussionItemMinimal } from "../db/models/communityDiscussionItemMinim
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { Message } from "../db/models/Message.js";
 
-import {
-
-  communityNameExists,
-
-} from "../utils/communities.js";
+import { communityNameExists } from "../utils/communities.js";
 import { ObjectId } from "mongodb";
 
 const addNewCommunity = async (requestBody, creator) => {
@@ -39,21 +35,18 @@ const addNewCommunity = async (requestBody, creator) => {
           manage_users: true,
           manage_settings: true,
           manage_posts_and_comments: true,
-
         },
         pending_flag: false,
-
       },
     ],
-    joined_users: [
-      {
-        _id: creator._id,
-      },
-    ],
+    // joined_users: [
+    //   {
+    //     _id: creator._id,
+    //   },
+    // ],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
-
   });
 
   try {
@@ -79,17 +72,16 @@ const addNewCommunity = async (requestBody, creator) => {
     await creator.save();
     //add new message to the creator inbox
     const message = new Message({
-      sender_id: new mongoose.Types.ObjectId('66356010be06bf92b669eda3'),
+      sender_id: new mongoose.Types.ObjectId("66356010be06bf92b669eda3"),
       sender_type: "user",
       subject: "You started a reddit community , now what ?:",
       receiver_id: creator._id,
       receiver_type: "user",
       message: `Ay kalam , reem w mido el mfrod yhoto kalam w redirection links w harakat`,
-
     });
     await message.save();
-    creator.communities.push(savedCommunity._id);
-    await creator.save();
+    // creator.communities.push(savedCommunity._id);
+    // await creator.save();
     return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
@@ -363,23 +355,37 @@ const getCommunity = async (request) => {
       //return error in auth token
       return { err: { status: status, message: msg } };
     }
-    //check if user username exist in the community.approved_users.username 
-    const joined_flag = await Community.findOne({ name: community_name, joined_users: { $elemMatch: { _id: user._id } } });
+    //check if user username exist in the community.approved_users.username
+    const joined_flag = await Community.findOne({
+      name: community_name,
+      joined_users: { $elemMatch: { _id: user._id } },
+    });
     const community = await Community.findOne({ name: community_name });
     if (!community) {
       return { err: { status: 400, message: "community does not exist " } };
     }
     const general_settings_id = community.general_settings;
-    const general_settings = await CommunityGeneralSettings.findById(general_settings_id);
+    const general_settings = await CommunityGeneralSettings.findById(
+      general_settings_id
+    );
 
-    // These flags are requested by the front-end team.  
-    console.log(user)
+    // These flags are requested by the front-end team.
+    console.log(user);
     console.log(user.moderated_communities);
-    const moderator_flag = user.moderated_communities.some(community => community.id == community.id);
-    console.log(moderator_flag)
-    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(community => community.id == community.id);
-    const favorite_flag = user.communities.some(community => community.id == community.id && community.favorite_flag) ||
-      user.moderated_communities.some(community => community.id == community.id && community.favorite_flag);
+    const moderator_flag = user.moderated_communities.some(
+      (community) => community.id == community.id
+    );
+    console.log(moderator_flag);
+    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(
+      (community) => community.id == community.id
+    );
+    const favorite_flag =
+      user.communities.some(
+        (community) => community.id == community.id && community.favorite_flag
+      ) ||
+      user.moderated_communities.some(
+        (community) => community.id == community.id && community.favorite_flag
+      );
 
     const returned_community = {
       community: {
@@ -397,36 +403,47 @@ const getCommunity = async (request) => {
         moderator_flag: moderator_flag,
         muted_flag: muted_flag,
         favorite_flag: favorite_flag,
-      }
+      },
+    };
 
-    }
-
-    return returned_community
-  }
-  catch (error) {
+    return returned_community;
+  } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
-}
+};
 
 // Get the names of all communities for caching to validate when creating a new community.
 const getCommunityNames = async () => {
   try {
-    // The second argument { name: 1 } is a projection object, which specifies the fields to include in the returned documents. 
+    // The second argument { name: 1 } is a projection object, which specifies the fields to include in the returned documents.
     // In this case, only the name field is included. The 1 means true (include) in this context.
     const community_names = await Community.find({}, { name: 1 });
     return { community_names };
   } catch (error) {
-    return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
+    return {
+      err: {
+        status: 500,
+        message: `Error while getting community names: ${error.message}`,
+      },
+    };
   }
 };
 
 // Get the names of all communities sorted by popularity indicated by the members count, with the most popular community first.
 const getCommunityNamesByPopularity = async () => {
   try {
-    const community_names = await Community.find({}, { name: 1, members_count: 1 }).sort({ members_count: -1 });
+    const community_names = await Community.find(
+      {},
+      { name: 1, members_count: 1 }
+    ).sort({ members_count: -1 });
     return { community_names };
   } catch (error) {
-    return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
+    return {
+      err: {
+        status: 500,
+        message: `Error while getting community names: ${error.message}`,
+      },
+    };
   }
 };
 
@@ -444,5 +461,5 @@ export {
   //   addComment,
   getCommunity,
   getCommunityNames,
-  getCommunityNamesByPopularity
+  getCommunityNamesByPopularity,
 };
