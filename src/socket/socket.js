@@ -41,14 +41,16 @@ io.on("connection", async (socket) => {
   // Get the user from the procided token to fill the userSocketMap.
 
   // Extract the token from the query parameter.
+  let token;
   if (socket.handshake.query.token) {
-    const token = socket.handshake.query.token.split(" ")[1];
+    token = socket.handshake.query.token.split(" ")[1];
     console.log("Token is provided");
+    console.log("Token is", token);
     // rest of your code...
   } else {
     console.log("Token is not provided");
   }
-  console.log("SOCKET ISSS", socket);
+  // console.log("SOCKET ISSS", socket);
 
   // Verify the token.
   let user_token;

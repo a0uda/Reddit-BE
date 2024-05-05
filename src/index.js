@@ -12,12 +12,13 @@ import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
 import { app, server } from "./socket/socket.js";
+import cors from "cors";
 dotenv.config();
 
 // const app = express();
 
 app.use(express.json());
-
+app.use(cors());
 try {
   connect_to_db();
 } catch (err) {
