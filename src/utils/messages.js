@@ -126,9 +126,9 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
     } else {
         postCreatorType = "user";
     }
-    const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
-        (user) => user.id
-    );
+    // const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+    //     (user) => user.id
+    // );
     // TODO:TEST THIS AND UNCOMMENT
     // let is_blocked = false;
     // const sender_id = await User.findOne({ username: userMentions.sender_username }).select('_id');

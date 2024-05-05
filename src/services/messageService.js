@@ -394,7 +394,15 @@ const getUserUnreadMessagesCount = async (request) => {
         if (!user || err) {
             return { success, err, status, user, msg };
         }
-        const messages = await Message.find({ receiver_id: user._id, unread_flag: true });
+        let messages = await Message.find({ receiver_id: user._id, unread_flag: true });
+        const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+            (user) => user.id
+        );
+        for (let i = 0; i < blockedUsers.length; i++) {
+            messages = messages.filter(
+                (message) => message.sender_id.toString() != blockedUsers[i].toString()
+            );
+        }
         return { status: 200, count: messages.length };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
