@@ -88,14 +88,14 @@ export async function createPost(request) {
       return next(err);
     }
     if (general_settings.type != "Public") {
-      const result = await checkApprovedUser(community, user._id);
+      const result = await checkApprovedUser(community, user.username);
       if (!result.success) {
         return result;
       }
     }
 
     //3. check if user is banned he can't post
-    const result = await checkBannedUser(community, user._id);
+    const result = await checkBannedUser(community, user.username);
     if (!result.success) {
       return result;
     }

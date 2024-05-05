@@ -69,6 +69,11 @@ const addNewCommunity = async (requestBody, creator) => {
       id: savedCommunity._id,
       favorite_flag: false,
     });
+    creator.communities.push({
+      id: savedCommunity._id,
+      favorite_flag: false,
+      disable_updates: false,
+    });
     await creator.save();
     //add new message to the creator inbox
     const message = new Message({
@@ -80,8 +85,7 @@ const addNewCommunity = async (requestBody, creator) => {
       message: `Ay kalam , reem w mido el mfrod yhoto kalam w redirection links w harakat`,
     });
     await message.save();
-    // creator.communities.push(savedCommunity._id);
-    // await creator.save();
+
     return { community: savedCommunity };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
