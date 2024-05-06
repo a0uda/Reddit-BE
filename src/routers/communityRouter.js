@@ -69,6 +69,7 @@ import {
     schedulePostController,
     getScheduledPostsController,
     editScheduledPostController,
+    submitScheduledPostController,
 
     addNewCommunityController,
     getCommunityNamesController,
@@ -134,6 +135,7 @@ communityRouter.get("/communities/get-items-from-queue/:community_name", protect
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
 communityRouter.post("/communities/edit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, editScheduledPostController);
+communityRouter.post("/communities/submit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, submitScheduledPostController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {

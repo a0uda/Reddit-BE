@@ -1,9 +1,10 @@
 import { verifyAuthToken } from "./userAuth.js";
 
 import { addNewCommunity, getCommunityNames, getCommunityNamesByPopularity } from "../services/communityService.js";
-import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost } from "../services/communityScheduledPostsService.js";
+import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost } from "../services/communityScheduledPostsService.js";
 
 import { scheduledPostSchema } from "../db/models/scheduledPosts.js";
+import { scheduledPost } from "../db/models/scheduledPosts.js";
 
 import schedule from "node-schedule";
 
@@ -29,7 +30,7 @@ export const addNewCommunityController = async (req, res, next) => {
 
 export const getCommunityNamesController = async (req, res, next) => {
     try {
-        const {err, communities} = await getCommunityNames();
+        const { err, communities } = await getCommunityNames();
 
         if (err) { return next(err) }
 
@@ -42,8 +43,8 @@ export const getCommunityNamesController = async (req, res, next) => {
 
 export const getCommunityNamesByPopularityController = async (req, res, next) => {
     try {
-        
-        const {err, communities} = await getCommunityNamesByPopularity();
+
+        const { err, communities } = await getCommunityNamesByPopularity();
 
         if (err) { return next(err) }
 
@@ -121,6 +122,8 @@ export const schedulePostController = async (req, res, next) => {
         const scheduleRule = new schedule.RecurrenceRule();
         scheduleRule.minute = schedule_date.getMinutes();
 
+        let job;
+
         if (repetition_option.toLowerCase() !== "none") {
             if (repetition_option.toLowerCase() !== "hourly") {
                 scheduleRule.hour = schedule_date.getHours();
@@ -134,10 +137,18 @@ export const schedulePostController = async (req, res, next) => {
                 scheduleRule.date = schedule_date.getDate();
             }
 
-            schedule.scheduleJob(scheduleRule, scheduleJob);
+            job = schedule.scheduleJob(scheduleRule, scheduleJob);
         } else {
             // One-time schedule
-            schedule.scheduleJob(schedule_date, scheduleJob);
+            job = schedule.scheduleJob(schedule_date, scheduleJob);
+        }
+
+        try {
+            // Update the document with the job's name
+            await scheduledPost.findByIdAndUpdate(saved_post_id, { jobName: job.name });
+        } catch (error) {
+            const err = { status: 500, message: error.message };
+            return next(err);
         }
 
         return res.status(201).send({ message: `Post scheduled successfully on ${new Date()} to be posted on ${scheduling_details.schedule_date} and reccurency is ${scheduling_details.repetition_option}!` });
@@ -169,6 +180,22 @@ export const editScheduledPostController = async (req, res, next) => {
         if (err) { return next(err) }
 
         return res.status(200).send(edited_post);
+
+    } catch (error) {
+        const err = { status: 500, message: error.message };
+        return next(err);
+    }
+}
+
+export const submitScheduledPostController = async (req, res, next) => {
+    try {
+        const { post_id } = req.body;
+
+        const { err, message } = await submitScheduledPost(post_id);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send({ message: message });
 
     } catch (error) {
         const err = { status: 500, message: error.message };
