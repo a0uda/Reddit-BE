@@ -6,6 +6,7 @@ import { User } from "../db/models/User.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 
 const sendMessage = async (sender, receiverUsername, message) => {
+  console.log("ANA HENAAA FOOOOOOOOOOOOOOOOOOOOOOOOOO  ", message);
   // Validating the sender and receiver.
   let receiver;
   try {
