@@ -56,6 +56,7 @@ io.on("connection", async (socket) => {
   let user_token;
   let user = null;
   let user_id = null;
+  //AAO
 
   try {
     user_token = jwt.verify(token, process.env.JWT_SECRET);
