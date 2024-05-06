@@ -123,7 +123,7 @@ communityRouter.post("/communities/change-posts-and-comments/:community_name", c
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
 communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
-communityRouter.post("/communities/edit-item/:community_name", protectRoute, protectModeratorRoute, editItemController);
+communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
 
 communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
 communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
