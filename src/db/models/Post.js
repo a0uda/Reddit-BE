@@ -112,31 +112,71 @@ export const postSchema = new mongoose.Schema({
 
   //if in my own profile then Im the moderator
   // The edited_at attribute is meaningless if the post is in a community, the edit history is stored in the moderator_details object.
+  // A moderator can object (report, remove, spam) on an item.
+  // When he does the corresponding flag should be sent to true.
+  // A moderator could then remove the objection which will reset the flag.
+  // Or he could approve the objection which will set the confirmed flag to true
+
+  // Before performing an objection, validation that the other two are false is a must
+  //Otherwise a message sayig that objections could not overlap should be returned.
+
+  // When getting the items in a certain queue (reported, removed and spamed)
+  // The check is that the flag is true and that the confirmations is false
+
+  // The is visible flag is concerned with the home page which does not display any objected on items
+
+  // When a post is first created it is added by default to the unmoderated queue.
+  // The moderator can approve it in the queue, so it will be removed from the queue.
+  // the moderator can also remove it from the queue which will be exactly equivaled to the action remove item
+
+  // If a post is edited, the moderator can't object on it until an action is taken in the edit.
+  // Notice that we are only concerned with the last edit.
+  // action means approve or remove
+
+  // If an item is objected on, it is considered moderated and it is removed from the unmoderated Queue.
+
+  // If an item is objected, the moderator can't edit it until an action is taken on that objection
   moderator_details: {
-    approved_flag: { type: Boolean, default: false },
-    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    approved_date: { type: Date, default: null },
+    unmoderated: {
+      approved: {
+        flag: { type: Boolean, default: false },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date },
+      },
 
-    removed_flag: { type: Boolean, default: false },
-    removed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    removed_date: { type: Date, default: null },
-    removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
+      any_action_taken: { type: Boolean, default: false },
+    },
 
-    spammed_flag: { type: Boolean, default: false },
-    spammed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    spammed_type: { type: String, default: null },
-    spammed_date: { type: Date },
-    spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
+    reported: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date },
+      type: { type: String, default: null },
 
-    // TODO: add reported_flag, reported_by, reported_type.
-    reported_flag: { type: Boolean, default: false },
-    reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    reported_type: { type: String, default: null },
-    reported_date: { type: Date },
+      confirmed: { type: Boolean, default: false },
+    },
+
+    spammed: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date },
+      type: { type: String, default: null },
+
+      confirmed: { type: Boolean, default: false },
+    },
+
+    removed: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date, default: null },
+      type: { type: String, default: null },
+
+      confirmed: { type: Boolean, default: false },
+    },
 
     edit_history: [
       {
-        edited_at: { type: Date },
+        edited_at: { type: Date, default: null},
         approved_edit_flag: { type: Boolean, default: false },
         removed_edit_flag: { type: Boolean, default: false },
       },

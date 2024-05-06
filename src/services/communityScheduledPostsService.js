@@ -98,9 +98,8 @@ const postScheduledPost = async (post_id) => {
     const scheduled_post = await scheduledPost.findById(post_id);
 
     // Create a new post with the attributes of the scheduled post.
-    // let post = new Post({ ...scheduled_post._doc, _id: undefined, createdAt: Date.now() });
     const { scheduling_details, ...postAttributes } = scheduled_post._doc;
-    let post = new Post({ ...postAttributes, _id: undefined, createdAt: Date.now() });
+    let post = new Post({ ...postAttributes, _id: undefined, created_at: Date.now() });
 
     // Save the post to the database.
     try {
@@ -155,8 +154,8 @@ const editScheduledPost = async (post_id, new_description) => {
         post.edited_at = Date.now();
 
         console.log(post)
-        
-        try{
+
+        try {
             await post.save();
         } catch (error) {
             return { err: { status: 500, message: `Error while saving the edited scheduled post: ${error.message}` } };
@@ -169,4 +168,44 @@ const editScheduledPost = async (post_id, new_description) => {
     }
 }
 
-export { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost };
+// submitScheduledPost can only be called with an id of a post from those in the scheduledPosts table and that are non recurring.
+// it should delete the post from the scheduledPosts table and post it to the posts table.
+// it should also cancel the scheduling of the post using job.cancel()
+
+const submitScheduledPost = async (post_id) => {
+    // Find the scheduled post with the given post id.
+    const scheduled_post = await scheduledPost.findById(post_id);
+
+    if (!scheduled_post) {
+        return { err: { status: 404, message: `No scheduled post found with the id: ${post_id}` } };
+    }
+
+    // Create a new post with the attributes of the scheduled post.
+    const { scheduling_details, ...postAttributes } = scheduled_post._doc;
+
+    if (scheduling_details.repetition_option.toLowerCase() != "none") {
+        return { err: { status: 400, message: "This post is recurring and cannot be submitted now." } };
+    }
+
+    let post = new Post({ ...postAttributes, _id: undefined, created_at: Date.now() });
+
+    // Save the post to the database.
+    try {
+        post = await post.save();
+    } catch (error) {
+        return { err: { status: 500, message: `Failed to save the post to be submitted: ${error.message}` } };
+    }
+
+    // Remove the scheduled post from the database if it is not recurring.
+    try {
+        await scheduledPost.deleteOne({ _id: scheduled_post._id });
+    }
+    catch (error) {
+        return { err: { status: 500, message: `Failed to delete the scheduled post after submitting it: ${error.message} `} };
+    }
+
+    // Return a success message.
+    return { message: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
+}
+
+export { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost };

@@ -69,6 +69,7 @@ import {
     schedulePostController,
     getScheduledPostsController,
     editScheduledPostController,
+    submitScheduledPostController,
 
     addNewCommunityController,
     getCommunityNamesController,
@@ -85,25 +86,19 @@ import {
 } from "../controller/communitySettingsController.js";
 
 import {
-    getRemovedItemsController,
-    getReportedItemsController,
-    getUnmoderatedItemsController,
-    getEditedItemsController,
-
-    removeItemController,
-    spamItemController,
-    reportItemController,
-    approveItemController,
+    objectItemConroller,
     editItemController,
-    approveEditController,
-    removeEditController
+
+    handleObjectionController,
+    handleEditController,
+    handleUnmoderatedItemController,
+
+    getItemsFromQueueController
 } from '../controller/communityQueueController.js';
 
 import {
     protectRoute,
-    protectModeratorRoute,
-    protectQueueActionsRoutes,
-    protectQueuePagesRoutes
+    protectModeratorRoute
 } from "../middleware/protectRoutes.js";
 
 
@@ -128,24 +123,19 @@ communityRouter.post("/communities/change-content-controls/:community_name", cha
 communityRouter.post("/communities/change-posts-and-comments/:community_name", changeCommunityPostsAndCommentsController);
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
-communityRouter.get("/communities/about/removed-or-spammed/:community_name", getRemovedItemsController);
-communityRouter.get("/communities/about/reported/:community_name", getReportedItemsController);
-communityRouter.get("/communities/about/unmoderated/:community_name", getUnmoderatedItemsController);
+communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
+communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
 
-communityRouter.post("/communities/remove-item/:community_name", removeItemController);
-communityRouter.post("/communities/spam-item/:community_name", spamItemController);
-communityRouter.post("/communities/report-item/:community_name", reportItemController);
-communityRouter.post("/communities/approve-item/:community_name", approveItemController);
+communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
+communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
+communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
 
-communityRouter.get("/communities/about/edited/:community_name", protectRoute, protectQueuePagesRoutes, getEditedItemsController);
-communityRouter.post("/communities/edit-item/:community_name", protectRoute, protectQueueActionsRoutes, editItemController);
-communityRouter.post("/communities/approve-edit/:community_name", protectRoute, protectQueueActionsRoutes, approveEditController);
-communityRouter.post("/communities/remove-edit/:community_name", protectRoute, protectQueueActionsRoutes, removeEditController);
-
+communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
 communityRouter.post("/communities/edit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, editScheduledPostController);
+communityRouter.post("/communities/submit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, submitScheduledPostController);
 
 //////////////////////////////////////////////////////////////////////// Discussion Items //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-item/:community_name", async (req, res, next) => {
