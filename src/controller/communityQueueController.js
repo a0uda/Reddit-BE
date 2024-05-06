@@ -2,311 +2,148 @@ import { verifyAuthToken } from "./userAuth.js";
 
 import { Community } from "../db/models/Community.js";
 
-import { 
-    getRemovedItems, 
-    getReportedItems, 
-    getUnmoderatedItems,
-    getEditedItems,
-    
-    removeItem,
-    spamItem,
-    reportItem,
-    approveItem,
+import {
+    objectItem,
     editItem,
-    approveEdit,
-    removeEdit
+
+    handleObjection,
+    handleEdit,
+
+    handleUnmoderatedItem,
+    getItemsFromQueue
 } from '../services/communityQueueService.js';
 
-// This is a dummy change to test merging the ChatsFeature branch.
-
-export const getRemovedItemsController = async (req, res, next) => {
+// const objectItem = async (item_id, item_type, objection_type, objected_by, objection_type_value, objection_reason)
+export const objectItemConroller = async (req, res, next) => {
     try {
-        console.log("Entered the controller")
-
-        // This attributes should be received as request Params not in the request body.
-        const { time_filter, posts_or_comments } = req.query;
-        console.log(time_filter, posts_or_comments);
-        
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
+        const authenticated_user = req.user;
         const community_name = req.params.community_name;
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Removed Items Queue." };
-            return next(err);
+        let { item_id, item_type, objection_type, objection_type_value } = req.body;
+
+        if (!item_id || !item_type || !objection_type) {
+            return next({ err: { status: 400, message: "You must provide the item_id, item_type and objection_type in the request body." } });
         }
 
-        const { err, removedItems } = await getRemovedItems(community_name, time_filter, posts_or_comments);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(removedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-};
-
-export const getReportedItemsController = async (req, res, next) => {
-    try {
-        const { time_filter, posts_or_comments } = req.query;
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
+        if (!objection_type_value) { objection_type_value = null; }
         
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
+        const { err, message } = await objectItem(item_id, item_type, objection_type, authenticated_user, objection_type_value, community_name);
 
-        const community_name = req.params.community_name;
+        if (err) { return next(err); }
 
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Reported Items Queue." };
-            return next(err);
-        }
-        
-        const { err, reportedItems } = await getReportedItems(community_name, time_filter, posts_or_comments);
+        res.status(200).send(message);
 
-        if (err) { return next(err) }
-
-        return res.status(200).send(reportedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-};
-
-export const getUnmoderatedItemsController = async (req, res, next) => {
-    try {
-        const { time_filter, posts_or_comments } = req.query;
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
-        const community_name = req.params.community_name;
-
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to view this community's Removed Items Queue." };
-            return next(err);
-        }
-
-        const { err, unmoderatedItems } = await getUnmoderatedItems(community_name, time_filter, posts_or_comments);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(unmoderatedItems);
-    }
-    catch (error) {
-        next(error);
-    }
-};
-
-//////////////////////////////////////////////////////////////////////////// Buttons/Actions ////////////////////////////////////////////////////////////////////////////
-export const removeItemController = async (req, res, next) => {
-    try {
-        const { item_id, item_type } = req.body;
-        let { removed_removal_reason } = req.body;
-
-        // If removed_removal_reason is not provided, set it to null
-        if (!removed_removal_reason) {
-            removed_removal_reason = null;
-        }
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
-        const community_name = req.params.community_name;
-
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to remove items from this community." };
-            return next(err);
-        }
-
-        const { err, message } = await removeItem(item_id, item_type, authenticated_user, removed_removal_reason);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
     }
 }
 
-export const spamItemController = async (req, res, next) => {
-    try {    
-        const { item_id, item_type } = req.body;
-        let { spammed_removal_reason } = req.body;
-
-        // If removed_removal_reason is not provided, set it to null
-        if (!spammed_removal_reason) {
-            spammed_removal_reason = null;
-        }
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
-        const community_name = req.params.community_name;
-
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to mark items as spam from this community." };
-            return next(err);
-        }
-
-        const { err, message } = await spamItem(item_id, item_type, authenticated_user, spammed_removal_reason);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
-    }
-}
-
-export const reportItemController = async (req, res, next) => {
-    try {
-        const { item_id, item_type } = req.body;
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
-        const community_name = req.params.community_name;
-
-        const { err, message } = await reportItem(item_id, item_type, authenticated_user, community_name);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
-    }
-}
-
-export const approveItemController = async (req, res, next) => {
-    try {
-        const { item_id, item_type } = req.body;
-
-        const { success, err: auth_error, status, user: authenticated_user } = await verifyAuthToken(req);
-        
-        if (!success) {
-            const err = { status: status, message: auth_error };
-            return next(err);
-        }
-
-        const community_name = req.params.community_name;
-
-        const community = await Community.findOne({ name: community_name, 'moderators.username': authenticated_user.username });
-        
-        if (!community) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to approve items in this community." };
-            return next(err);
-        }
-
-        const { err, message } = await approveItem(item_id, item_type, authenticated_user);
-
-        if (err) { return next(err) }
-
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////// New Phase 3 Endpoints ///////////////////////////////////////////////////////////////////////////////////
-
+// const editItem = async (item_id, item_type, new_content, editing_user) 
 export const editItemController = async (req, res, next) => {
     try {
-        const { item_id, item_type, new_content } = req.body;
-        const editing_user = req.user;
-        
-        const { err, message } = await editItem(item_id, item_type, new_content, editing_user);
+        const authenticated_user = req.user;
 
-        if (err) { return next(err) }
+        let { item_id, item_type, new_content } = req.body;
 
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
-    }
-}
+        if (!item_id || !item_type || !new_content) {
+            return next({ err: { status: 400, message: "You must provide the item_id, item_type, and new_content in the request body." } });
+        }
 
-export const getEditedItemsController = async (req, res, next) => {
-    try {
-        const { time_filter, posts_or_comments } = req.query;
+        const { err, message } = await editItem(item_id, item_type, new_content, authenticated_user);
 
-        const community_name = req.params.community_name;
+        if (err) { return next(err); }
 
-        const { err, editedItems } = await getEditedItems(community_name, time_filter, posts_or_comments);
+        res.status(200).send(message);
 
-        if (err) { return next(err) }
-
-        return res.status(200).send(editedItems);
-    }
-    catch (error) {
-        next(error);
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
     }
 }
 
-export const approveEditController = async (req, res, next) => {
+// const handleObjection = async (item_id, item_type, objection_type, action)
+export const handleObjectionController = async (req, res, next) => {
     try {
-        const { item_id, item_type } = req.body;
+        const authenticated_user = req.user;
 
-        const { err, message } = await approveEdit(item_id, item_type);
+        let { item_id, item_type, objection_type, action } = req.body;
 
-        if (err) { return next(err) }
+        if (!item_id || !item_type || !objection_type || !action) {
+            return next({ err: { status: 400, message: "You must provide the item_id, item_type, objection_type, and action in the request body." } });
+        }
 
-        return res.status(200).send(message);
-    }
-    catch (error) {
-        next(error);
+        const { err, message } = await handleObjection(item_id, item_type, objection_type, action, authenticated_user);
+
+        if (err) { return next(err); }
+
+        res.status(200).send(message);
+
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
     }
 }
 
-export const removeEditController = async (req, res, next) => {
+// const handleEdit = async (item_id, item_type, action)
+export const handleEditController = async (req, res, next) => {
     try {
-        const { item_id, item_type } = req.body;
+        const authenticated_user = req.user;
 
-        const { err, message } = await removeEdit(item_id, item_type);
+        let { item_id, item_type, action } = req.body;
 
-        if (err) { return next(err) }
+        if (!item_id || !item_type || !action) {
+            return next({ err: { status: 400, message: "You must provide the item_id, item_type, and action in the request body." } });
+        }
 
-        return res.status(200).send(message);
+        const { err, message } = await handleEdit(item_id, item_type, action, authenticated_user);
+
+        if (err) { return next(err); }
+
+        res.status(200).send(message);
+
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
     }
-    catch (error) {
-        next(error);
+}
+
+// const handleUnmoderatedItem = async (itemId, itemType, userId, action)
+export const handleUnmoderatedItemController = async (req, res, next) => {
+    try {
+        const authenticated_user = req.user;
+
+        let { item_id, item_type, action } = req.body;
+
+        if (!item_id || !item_type || !action) {
+            return next({ err: { status: 400, message: "You must provide the item_id, item_type, and action in the request body." } });
+        }
+
+        const { err, message } = await handleUnmoderatedItem(item_id, item_type, authenticated_user, action);
+
+        if (err) { return next(err); }
+
+        res.status(200).send(message);
+
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
+    }
+}
+
+// const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type)
+export const getItemsFromQueueController = async (req, res, next) => {
+    try {
+        const authenticated_user = req.user;
+
+        let { time_filter, posts_or_comments, queue_type } = req.query;
+
+        if (!time_filter || !posts_or_comments || !queue_type) {
+            return next({ err: { status: 400, message: "You must provide the time_filter, posts_or_comments, and queue_type in the request query." } });
+        }
+
+        const { err, items } = await getItemsFromQueue(time_filter, posts_or_comments, queue_type, authenticated_user);
+
+        if (err) { return next(err); }
+
+        res.status(200).send(items);
+
+    } catch (error) {
+        return next({ err: { status: 500, message: error.message } });
     }
 }
