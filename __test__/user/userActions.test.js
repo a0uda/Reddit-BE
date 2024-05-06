@@ -5,11 +5,14 @@ import {
   muteCommunity,
   clearHistory,
   favoriteCommunity,
+  deleteAccount,
 } from "../../src/controller/userActions";
 import { User } from "../../src/db/models/User";
 import { Community } from "../../src/db/models/Community";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
+jest.mock("bcryptjs");
 jest.mock("../../src/db/models/User");
 jest.mock("../../src/db/models/Community");
 jest.mock("jsonwebtoken", () => ({
@@ -573,6 +576,47 @@ describe("Favorite Community", () => {
     expect(mockUser.save).toHaveBeenCalled();
   });
 
+  it("should retuen error if community not found in user ", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { community_name: "Test Community" },
+    }; // Mock request object
+
+    // Mock user data
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      communities: [],
+      moderated_communities: [],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+
+    // Mock community data
+    const mockCommunity = {
+      _id: "communityId1",
+      name: "Test Community",
+    };
+
+    // Mock the behavior of functions and models
+    User.findById.mockResolvedValue(mockUser);
+    // jwt.verify.mockReturnValue({ _id: mockUser._id });
+    Community.findOne.mockReturnValueOnce(mockCommunity);
+
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 404,
+        message: "Community not found in user communities",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await favoriteCommunity(request);
+    expect(result).toEqual(expectedResult);
+  });
+
   it("should return error if community name is missing", async () => {
     const request = {
       headers: { authorization: "Bearer valid_token" },
@@ -624,24 +668,72 @@ describe("Favorite Community", () => {
     expect(result.error.message).toBe("Community not found");
   });
 
+  it("should modify favorite flag of community successfully part 2", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { community_name: "Test Community" },
+    }; // Mock request object
+
+    // Mock user data
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      communities: [],
+      moderated_communities: [{ id: "communityId1", favorite_flag: false }],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+
+    // Mock community data
+    const mockCommunity = {
+      _id: "communityId1",
+      name: "Test Community",
+    };
+
+    // Mock the behavior of functions and models
+    User.findById.mockResolvedValue(mockUser);
+    // jwt.verify.mockReturnValue({ _id: mockUser._id });
+    Community.findOne.mockResolvedValue(mockCommunity);
+
+    // Expected result
+    const expectedResult = {
+      success: true,
+      message: "Moderated community modified successfully.",
+    };
+
+    // Call the function and assert the result
+    const result = await favoriteCommunity(request);
+    expect(result).toEqual(expectedResult);
+  });
+
   // it("should return error if an internal server error occurs", async () => {
   //   const request = {
   //     headers: { authorization: "Bearer valid_token" },
   //     body: { community_name: "Test Community" },
-  //   };
+  //   }; // Mock request object
 
+  //   // Mock user data
   //   const mockUser = {
   //     _id: "mockUserId",
   //     token: ["valid_token"],
-  //     communities: [{ id: "communityId1", favorite_flag: false }],
+  //     communities: [],
   //     moderated_communities: [],
   //     markModified: jest.fn(),
   //     save: jest.fn(),
   //   };
 
-  //   // Mock the behavior of verifyAuthToken to throw an error
-  //   const mockError = new Error("Something went wrong");
-  //   User.findById.mockRejectedValue(mockError); // Simulate internal server error
+  //   // Mock community data
+  //   const mockCommunity = {
+  //     _id: "communityId1",
+  //     name: "Test Community",
+  //   };
+
+  //   // Mock the behavior of functions and models
+  //   User.findById.mockResolvedValue(mockUser);
+  //   // jwt.verify.mockReturnValue({ _id: mockUser._id });
+  //   Community.findOne.mockImplementation(() => {
+  //     throw new Error("Error getting account settings");
+  //   });
 
   //   // Expected result
   //   const expectedResult = {
@@ -655,6 +747,152 @@ describe("Favorite Community", () => {
   //   // Call the function and assert the result
   //   const result = await favoriteCommunity(request);
   //   expect(result).toEqual(expectedResult);
-
   // });
+});
+
+describe("Delete Account", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return error if authorization token is missing", async () => {
+    const request = {
+      headers: {}, // No authorization token provided
+    };
+
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 401,
+        message: "Access Denied",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await deleteAccount(request);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should return error if username is incorrect", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { username: "IncorrectUsername" },
+    };
+
+    // Mock verifyAuthToken
+    const mockUser = {
+      _id: "mockUserId",
+      username: "correctUsername",
+      token: ["valid_token"],
+      communities: [],
+      moderated_communities: [{ id: "communityId1", favorite_flag: false }],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 400,
+        message: "Incorrect Username",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await deleteAccount(request);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should return error if password is incorrect", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { username: "correctUsername", password: "incorrectPassword" },
+    };
+
+    // Mock verifyAuthToken
+    const mockUser = {
+      username: "correctUsername",
+      password: "correctPassword",
+      _id: "mockUserId",
+      token: ["valid_token"],
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    bcrypt.compare.mockResolvedValueOnce(false);
+
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 400,
+        message: "Incorrect Password",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await deleteAccount(request);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should return error if user has already been deleted", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { username: "correctUsername", password: "correctPassword" },
+    };
+
+    const mockUser = {
+      username: "correctUsername",
+      password: "correctPassword",
+      deleted: true,
+      _id: "mockUserId",
+      token: ["valid_token"],
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    bcrypt.compare.mockResolvedValueOnce(true);
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 400,
+        message: "User already deleted",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await deleteAccount(request);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should delete the account successfully", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { username: "correctUsername", password: "correctPassword" },
+    };
+
+    const mockUser = {
+      username: "correctUsername",
+      password: "correctPassword",
+      deleted: false,
+      _id: "mockUserId",
+      token: ["valid_token"],
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    bcrypt.compare.mockResolvedValueOnce(true);
+    // Mock User.updateMany
+    User.updateMany.mockResolvedValueOnce();
+
+    // Expected result
+    const expectedResult = {
+      success: true,
+      message: "Account deleted successfully.",
+    };
+
+    // Call the function and assert the result
+    const result = await deleteAccount(request);
+    expect(result).toEqual(expectedResult);
+  });
 });
