@@ -55,11 +55,12 @@ io.on("connection", async (socket) => {
   // Verify the token.
   let user_token;
   let user = null;
+  let user_id = null;
 
   try {
     user_token = jwt.verify(token, process.env.JWT_SECRET);
     // Get the user id from the token.
-    const user_id = user_token._id;
+    user_id = user_token._id;
 
     // Get the user from the id.
     user = await User.findById(user_id);
