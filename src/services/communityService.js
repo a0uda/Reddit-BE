@@ -404,8 +404,8 @@ const getCommunityNames = async () => {
   try {
     // The second argument { name: 1 } is a projection object, which specifies the fields to include in the returned documents. 
     // In this case, only the name field is included. The 1 means true (include) in this context.
-    const community_names = await Community.find({}, { name: 1 });
-    return { community_names };
+    const communities = await Community.find({}, { name: 1, profile_picture: 1, members_count: 1 });
+    return { communities };
   } catch (error) {
     return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
   }
@@ -414,8 +414,8 @@ const getCommunityNames = async () => {
 // Get the names of all communities sorted by popularity indicated by the members count, with the most popular community first.
 const getCommunityNamesByPopularity = async () => {
   try {
-    const community_names = await Community.find({}, { name: 1, members_count: 1 }).sort({ members_count: -1 });
-    return { community_names };
+    const communities = await Community.find({}, { name: 1, profile_picture: 1, members_count: 1 }).sort({ members_count: -1 });
+    return { communities };
   } catch (error) {
     return { err: { status: 500, message: `Error while getting community names: ${error.message}` } };
   }
