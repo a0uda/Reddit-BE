@@ -77,7 +77,7 @@ const deleteCommunityProfilePicture = async (requestBody) => {
                 err: { status: 500, message: "community name does not exist " },
             };
         }
-        community.profile_picture = "none";
+        community.profile_picture = "";
         const savedCommunity = await community.save();
 
         console.log(savedCommunity);
@@ -158,7 +158,7 @@ const deleteCommunityBannerPicture = async (requestBody) => {
             };
         }
 
-        community.banner_picture = "none";
+        community.banner_picture = "";
         const savedCommunity = await community.save();
 
         console.log(savedCommunity);

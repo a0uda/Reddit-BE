@@ -14,12 +14,12 @@ const server = http.createServer(app);
 // // TODO: Uncomment.
 
 const io = new Server(server, {
+  path: "/socket.io",
   cors: {
     origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   },
 });
-
 
 // This function is exported so it can be used in other files.
 // It takes a receiverId and returns the corresponding socket ID from userSocketMap.
@@ -41,7 +41,16 @@ io.on("connection", async (socket) => {
   // Get the user from the procided token to fill the userSocketMap.
 
   // Extract the token from the query parameter.
-  const token = socket.handshake.query.token.split(" ")[1];
+  let token;
+  if (socket.handshake.query.token) {
+    token = socket.handshake.query.token.split(" ")[1];
+    console.log("Token is provided");
+    console.log("Token is", token);
+    // rest of your code...
+  } else {
+    console.log("Token is not provided");
+  }
+  // console.log("SOCKET ISSS", socket);
 
   // Verify the token.
   let user_token;
@@ -49,7 +58,9 @@ io.on("connection", async (socket) => {
   try {
     user_token = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
-    console.log({ err: { status: 401, message: `Invalid Token: ${err.message}` } });
+    console.log({
+      err: { status: 401, message: `Invalid Token: ${err.message}` },
+    });
   }
 
   // Get the user id from the token.

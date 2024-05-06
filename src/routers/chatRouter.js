@@ -1,5 +1,5 @@
 import express from "express";
-import protectRoute from "../middleware/protectRoutes.js";
+import {protectRoute} from "../middleware/protectRoutes.js";
 
 import {
     sendMessageController,

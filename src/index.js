@@ -8,31 +8,28 @@ import { postsRouter } from "./routers/posts.js";
 import { postsOrCommentsRouter } from "./routers/postsOrComments.js";
 import { notificationsRouter } from "./routers/notifications.js";
 import { messageRouter } from "./routers/messageRouter.js";
-// import chatRouter from "./routers/chatRouter.js";
+import chatRouter from "./routers/chatRouter.js";
 import { connect_to_db } from "./db/mongoose.js";
 import { commentsRouter } from "./routers/comments.js";
-
+import { app, server } from "./socket/socket.js";
+import cors from "cors";
 dotenv.config();
 
-const app = express();
+// const app = express();
 
 app.use(express.json());
-
+app.use(cors());
 try {
   connect_to_db();
 } catch (err) {
   console.log("Error, couldn't connect to database");
 }
-const port = process.env.PORT;
+const port = process.env.PORT || 3001;
 
 // Abdullah & Mido
 app.use((req, res, next) => {
   res.header("Access-Control-Expose-Headers", "Authorization");
   next();
-});
-
-app.listen(port, () => {
-  console.log("Server is Up");
 });
 
 app.use([
@@ -45,8 +42,12 @@ app.use([
   communityRouter,
   messageRouter,
   searchRouter,
-  // chatRouter,
+  chatRouter,
 ]);
+
+server.listen(port, () => {
+  console.log("Server is Up on port " + port);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

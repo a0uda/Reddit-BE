@@ -226,6 +226,7 @@ export async function getUserCommentsHelper(
 export async function getCommunitiesHelper(user) {
   const communities = await Promise.all(
     user.communities.map(async (userCommunity) => {
+      console.log(userCommunity.id)
       const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture, members_count } = community;
@@ -246,13 +247,13 @@ export async function getCommunitiesHelper(user) {
   return filteredCommunities;
 }
 
-export async function getModeratedCommunitiesHelper(user) {
+export async function getModeratedCommunitiesHelper(user, loggedInUser) {
   const moderatedCommunities = await Promise.all(
     user.moderated_communities.map(async (userCommunity) => {
       const community = await Community.findById(userCommunity.id);
       if (community) {
         const { name, profile_picture, members_count } = community;
-        const joinedCommunity = user.communities.find(
+        const joinedCommunity = loggedInUser.communities.find(
           (joinedCommunityObj) =>
             joinedCommunityObj.id.toString() == community._id.toString()
         );
