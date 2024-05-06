@@ -116,6 +116,11 @@ const sendMessage = async (sender, receiverUsername, message) => {
   }
 
   const receiverSocketId = getReceiverSocketId(receiver._id);
+  console.log("receiverSocketId", receiverSocketId);
+  console.log("savedMessage", savedMessage);
+  console.log(
+    "AOUDA BARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  );
   if (receiverSocketId) {
     // io.to(<socket_id>).emit() used to send events to specific client
     console.log("receiverSocketId", receiverSocketId);
