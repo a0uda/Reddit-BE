@@ -54,20 +54,20 @@ io.on("connection", async (socket) => {
 
   // Verify the token.
   let user_token;
+  let user = null;
 
   try {
     user_token = jwt.verify(token, process.env.JWT_SECRET);
+    // Get the user id from the token.
+    const user_id = user_token._id;
+
+    // Get the user from the id.
+    user = await User.findById(user_id);
   } catch (err) {
     console.log({
       err: { status: 401, message: `Invalid Token: ${err.message}` },
     });
   }
-
-  // Get the user id from the token.
-  const user_id = user_token._id;
-
-  // Get the user from the id.
-  const user = await User.findById(user_id);
 
   if (!user) {
     console.log({ err: { status: 404, message: "User not found" } });
