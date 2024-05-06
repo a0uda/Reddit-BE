@@ -26,7 +26,7 @@ export const objectItemConroller = async (req, res, next) => {
         }
 
         if (!objection_type_value) { objection_type_value = null; }
-        
+
         const { err, message } = await objectItem(item_id, item_type, objection_type, authenticated_user, objection_type_value, community_name);
 
         if (err) { return next(err); }
@@ -42,6 +42,15 @@ export const objectItemConroller = async (req, res, next) => {
 export const editItemController = async (req, res, next) => {
     try {
         const authenticated_user = req.user;
+
+        const community_name = req.params.community_name;
+
+        const community = await Community.findOne({ name: community_name });
+
+        if (!community) {
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
 
         let { item_id, item_type, new_content } = req.body;
 

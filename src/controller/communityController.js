@@ -29,11 +29,11 @@ export const addNewCommunityController = async (req, res, next) => {
 
 export const getCommunityNamesController = async (req, res, next) => {
     try {
-        const {err, community_names} = await getCommunityNames();
+        const {err, communities} = await getCommunityNames();
 
         if (err) { return next(err) }
 
-        return res.status(200).send(community_names);
+        return res.status(200).send(communities);
 
     } catch (error) {
         next(error)
@@ -42,11 +42,12 @@ export const getCommunityNamesController = async (req, res, next) => {
 
 export const getCommunityNamesByPopularityController = async (req, res, next) => {
     try {
-        const {err, community_names} = await getCommunityNamesByPopularity();
+        
+        const {err, communities} = await getCommunityNamesByPopularity();
 
         if (err) { return next(err) }
 
-        return res.status(200).send(community_names);
+        return res.status(200).send(communities);
 
     } catch (error) {
         next(error)
