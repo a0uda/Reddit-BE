@@ -125,7 +125,7 @@ const getUserSentMessages = async (request) => {
         }
 
         const user_id = user._id;
-        const messages = await Message.find({ sender_id: user_id }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        const messages = await Message.find({ sender_id: user_id }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         let messagesToSend = await Promise.all(messages.map(async (message) => {
             const type = "getUserSentMessages"
@@ -154,7 +154,7 @@ const getUserUnreadMessages = async (request) => {
             receiver_type: "user",
             receiver_id: user_id,
             unread_flag: true
-        }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id and unread_flag is true
         let moderatorMessages = await Message.find({
@@ -162,7 +162,7 @@ const getUserUnreadMessages = async (request) => {
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id }, // Assuming user.communities holds the IDs of communities the user is a moderator of
             unread_flag: true
-        }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
         let messages = [...userMessages, ...moderatorMessages];
@@ -193,23 +193,23 @@ const getAllMessages = async (request) => {
         const userMessages = await Message.find({
             receiver_type: "user",
             receiver_id: user_id
-        }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id
         const moderatorMessages = await Message.find({
             receiver_type: "moderator",
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id } // Assuming user.communities holds the IDs of communities the user is a moderator of
-        }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
         //Query for messages where the sender is the user
         const userSentMessages = await Message.find({
             sender_id: user_id
-        }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
         // //Query  for messages where the sender is a moderator of the community referenced by sender_via_id 
         // const moderatorSentMessages = await Message.find({
         //     sender_type: "moderator",
         //     sender_via_id: { $in: user.moderated_communities.id }
-        // }).select('_id sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        // }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
 
         // Combine the results from both queries
         let messages = [...userMessages, ...moderatorMessages, ...userSentMessages];
@@ -304,6 +304,7 @@ const getUserPostReplies = async (request) => {
 
         const posts = await Post.find({ user_id: user._id });
 
+
         const mappedReplies = await Promise.all(posts.map(async (post) => {
             return await mapPostRepliesToFormat(post, user);
         }));
@@ -352,17 +353,19 @@ const markMessageAsRead = async (request) => {
         if (!user || err) {
             return { success, err, status, user, msg };
         }
-        const { _id } = request.body;
-        const message = await Message.findById(_id);
-        if (!message) {
-            return { err: { status: 400, message: "Message not found" } };
+        const { Messages } = request.body;
+        const messages = await Message.find({ _id: { $in: Messages } });
+        if (messages.length === 0) {
+            return { err: { status: 400, message: "Messages not found" } };
         }
-        // if (message.receiver_id.toString() !== user._id.toString()) {
-        //     return { err: { status: 401, message: "you are not the reciever of this message to mark as read :) " } };
-        // }
-        message.unread_flag = false;
-        await message.save();
-        return { status: 200, message: "Message marked as read" };
+        const updatedMessages = await Promise.all(messages.map(async (message) => {
+            if (message.receiver_id.toString() == user._id.toString()) {
+                message.unread_flag = false;
+                await message.save();
+            }
+        }));
+        return { status: 200, messages: updatedMessages };
+
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
@@ -391,7 +394,15 @@ const getUserUnreadMessagesCount = async (request) => {
         if (!user || err) {
             return { success, err, status, user, msg };
         }
-        const messages = await Message.find({ receiver_id: user._id, unread_flag: true });
+        let messages = await Message.find({ receiver_id: user._id, unread_flag: true });
+        const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+            (user) => user.id
+        );
+        for (let i = 0; i < blockedUsers.length; i++) {
+            messages = messages.filter(
+                (message) => message.sender_id.toString() != blockedUsers[i].toString()
+            );
+        }
         return { status: 200, count: messages.length };
     } catch (error) {
         return { err: { status: 500, message: error.message } };

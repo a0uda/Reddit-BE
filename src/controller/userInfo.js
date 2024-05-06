@@ -487,14 +487,19 @@ export async function getAbout(request) {
       return generateResponse(false, 404, "No user found with username");
     }
     const about = await getAboutFormat(user);
-    const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+    var { user: loggedInUser } = await verifyAuthToken(request);
+    if (!loggedInUser) loggedInUser = user;
+    const moderatedCommunities = await getModeratedCommunitiesHelper(
+      user,
+      loggedInUser
+    );
     return {
       success: true,
       message: "About retrieved successfully",
       about: { ...about, moderatedCommunities },
     };
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return generateResponse(false, 500, "Internal Server Error");
   }
 }
@@ -512,7 +517,10 @@ export async function getCommunities(request, communityType) {
       return { success, err, status, user, msg };
     }
     if (communityType == "moderated") {
-      const moderatedCommunities = await getModeratedCommunitiesHelper(user);
+      const moderatedCommunities = await getModeratedCommunitiesHelper(
+        user,
+        user
+      );
       return {
         success: true,
         status: 200,
@@ -529,7 +537,7 @@ export async function getCommunities(request, communityType) {
       };
     }
   } catch (error) {
-    //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,
@@ -607,12 +615,24 @@ export async function getMutedCommunities(request) {
  */
 export async function getActiveCommunities(request) {
   try {
-    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    // const { success, err, status, user, msg } = await verifyAuthToken(request);
 
-    // console.log(success, err, status, user, msg);
+    // // console.log(success, err, status, user, msg);
+    // if (!user) {
+    //   return { success, err, status, user, msg };
+    // }
+
+    const { username } = request.query;
+    if (!username) return generateResponse(false, 400, "Username is required");
+
+    const user = await User.findOne({ username });
     if (!user) {
-      return { success, err, status, user, msg };
+      return generateResponse(false, 400, "User not found");
     }
+
+    const showActiveCommunities =
+      user.profile_settings.active_communities_visibility;
+
     const communityIds = user.communities.map((community) => community.id);
     // console.log(communityIds);
     // Combine the conditions for finding posts and comments in communities
@@ -658,7 +678,7 @@ export async function getActiveCommunities(request) {
       success: true,
       message: "Your active communities list is retrieved successfully",
       status: 200,
-      content: active_communities,
+      content: { active_communities, showActiveCommunities },
     };
   } catch (error) {
     console.error("Error:", error);

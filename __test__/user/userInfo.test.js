@@ -454,7 +454,7 @@ describe("Get About", () => {
 
   it("should return error if internal server error occurs", async () => {
     const request = {
-      params: {
+      query: {
         username: "example_user",
       },
     };
@@ -481,16 +481,15 @@ describe("Get Active Communities", () => {
     jest.clearAllMocks();
   });
 
-  it("should return error if authorization token is missing", async () => {
+  it("should return error if username is missing", async () => {
     const request = {
-      headers: {}, // No authorization token provided
+      query: {}, // No authorization token provided
     };
 
     // Expected result
     const expectedResult = {
       success: false,
-      status: 401,
-      err: "Access Denied",
+      error: { status: 400, message: "Username is required" },
     };
 
     // Call the function and assert the result
@@ -500,14 +499,18 @@ describe("Get Active Communities", () => {
 
   it("should return active communities successfully", async () => {
     const request = {
-      headers: { authorization: "Bearer valid_token" },
+      query: { username: "username1" },
     }; // Mock request object
 
     // Mock user data
     const mockUser = {
       _id: "mockUserId",
+      username: "username1",
       token: ["valid_token"],
       communities: [{ id: "communityId1" }, { id: "communityId2" }],
+      profile_settings: {
+        active_communities_visibility: true,
+      },
       generateAuthToken: jest.fn(),
       save: jest.fn(),
     };
@@ -530,7 +533,8 @@ describe("Get Active Communities", () => {
 
     // Mock the behavior of functions and models
     User.findById.mockResolvedValue(mockUser);
-    jwt.verify.mockReturnValue({ _id: mockUser._id });
+    User.findOne.mockResolvedValue(mockUser);
+
     Post.find.mockReturnValue({
       exec: jest.fn().mockResolvedValue(mockPosts),
     });
@@ -548,7 +552,10 @@ describe("Get Active Communities", () => {
       success: true,
       message: "Your active communities list is retrieved successfully",
       status: 200,
-      content: mockActiveCommunities,
+      content: {
+        active_communities: mockActiveCommunities,
+        showActiveCommunities: true,
+      },
     };
 
     // Call the function and assert the result

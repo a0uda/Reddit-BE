@@ -47,22 +47,30 @@ const mapMessageToFormat = async (message, user, which_function) => {
     const muted_communities = user.safety_and_privacy_settings.muted_communities.map(
         (user) => user.id
     );
-    //
+    let is_blocked = false;
     console.log("blockedUsers", blockedUsers);
     console.log("muted_communities", muted_communities);
+    for (let i = 0; i < blockedUsers.length; i++) {
+        if (blockedUsers[i].toString() == message.sender_id.toString()) {
+            is_blocked = true;
+            break;
+        }
+    }
+    for (let i = 0; i < muted_communities.length; i++) {
+        if ((message.sender_type == "moderator") && muted_communities[i].toString() == message.sender_via_id.toString()) {
+            is_blocked = true;
+            break;
+        }
+    }
+    if ((!isSent) && is_blocked) return null;
 
-    if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false ||
-        (blockedUsers.includes(message.sender_id) ||
-            (message.sender_type === "moderator" && muted_communities.includes(message.sender_via_id)))
-    )) return null;
-    //if the message is sent by the user and the function is getUserUnreadMessages
-    // remove all messages from blocked users and muted communities  
-    if (which_function === "getAllMessages" && (!isSent) && (
-        (blockedUsers.includes(message.sender_id) ||
-            (message.sender_type === "moderator" && muted_communities.includes(message.sender_via_id)))
-    )) return null;
-    //filter deleted messages
-    //TODO: UNCOMMENT THIS WHEN SEEDING IS DONE  if ((!isSent && message.receiver_deleted_at !== null) || (isSent && message.sender_deleted_at !== null)) return null;
+
+    if (which_function === "getUserUnreadMessages" && (!isSent) && (message.unread_flag === false)) return null;
+    console.log(message)
+    if (which_function === "getAllMessages" && (!isSent) && (is_blocked)) return null;
+
+    if ((!isSent && message.receiver_deleted_at) || (isSent && message.sender_deleted_at)) return null;
+    console.log("passed")
     const sender = await User.findOne({ _id: message.sender_id });
     if (!sender) {
         return null;
@@ -100,8 +108,8 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
     let postCreatorType = null;
     let rank;
     //check if user._id some of comment.upvoted_users 
-    const upvoted = comment.upvote_users.includes(user._id);
-    const downvoted = comment.downvote_users.includes(user._id);
+    const upvoted = comment.upvote_users.includes(user.username);
+    const downvoted = comment.downvote_users.includes(user.username);
     if (upvoted)
         rank = 1;
     else if (downvoted)
@@ -118,7 +126,19 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
     } else {
         postCreatorType = "user";
     }
-
+    // const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+    //     (user) => user.id
+    // );
+    // TODO:TEST THIS AND UNCOMMENT
+    // let is_blocked = false;
+    // const sender_id = await User.findOne({ username: userMentions.sender_username }).select('_id');
+    // for (let i = 0; i < blockedUsers.length; i++) {
+    //     if (blockedUsers[i].toString() == message.sender_id.toString()) {
+    //         is_blocked = true;
+    //         break;
+    //     }
+    // }
+    // if (is_blocked) return null;
     const mappedMessages = {
         created_at: comment.created_at,
         senderUsername: userMentions.sender_username,
@@ -143,14 +163,23 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 }
 const mapPostRepliesToFormat = async (post, user) => {
 
-    const comment = await Comment.findOne({ post_id: post._id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
+    const comment = await Comment.findOne({ post_id: post._id });
+    console.log("post", post.title)
+
+
+
+
     if (comment) {
-        const postCreator = user.username;
+        console.log("comment", comment)
+        const sender = comment.username
         let postCreatorType = null;
+        let postCreator = null;
         let rank;
         //check if user._id some of comment.upvoted_users 
-        const upvoted = comment.upvote_users.includes(user._id);
-        const downvoted = comment.downvote_users.includes(user._id);
+        const upvoted = comment.upvote_users.includes(user.username);
+
+        const downvoted = comment.downvote_users.includes(user.username);
+        console.log("comment text", comment.description)
         if (upvoted)
             rank = 1;
         else if (downvoted)
@@ -158,25 +187,23 @@ const mapPostRepliesToFormat = async (post, user) => {
         else
             rank = -1;
 
-
         if (post.post_in_community_flag) {
-            const community = await Community.findOne({ _id: post.community_id }).select('moderators');
+            const community = await Community.findOne({ _id: post.community_id })
             //check if post creator is in moderators 
-            postCreatorType = community.moderators.includes(postCreator.username) ? "moderator" : "user";
+            postCreatorType = "moderator"
+            postCreator = community.name
 
         } else {
             postCreatorType = "user";
+            postCreator = comment.username;
         }
-        const sender = await User.findOne({ _id: comment.user_id });
-        if (!sender) {
-            return null;
-        }
+
 
         const mappedMessages = {
             created_at: comment.created_at,
-            senderUsername: sender.username,
-            postCreator: postCreator.username,
-            postCreatorType: postCreatorType,
+            senderUsername: comment.username,
+            postCreator,
+            postCreatorType,
             postSubject: post.title,
             replyContent: comment.description,
             _id: comment._id,
