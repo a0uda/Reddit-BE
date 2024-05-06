@@ -67,7 +67,7 @@ export async function pushNotification(
       } else return { success: false, error: "User has this option sent off" };
     } else return { success: false, error: "Can't push notif to same user" };
   } catch (e) {
-    return { success: false, error: e };
+    return { success: false, error: "Internal server error" };
   }
 }
 

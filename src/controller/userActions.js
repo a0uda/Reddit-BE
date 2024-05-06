@@ -500,12 +500,11 @@ export async function clearHistory(request) {
   }
 }
 
-//Note: still handle the followers/following count and his activities
 export async function deleteAccount(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
     if (!user) {
-      return { success, err, status, user, msg };
+      return generateResponse(success, status, err);
     }
 
     const username = user.username;
