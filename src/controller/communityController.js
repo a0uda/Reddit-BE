@@ -209,6 +209,8 @@ export const getVisiblePostsController = async (req, res, next) => {
     try {
         const authenticated_user = req.user;
 
+        const sortBy = req.query.sortBy || "hot";
+
         const community_name = req.params.community_name;
 
         const community = await Community.findOne({ name: community_name }).populate('general_settings');
@@ -218,7 +220,10 @@ export const getVisiblePostsController = async (req, res, next) => {
             return next(err);
         }
 
-        const { err, visiblePosts } = await getVisiblePosts(community, authenticated_user);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const { err, visiblePosts } = await getVisiblePosts(community, authenticated_user, sortBy, page, limit);
 
         if (err) { return next(err) }
 
