@@ -1,7 +1,7 @@
 import { verifyAuthToken } from "./userAuth.js";
 
 import { addNewCommunity, getCommunityNames, getCommunityNamesByPopularity, getVisiblePosts } from "../services/communityService.js";
-import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost } from "../services/communityScheduledPostsService.js";
+import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost, cancelScheduledPost } from "../services/communityScheduledPostsService.js";
 
 import { scheduledPostSchema } from "../db/models/scheduledPosts.js";
 import { scheduledPost } from "../db/models/scheduledPosts.js";
@@ -145,9 +145,12 @@ export const schedulePostController = async (req, res, next) => {
             job = schedule.scheduleJob(schedule_date, scheduleJob);
         }
 
+        let jobName = `Job for post ${saved_post_id}`;
+        job = schedule.scheduleJob(jobName, scheduleRule, scheduleJob);
+
         try {
             // Update the document with the job's name
-            await scheduledPost.findByIdAndUpdate(saved_post_id, { jobName: job.name });
+            const updated = await scheduledPost.findByIdAndUpdate(saved_post_id, { 'scheduling_details.jobName': jobName });
         } catch (error) {
             const err = { status: 500, message: error.message };
             return next(err);
@@ -194,6 +197,22 @@ export const submitScheduledPostController = async (req, res, next) => {
         const { post_id } = req.body;
 
         const { err, message } = await submitScheduledPost(post_id);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send({ message: message });
+
+    } catch (error) {
+        const err = { status: 500, message: error.message };
+        return next(err);
+    }
+}
+
+export const cancelScheduledPostController = async (req, res, next) => {
+    try {
+        const { post_id } = req.body;
+
+        const { err, message } = await cancelScheduledPost(post_id);
 
         if (err) { return next(err) }
 
