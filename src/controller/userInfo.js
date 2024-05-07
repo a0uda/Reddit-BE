@@ -79,17 +79,39 @@ export async function getFollowing(request) {
  * @returns {Promise<Object>} An object containing the success status, message, and the count of followers for the authenticated user.
  */
 export async function getFollowersCount(request) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  try {
+    const token = request?.headers?.authorization?.split(" ")[1];
+    if (token) {
+      const { success, err, status, user, msg } = await verifyAuthToken(
+        request
+      );
 
-  if (!user) {
-    return generateResponse(success, status, err);
+      if (!user) {
+        return generateResponse(success, status, err);
+      }
+      const followersUsers = user.followers_ids;
+      return {
+        success: true,
+        message: "User followers count retrieved successfully",
+        count: followersUsers.length,
+      };
+    } else {
+      const username = request?.query?.username;
+      const user = await User.findOne({ username });
+      if (!user) {
+        return generateResponse(false, 404, "User not found");
+      }
+      const followersUsers = user.followers_ids;
+      return {
+        success: true,
+        message: "User followers count retrieved successfully",
+        count: followersUsers.length,
+      };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return generateResponse(false, 500, "Internal Server Error");
   }
-  const followersUsers = user.followers_ids;
-  return {
-    success: true,
-    message: "User followers count retrieved successfully",
-    count: followersUsers.length,
-  };
 }
 /**
  * Retrieves the count of users followed by the authenticated user.
@@ -97,18 +119,39 @@ export async function getFollowersCount(request) {
  * @returns {Promise<Object>} An object containing the success status, message, and the count of users followed by the authenticated user.
  */
 export async function getFollowingCount(request) {
-  const { success, err, status, user, msg } = await verifyAuthToken(request);
+  try {
+    const token = request?.headers?.authorization?.split(" ")[1];
+    if (token) {
+      const { success, err, status, user, msg } = await verifyAuthToken(
+        request
+      );
 
-  if (!user) {
-    return generateResponse(success, status, err);
+      if (!user) {
+        return generateResponse(success, status, err);
+      }
+      const followersUsers = user.following_ids;
+      return {
+        success: true,
+        message: "User following count retrieved successfully",
+        count: followersUsers.length,
+      };
+    } else {
+      const username = request?.query?.username;
+      const user = await User.findOne({ username });
+      if (!user) {
+        return generateResponse(false, 404, "User not found");
+      }
+      const followersUsers = user.following_ids;
+      return {
+        success: true,
+        message: "User followers count retrieved successfully",
+        count: followersUsers.length,
+      };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return generateResponse(false, 500, "Internal Server Error");
   }
-  const followingUsers = user.following_ids;
-
-  return {
-    success: true,
-    message: "User following count retrieved successfully",
-    count: followingUsers.length,
-  };
 }
 /**
  * Retrieves posts for a specific user based on the provided username.

@@ -380,7 +380,7 @@ export async function joinCommunity(request, leave = false) {
 
     if (leave) {
       const index = community.joined_users.findIndex(
-        (userObj) => userObj._id.toString() === user._id.toString()
+        (userObj) => userObj.id.toString() == user._id.toString()
       );
       console.log(index, "here");
       if (index !== -1) {
@@ -396,7 +396,7 @@ export async function joinCommunity(request, leave = false) {
       }
 
       const communityIndex = user.communities.findIndex(
-        (c) => c.id.toString() === community._id.toString()
+        (c) => c.id.toString() == community._id.toString()
       );
       if (communityIndex !== -1) {
         user.communities.splice(communityIndex, 1);
@@ -421,7 +421,7 @@ export async function joinCommunity(request, leave = false) {
       console.log(
         community.joined_users.some(
           (userObj) =>
-            userObj._id && userObj._id.toString() == user._id.toString()
+            userObj.id && userObj.id.toString() == user._id.toString()
         )
       );
       console.log("testtt join community :", request.body.community_name);
@@ -430,7 +430,7 @@ export async function joinCommunity(request, leave = false) {
       if (
         community.joined_users.some(
           (userObj) =>
-            userObj._id && userObj._id.toString() === user._id.toString()
+            userObj.id && userObj.id.toString() == user._id.toString()
         )
       ) {
         return {
@@ -445,7 +445,7 @@ export async function joinCommunity(request, leave = false) {
       await community.save();
       if (
         !user.communities.some(
-          (c) => c.id.toString() === community._id.toString()
+          (c) => c.id.toString() == community._id.toString()
         )
       ) {
         user.communities.push({
