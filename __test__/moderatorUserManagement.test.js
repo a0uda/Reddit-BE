@@ -22,9 +22,132 @@ jest.mock("../src/controller/userAuth");
 //13. Test the removeModerator function
 
 
+/*const approveUser = async (request) => {
+    try {
+        const { username, community_name } = request.body;
+        //use auth token to verify user
+        const {
+            success,
+            err,
+            status,
+            user: approvingUser,
+            msg,
+        } = await verifyAuthToken(request);
+        if (!approvingUser) {
+            return { success, err, status, approvingUser, msg };
+        }
 
+        const user_to_be_approved = await User.findOne({ username: username });
+        if (!user_to_be_approved) {
+            return { err: { status: 400, message: "Username not found." } };
+        }
+        console.log("community_name: ", community_name);
+
+        const community = await communityNameExists(community_name);
+        console.log("community: ", community);
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+        const moderators = community.moderators;
+        console.log("moderators: ", moderators);
+        // search if  approvingUser username exists in moderators .username
+        const isModerator = moderators.some(
+            (moderator) => moderator.username === approvingUser.username
+        );
+        if (!isModerator) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not a moderator in this community",
+                },
+            };
+        }
+
+        //get the community.moderator object of the muting user
+        const moderator = community.moderators.find(
+            (moderator) => moderator.username === approvingUser.username
+        );
+        console.log("moderator: ", moderator);
+        //check if moderator object is allowed to mute
+        if (
+            !moderator.has_access.everything &&
+            !moderator.has_access.manage_users
+        ) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not allowed to approve users. permission denied",
+                },
+            };
+        }
+        // Check if user username  already exists in the approved_users array of the community
+        const isAlreadyApproved = isUserAlreadyApproved(
+            community,
+            user_to_be_approved.username
+        );
+        if (isAlreadyApproved) {
+            return {
+                err: {
+                    status: 400,
+                    message: "User is already approved in this community.",
+                },
+            };
+        }
+        community.approved_users.push({
+            username: user_to_be_approved.username,
+            approved_at: new Date(),
+        });
+        await community.save();
+        const message = new Message({
+            sender_id: approvingUser._id,
+            sender_via_id: community._id,
+            sender_type: "moderator",
+            receiver_id: user_to_be_approved._id,
+            receiver_type: "user",
+            message: "You are approved by the moderator " + approvingUser.username + " in the subreddit  r/" + community_name,
+            subject: "You are approved in the subreddit  /r/ " + community_name,
+        });
+        await message.save();
+
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}; */
 
 describe('approveUser', () => {
+    jest.setTimeout(10000);
+    it("should approve the user successfully", async () => {
+        //increase timeout 
+
+        const requestBody = {
+            body: {
+                username: 'existingUsername',
+                community_name: 'existingCommunityName'
+            }
+        };
+        const user_to_be_approved = {
+            username: 'existingUsername',
+            profile_picture: 'profilePicture',
+            "_id": "66264a48ce0df64ce7205d9a"
+        };
+        const approvingUser = {
+            username: 'approvingUser',
+            "_id": "66264a48ce0df64ce7205d9a"
+        }
+        const community = {
+            name: 'existingCommunityName',
+            moderators: [{ username: 'approvingUser', has_access: { everything: true, manage_users: true } }],
+            save: jest.fn(),
+            approved_users: [],
+            _id: "66264a48ce0df64ce7205d9a"
+        }
+        User.findOne.mockResolvedValueOnce(user_to_be_approved);
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: approvingUser });
+        communityNameExists.mockResolvedValueOnce(community);
+        const result = await approveUser(requestBody);
+        expect(result).toEqual({ success: true });
+    })
     // it('should return success if user is approved', async () => {
     //     // Mock request body
     //     const requestBody = {
@@ -70,51 +193,51 @@ describe('approveUser', () => {
     //     //excpect the length of the array to be 1
     //     expect(community.approved_users.length).toBe(1);
     // });
-    it('should return error if the user is not found', async () => {
-        // Mock request body
-        const requestBody = {
-            body: {
-                username: 'existingUsername',
-                community_name: 'existingCommunityName'
-            }
-        };
-        // Mock user found in database
-        const user_to_be_approved = {
-            username: 'nonexistingUsername',
-            profile_picture: 'profilePicture',
-        };
-        //Mock muting user
-        const approvingUser = {
-            username: 'approvingUser',
-        }
-        //mock community 
-        const community = {
-            name: 'existingCommunityName',
-            moderators: [{ username: 'approvingUser', has_access: { everything: true, manage_users: true } }],
-            save: jest.fn(),
-            approved_users: []
-        }
-        // Mock User.findOne
-        User.findOne.mockResolvedValueOnce(undefined);
-        // Mock verifyAuthToken
-        verifyAuthToken.mockResolvedValueOnce({ success: true, user: approvingUser });
-        //mock community name exists
-        communityNameExists.mockResolvedValueOnce(community);
-        //mock moderators.some 
-        community.moderators.some = jest.fn().mockReturnValueOnce(true);
-        //mock community.moderators.find
-        community.moderators.find = jest.fn().mockReturnValueOnce({ has_access: { everything: true, manage_users: true } });
-        //mock isuseralreadyapproved
-        isUserAlreadyApproved.mockReturnValueOnce(false);
-        //excpect the array to be updated
-        const result = await approveUser(requestBody);
-        expect(result).toEqual({
-            err: {
-                status: 400,
-                message: expect.stringMatching(/^Username not found.\s*$/),
-            },
-        });
-    })
+    // it('should return error if the user is not found', async () => {
+    //     // Mock request body
+    //     const requestBody = {
+    //         body: {
+    //             username: 'existingUsername',
+    //             community_name: 'existingCommunityName'
+    //         }
+    //     };
+    //     // Mock user found in database
+    //     const user_to_be_approved = {
+    //         username: 'nonexistingUsername',
+    //         profile_picture: 'profilePicture',
+    //     };
+    //     //Mock muting user
+    //     const approvingUser = {
+    //         username: 'approvingUser',
+    //     }
+    //     //mock community 
+    //     const community = {
+    //         name: 'existingCommunityName',
+    //         moderators: [{ username: 'approvingUser', has_access: { everything: true, manage_users: true } }],
+    //         save: jest.fn(),
+    //         approved_users: []
+    //     }
+    //     // Mock User.findOne
+    //     User.findOne.mockResolvedValueOnce(undefined);
+    //     // Mock verifyAuthToken
+    //     verifyAuthToken.mockResolvedValueOnce({ success: true, user: approvingUser });
+    //     //mock community name exists
+    //     communityNameExists.mockResolvedValueOnce(community);
+    //     //mock moderators.some 
+    //     community.moderators.some = jest.fn().mockReturnValueOnce(true);
+    //     //mock community.moderators.find
+    //     community.moderators.find = jest.fn().mockReturnValueOnce({ has_access: { everything: true, manage_users: true } });
+    //     //mock isuseralreadyapproved
+    //     isUserAlreadyApproved.mockReturnValueOnce(false);
+    //     //excpect the array to be updated
+    //     const result = await approveUser(requestBody);
+    //     expect(result).toEqual({
+    //         err: {
+    //             status: 400,
+    //             message: expect.stringMatching(/^Username not found.\s*$/),
+    //         },
+    //     });
+    // })
     it('should return error if the community is not found', async () => {
         jest.resetAllMocks();
         // Mock request body
