@@ -28,12 +28,12 @@ commentsRouter.get("/comments/get-comment", async (req, res) => {
 
 commentsRouter.post("/comments/new-comment", async (req, res) => {
   try {
-    const { success, error, message } = await newComment(req);
+    const { success, error, message, comment_id } = await newComment(req);
     if (!success) {
       res.status(error.status).send({ error });
       return;
     }
-    res.status(200).send({ message });
+    res.status(200).send({ message, comment_id });
   } catch (e) {
     console.log(e);
     res.status(500).send({ error: e });
