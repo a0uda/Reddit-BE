@@ -149,7 +149,15 @@ export const getItemsFromQueueController = async (req, res, next) => {
             return next({ err: { status: 400, message: "You must provide the time_filter, posts_or_comments, and queue_type in the request query." } });
         }
 
-        const { err, items } = await getItemsFromQueue(time_filter, posts_or_comments, queue_type, authenticated_user, page, limit);
+        const community_name = req.params.community_name;
+
+		const community = await Community.findOne({ name: community_name });
+
+		if (!community) {
+			return next({err: {status: 404, message: "Community not found."}});
+		}
+
+        const { err, items } = await getItemsFromQueue(time_filter, posts_or_comments, queue_type, community_name, authenticated_user, page, limit);
 
         if (err) { return next(err); }
 

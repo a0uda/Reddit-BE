@@ -294,7 +294,7 @@ const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
 
 //////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
 
-const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, authenticated_user, page, limit) => {
+const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, community_name, authenticated_user, page, limit) => {
     try {
         // Validate the time_filter parameter. It should be either 'newest first' or 'oldest first'.
         if (!['newest first', 'oldest first'].includes(time_filter.toLowerCase())) {
@@ -307,11 +307,12 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, aut
         }
 
         // Define the query object
-        let query = {};
+        let query = { community_name };
 
         // If queue_type is 'removed', we need to get items where either 'removed.flag' or 'spammed.flag' is true
         if (queue_type === 'removed') {
             query = {
+                ...query,
                 $or: [
                     { [`community_moderator_details.removed.flag`]: true, [`community_moderator_details.removed.confirmed`]: false },
                     { [`community_moderator_details.spammed.flag`]: true, [`community_moderator_details.spammed.confirmed`]: false }
@@ -320,15 +321,16 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, aut
         }
 
         else if (queue_type === 'reported') {
-            query = { [`community_moderator_details.reported.flag`]: true, [`community_moderator_details.reported.confirmed`]: false };
+            query = { ...query, [`community_moderator_details.reported.flag`]: true, [`community_moderator_details.reported.confirmed`]: false };
         }
 
         else if (queue_type === 'unmoderated') {
-            query = { 'community_moderator_details.unmoderated.any_action_taken': false }
+            query = { ...query, 'community_moderator_details.unmoderated.any_action_taken': false }
         }
 
         else if (queue_type === 'edited') {
             query = {
+                ...query,
                 $expr: {
                     $let: {
                         vars: {
