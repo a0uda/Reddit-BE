@@ -43,15 +43,18 @@ const addNewCommunity = async (requestBody, creator) => {
         pending_flag: false,
       },
     ],
-    // joined_users: [
-    //   {
-    //     _id: creator._id,
-    //   },
-    // ],
+    joined_users: [
+      {
+        _id: creator._id,
+      },
+    ],
     general_settings: communityGeneralSettings._id,
     content_controls: communityContentControls._id,
     posts_and_comments: communityPostsAndComments._id,
   });
+
+  // console.log("LLLL")
+  // console.log(community.joined_users)
 
   try {
     const duplicate_community = await Community.findOne({ name: name });
