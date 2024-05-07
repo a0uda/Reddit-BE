@@ -242,7 +242,7 @@ export const getVisiblePostsController = async (req, res, next) => {
         }
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 100;
 
         const { err, visiblePosts } = await getVisiblePosts(community, authenticated_user, sortBy, page, limit);
 
