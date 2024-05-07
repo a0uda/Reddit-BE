@@ -138,6 +138,9 @@ export const handleUnmoderatedItemController = async (req, res, next) => {
 // const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type)
 export const getItemsFromQueueController = async (req, res, next) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
         const authenticated_user = req.user;
 
         let { time_filter, posts_or_comments, queue_type } = req.query;
@@ -146,7 +149,7 @@ export const getItemsFromQueueController = async (req, res, next) => {
             return next({ err: { status: 400, message: "You must provide the time_filter, posts_or_comments, and queue_type in the request query." } });
         }
 
-        const { err, items } = await getItemsFromQueue(time_filter, posts_or_comments, queue_type, authenticated_user);
+        const { err, items } = await getItemsFromQueue(time_filter, posts_or_comments, queue_type, authenticated_user, page, limit);
 
         if (err) { return next(err); }
 
