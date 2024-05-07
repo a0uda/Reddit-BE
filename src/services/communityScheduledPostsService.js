@@ -16,6 +16,23 @@ import schedule from "node-schedule";
 
 const savePostForScheduling = async (scheduling_details, postInput, user) => {
     // Check that the input to create the new post is valid.
+
+    // if (!title || post_in_community_flag === undefined || !type) {
+
+    if (!postInput.title === undefined) {
+        return { err: { status: 400, message: "Title is required." } };
+    }
+
+    if (postInput.post_in_community_flag === undefined) {
+        return { err: { status: 400, message: "Post in community flag is required." } };
+    }
+
+    if (postInput.type === undefined) {
+        return { err: { status: 400, message: "Type is required." } };
+    }
+
+
+
     const { result, message } = await checkNewPostInput(postInput);
 
     if (!result) {
@@ -99,10 +116,9 @@ const savePostForScheduling = async (scheduling_details, postInput, user) => {
 const postScheduledPost = async (post_id) => {
     // Find the scheduled post with the given post id.
 
-    try{
-    const scheduled_post = await scheduledPost.findById(post_id);
-    } catch(error)
-    {
+    try {
+        const scheduled_post = await scheduledPost.findById(post_id);
+    } catch (error) {
         console.log(error)
         return { err: { status: 500, message: error.message } };
     }
