@@ -294,7 +294,7 @@ const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
 
 //////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
 
-const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type) => {
+const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, page, limit) => {
     try {
         // Validate the time_filter parameter. It should be either 'newest first' or 'oldest first'.
         if (!['newest first', 'oldest first'].includes(time_filter.toLowerCase())) {
@@ -324,7 +324,7 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type) => 
         }
 
         else if (queue_type === 'unmoderated') {
-            query = { 'unmoderated.any_action_taken': false }
+            query = { 'community_moderator_details.unmoderated.any_action_taken': false }
         }
 
         else if (queue_type === 'edited') {
@@ -353,8 +353,8 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type) => 
         const sortOrder = time_filter === 'Newest First' ? -1 : 1;
 
         let [posts, comments] = await Promise.all([
-            (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }) : [],
-            (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }) : []
+            (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }).skip((page - 1) * limit).limit(limit) : [],
+            (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }).skip((page - 1) * limit).limit(limit)  : []
         ]);
 
         // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
