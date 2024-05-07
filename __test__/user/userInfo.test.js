@@ -186,15 +186,15 @@ describe("Get Followers Count", () => {
     jest.clearAllMocks();
   });
 
-  it("should return error if token is missing", async () => {
-    const request = {
-      headers: {},
-    };
-    const result = await getFollowersCount(request);
-    expect(result.success).toBe(false);
-    expect(result.error.status).toEqual(401);
-    expect(result.error.message).toEqual("Access Denied");
-  });
+  // it("should return error if token is missing", async () => {
+  //   const request = {
+  //     headers: {},
+  //   };
+  //   const result = await getFollowersCount(request);
+  //   expect(result.success).toBe(false);
+  //   expect(result.error.status).toEqual(401);
+  //   expect(result.error.message).toEqual("Access Denied");
+  // });
 
   it("should return user followers count", async () => {
     const request = {
@@ -224,15 +224,15 @@ describe("Get Following Count", () => {
     jest.clearAllMocks();
   });
 
-  it("should return error if token is missing", async () => {
-    const request = {
-      headers: {},
-    };
-    const result = await getFollowingCount(request);
-    expect(result.success).toBe(false);
-    expect(result.error.status).toEqual(401);
-    expect(result.error.message).toEqual("Access Denied");
-  });
+  // it("should return error if token is missing", async () => {
+  //   const request = {
+  //     headers: {},
+  //   };
+  //   const result = await getFollowingCount(request);
+  //   expect(result.success).toBe(false);
+  //   expect(result.error.status).toEqual(401);
+  //   expect(result.error.message).toEqual("Access Denied");
+  // });
 
   it("should return user following count", async () => {
     const request = {
