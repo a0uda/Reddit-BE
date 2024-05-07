@@ -244,7 +244,7 @@ const deleteMessage = async (request) => {
         }
 
         const { _id } = request.body;
-
+        console.log(_id);
         const message = await Message.findById(_id);
 
         if (!message) {
@@ -255,10 +255,7 @@ const deleteMessage = async (request) => {
         else
             message.receiver_deleted_at = Date.now();
         await message.save();
-        //get from users _id of the user who is named heba  
-        const heba = await User.findOne({ username: "newHeba" });
-        //delete all messages sent or received by heba 
-        await Message.deleteMany({ $or: [{ sender_id: heba._id }, { receiver_id: heba._id }] });
+
 
 
 

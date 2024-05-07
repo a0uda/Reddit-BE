@@ -73,7 +73,8 @@ import {
 
     addNewCommunityController,
     getCommunityNamesController,
-    getCommunityNamesByPopularityController
+    getCommunityNamesByPopularityController,
+    getVisiblePostsController
 } from "../controller/communityController.js";
 
 import {
@@ -85,16 +86,16 @@ import {
     changeCommunityPostsAndCommentsController
 } from "../controller/communitySettingsController.js";
 
-import {
-    objectItemConroller,
-    editItemController,
+// import {
+//     objectItemConroller,
+//     editItemController,
 
-    handleObjectionController,
-    handleEditController,
-    handleUnmoderatedItemController,
+//     handleObjectionController,
+//     handleEditController,
+//     handleUnmoderatedItemController,
 
-    getItemsFromQueueController
-} from '../controller/communityQueueController.js';
+//     getItemsFromQueueController
+// } from '../controller/communityQueueController.js';
 
 import {
     protectRoute,
@@ -108,10 +109,11 @@ const communityRouter = express.Router();
 // TODO: Validations.
 // communityRouter.use(protectRoute)
 
-//////////////////////////////////////////////////////////////////////// Add Community //////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// Miscellaneous //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
 communityRouter.get("/communities/get-community-names", protectRoute, getCommunityNamesController);
 communityRouter.get("/communities/get-community-names-by-popularity", protectRoute, getCommunityNamesByPopularityController);
+communityRouter.get("/communities/get-visible-posts/:community_name", protectRoute, getVisiblePostsController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/get-general-settings/:community_name", getCommunityGeneralSettingsController);
@@ -123,14 +125,14 @@ communityRouter.post("/communities/change-content-controls/:community_name", cha
 communityRouter.post("/communities/change-posts-and-comments/:community_name", changeCommunityPostsAndCommentsController);
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
-communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
-communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
+// communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
+// communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
 
-communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
-communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
-communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
+// communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
+// communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
+// communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
 
-communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
+// communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
@@ -316,7 +318,12 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {
-        const { err, users } = await getApprovedUsers(req.params.community_name)
+
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
+        const { err, users } = await getApprovedUsers(req.params.community_name, pageNumber, pageSizeNumber)
 
         if (err) { return next(err) }
 
@@ -526,7 +533,10 @@ communityRouter.post("/communities/mute-user", async (req, res, next) => {
 communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name)
-        const { err, users } = await getMutedUsers(req.params.community_name)
+        //pagination
+        const { pageNumber, pageSizeNumber } = req.query
+
+        const { err, users } = await getMutedUsers(req.params.community_name, pageNumber, pageSizeNumber)
 
         if (err) { return next(err) }
 
@@ -590,7 +600,9 @@ communityRouter.post("/communities/accept-moderator-invitation", async (req, res
 communityRouter.get("/communities/about/moderators/:community_name", async (req, res, next) => {
 
     try {
-        const { err, returned_moderators } = await getModerators(req.params.community_name)
+        //pagination 
+        const { pageNumber, pageSizeNumber } = req.query
+        const { err, returned_moderators } = await getModerators(req.params.community_name, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
 
 

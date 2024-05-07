@@ -11,6 +11,8 @@ import { Message } from "../db/models/Message.js";
 
 import { communityNameExists } from "../utils/communities.js";
 import { ObjectId } from "mongodb";
+import { Post } from "../db/models/Post.js";
+import { User } from "../db/models/User.js";
 
 const addNewCommunity = async (requestBody, creator) => {
   const { name, type, nsfw_flag, category, description } = requestBody;
@@ -448,6 +450,69 @@ const getCommunityNamesByPopularity = async () => {
   }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Implement a function that returns all posts written in a community except those that should no be visible according to the below conditions
+// Query:
+// community_name
+// !(post.moderator_details.reported.flag || post.moderator_details.spammed.flag || post.moderator_details.removed.flag)
+// community.general_settings_type == Restricted && community.approved_users.username == user.username (This is an array to make sure that it contains the name)
+// community.banned_users.username != user.username (This is an array to make sure that it does not contain the name)
+// User.safety_and_privacy_settings.blocked_users.id != user.id (This is an array to make sure that it does not contain the id)
+
+
+
+const getVisiblePosts = async (community, user) => {
+
+  const username = user.username;
+  const userId = user._id;
+
+  const community_name = community.name;
+
+  // If the community is restricted, posts are only visible to approved users.
+  const userIsApproved = community.general_settings.type === 'Restricted'
+    ? community.approved_users.some(user => user.username === username)
+    : true;
+
+  if (!userIsApproved) {
+    return { err: { status: 400, message: "The community is restricted and the user is not approved." } };
+  }
+
+  // If the user is banned from the community, they should not see any posts.
+  const userIsBanned = community.banned_users.some(user => user.username === username);
+
+  if (userIsBanned) {
+    return { err: { status: 400, message: "The user is banned from this community." } };
+  }
+
+  // Find all posts in the community that follow these conditions.
+const posts = await Post.find({
+  'community_name': community_name,
+  // 'moderator_details.reported.flag': false,
+  // 'moderator_details.spammed.flag': false,
+  // 'moderator_details.removed.flag': false,
+})
+
+// // Validate that the author of the post has not blocked the user browsing the community and vice versa.
+// const visiblePosts = posts.filter(async post => {
+//   const browsingUser = await User.findById(userId);
+
+//   const author = await User.find({ username: post.username });
+  
+//   const authorBlockedBrowsingUser = author.social_links.safety_and_privacy_settings.blocked_users.some(user => user.toString() === userId.toString());
+//   const browsingUserBlockedAuthor = browsingUser.social_links.safety_and_privacy_settings.blocked_users.some(user => user.toString() === post.username._id.toString());
+
+//   const someoneIsBlocked = authorBlockedBrowsingUser || browsingUserBlockedAuthor;
+
+//   return !someoneIsBlocked;
+// });
+
+  return { visiblePosts: posts };
+
+// return visiblePosts;
+}
+
+
 export {
   addNewCommunity,
   addDiscussionItemToCommunity,
@@ -463,4 +528,6 @@ export {
   getCommunity,
   getCommunityNames,
   getCommunityNamesByPopularity,
+
+  getVisiblePosts,
 };
