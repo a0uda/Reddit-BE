@@ -11,7 +11,14 @@ export const scheduledPostSchema = new mongoose.Schema({
             type: Date,
             required: true,
         },
+        // jobName: {
+        //     type: String,
+        //     default: null,
+        // }
     },
+
+
+
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

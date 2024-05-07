@@ -11,6 +11,9 @@ import {
 
 import { getCommunityGeneralSettings } from "./communitySettingsService.js";
 
+import schedule from "node-schedule";
+
+
 const savePostForScheduling = async (scheduling_details, postInput, user) => {
     // Check that the input to create the new post is valid.
     const { result, message } = await checkNewPostInput(postInput);
@@ -95,7 +98,14 @@ const savePostForScheduling = async (scheduling_details, postInput, user) => {
 
 const postScheduledPost = async (post_id) => {
     // Find the scheduled post with the given post id.
+
+    try{
     const scheduled_post = await scheduledPost.findById(post_id);
+    } catch(error)
+    {
+        console.log(error)
+        return { err: { status: 500, message: error.message } };
+    }
 
     // Create a new post with the attributes of the scheduled post.
     const { scheduling_details, ...postAttributes } = scheduled_post._doc;
@@ -196,16 +206,50 @@ const submitScheduledPost = async (post_id) => {
         return { err: { status: 500, message: `Failed to save the post to be submitted: ${error.message}` } };
     }
 
+    // // Cancel the scheduling of the post.
+    // try {
+    //     await scheduled_post.scheduling_details.jobName.cancel();
+    // } catch (error) {
+    //     return { err: { status: 500, message: `Failed to cancel the scheduling of the post: ${error.message}` } };
+    // }
+
     // Remove the scheduled post from the database if it is not recurring.
     try {
         await scheduledPost.deleteOne({ _id: scheduled_post._id });
     }
     catch (error) {
-        return { err: { status: 500, message: `Failed to delete the scheduled post after submitting it: ${error.message} `} };
+        return { err: { status: 500, message: `Failed to delete the scheduled post after submitting it: ${error.message} ` } };
     }
 
     // Return a success message.
     return { message: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
 }
 
-export { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost };
+const cancelScheduledPost = async (post_id) => {
+    // Find the scheduled post with the given post id.
+    const scheduled_post = await scheduledPost.findById(post_id);
+
+    if (!scheduled_post) {
+        return { err: { status: 404, message: `No scheduled post found with the id: ${post_id}` } };
+    }
+
+    // // Cancel the scheduling of the post.
+    // try {
+    //     await scheduled_post.scheduling_details.jobName.cancel();
+    // } catch (error) {
+    //     return { err: { status: 500, message: `Failed to cancel the scheduling of the post: ${error.message}` } };
+    // }
+
+    // Remove the scheduled post from the database.
+    try {
+        await scheduledPost.deleteOne({ _id: scheduled_post._id });
+    }
+    catch (error) {
+        return { err: { status: 500, message: `Failed to delete the scheduled post after cancelling it: ${error.message} ` } };
+    }
+
+    // Return a success message.
+    return { message: `Post with title ${scheduled_post.title} cancelled successfully!` };
+}
+
+export { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost, cancelScheduledPost };
