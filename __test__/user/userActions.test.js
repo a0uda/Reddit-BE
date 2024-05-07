@@ -1,17 +1,17 @@
-import { ObjectId } from "mongodb";
 import {
   blockUser,
   reportUser,
   addOrRemovePicture,
   muteCommunity,
   clearHistory,
-} from "../src/controller/userActions";
-import { User } from "../src/db/models/User";
-import { Community } from "../src/db/models/Community";
+  favoriteCommunity,
+} from "../../src/controller/userActions";
+import { User } from "../../src/db/models/User";
+import { Community } from "../../src/db/models/Community";
 import jwt from "jsonwebtoken";
 
-jest.mock("../src/db/models/User");
-jest.mock("../src/db/models/Community");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/db/models/Community");
 jest.mock("jsonwebtoken", () => ({
   verify: jest.fn(() => ({
     _id: "userId",
@@ -506,4 +506,155 @@ describe("Clearing History", () => {
     expect(mockUser.history_posts_ids).toEqual([]); // Ensure history is cleared in the user object
     expect(mockUser.save).toHaveBeenCalled(); // Ensure the save function was called
   });
+});
+
+describe("Favorite Community", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return error if authorization token is missing", async () => {
+    const request = {
+      headers: {}, // No authorization token provided
+    };
+
+    // Expected result
+    const expectedResult = {
+      success: false,
+      error: {
+        status: 401,
+        message: "Access Denied",
+      },
+    };
+
+    // Call the function and assert the result
+    const result = await favoriteCommunity(request);
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("should modify favorite flag of community successfully", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { community_name: "Test Community" },
+    }; // Mock request object
+
+    // Mock user data
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      communities: [{ id: "communityId1", favorite_flag: false }],
+      moderated_communities: [],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+
+    // Mock community data
+    const mockCommunity = {
+      _id: "communityId1",
+      name: "Test Community",
+    };
+
+    // Mock the behavior of functions and models
+    User.findById.mockResolvedValue(mockUser);
+    // jwt.verify.mockReturnValue({ _id: mockUser._id });
+    Community.findOne.mockResolvedValue(mockCommunity);
+
+    // Expected result
+    const expectedResult = {
+      success: true,
+      message: "Community modified successfully.",
+    };
+
+    // Call the function and assert the result
+    const result = await favoriteCommunity(request);
+    expect(result).toEqual(expectedResult);
+    expect(mockUser.communities[0].favorite_flag).toBe(true);
+    expect(mockUser.markModified).toHaveBeenCalledWith("communities");
+    expect(mockUser.save).toHaveBeenCalled();
+  });
+
+  it("should return error if community name is missing", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: {}, // Missing community name
+    };
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      communities: [{ id: "communityId1", favorite_flag: false }],
+      moderated_communities: [],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+
+    // Call the function and assert the result
+    User.findById.mockResolvedValue(mockUser);
+    // jwt.verify.mockReturnValue({ _id: mockUser._id });
+
+    const result = await favoriteCommunity(request);
+    expect(result.success).toBe(false);
+    expect(result.error.status).toBe(400);
+    expect(result.error.message).toBe("Missing community_name");
+  });
+
+  it("should return error if community is not found", async () => {
+    const request = {
+      headers: { authorization: "Bearer valid_token" },
+      body: { community_name: "Nonexistent Community" },
+    };
+
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      communities: [{ id: "communityId1", favorite_flag: false }],
+      moderated_communities: [],
+      markModified: jest.fn(),
+      save: jest.fn(),
+    };
+
+    // Mock the behavior of functions to return no community
+    User.findById.mockResolvedValue(mockUser);
+    // jwt.verify.mockReturnValue({ _id: mockUser._id });
+    Community.findOne.mockResolvedValue(null);
+
+    // Call the function and assert the result
+    const result = await favoriteCommunity(request);
+    expect(result.success).toBe(false);
+    expect(result.error.status).toBe(404);
+    expect(result.error.message).toBe("Community not found");
+  });
+
+  // it("should return error if an internal server error occurs", async () => {
+  //   const request = {
+  //     headers: { authorization: "Bearer valid_token" },
+  //     body: { community_name: "Test Community" },
+  //   };
+
+  //   const mockUser = {
+  //     _id: "mockUserId",
+  //     token: ["valid_token"],
+  //     communities: [{ id: "communityId1", favorite_flag: false }],
+  //     moderated_communities: [],
+  //     markModified: jest.fn(),
+  //     save: jest.fn(),
+  //   };
+
+  //   // Mock the behavior of verifyAuthToken to throw an error
+  //   const mockError = new Error("Something went wrong");
+  //   User.findById.mockRejectedValue(mockError); // Simulate internal server error
+
+  //   // Expected result
+  //   const expectedResult = {
+  //     success: false,
+  //     error: {
+  //       status: 500,
+  //       message: "Internal Server error",
+  //     },
+  //   };
+
+  //   // Call the function and assert the result
+  //   const result = await favoriteCommunity(request);
+  //   expect(result).toEqual(expectedResult);
+
+  // });
 });

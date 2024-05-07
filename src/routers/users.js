@@ -28,6 +28,7 @@ import {
   isUsernameAvailable,
   isEmailAvailable,
   changeUsername,
+  disconnectGoogle,
 } from "../controller/userAuth.js";
 
 import {
@@ -125,6 +126,57 @@ usersRouter.post("/users/logout", async (req, res) => {
       .send({ error: { status: 500, message: "Internal server error." } });
   }
 });
+usersRouter.post("/users/connect-to-google", async (req, res) => {
+  try {
+    const accessToken = req.body.access_token;
+    const { data: userData } = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    const {
+      success,
+      err,
+      status,
+      user: authenticatedUser,
+      msg,
+    } = await verifyAuthToken(request);
+    if (!authenticatedUser) {
+      return { success, err, status, user: authenticatedUser, msg };
+    }
+    user = authenticatedUser;
+    user.gmail = userData.email;
+    user.connected_google = true;
+
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      status: 200,
+      msg: "connected to google successfully.",
+    });
+  } catch (error) {
+    console.error("Google OAuth error:", error.message);
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
+
+usersRouter.post("/users/disconnect-google", async (req, res) => {
+  try {
+    const { success, error, message } = await disconnectGoogle(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
+    }
+    res.status(200).send({ message });
+  } catch (error) {
+    res.status(500).json({ error: "Google OAuth error" });
+  }
+});
 
 usersRouter.post("/users/signup-google", async (req, res) => {
   try {
@@ -152,8 +204,9 @@ usersRouter.post("/users/signup-google", async (req, res) => {
       });
     }
     const refreshToken = await user.generateAuthToken();
+    const token = await user.generateAuthToken();
     await user.save();
-    res.header("Authorization", `Bearer ${user.token} `);
+    res.header("Authorization", `Bearer ${token} `);
     res.setHeader("RefreshToken", refreshToken);
     res.status(200).send({ username: user.username });
   } catch (error) {

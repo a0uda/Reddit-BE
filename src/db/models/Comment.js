@@ -98,44 +98,54 @@ const commentSchema = new mongoose.Schema({
     default: true,
   },
   //if in my own profile then Im the moderator
+  // The edited_at attribute is meaningless if the post is in a community, the edit history is stored in the moderator_details object.
   moderator_details: {
-    approved_flag: { type: Boolean, default: false },
-    approved_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
-    approved_date: { type: Date, default: null },
+    unmoderated: {
+      approved: {
+        flag: { type: Boolean, default: false },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        date: { type: Date },
+      },
 
-    removed_flag: { type: Boolean, default: false },
-    removed_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+      any_action_taken: { type: Boolean, default: false },
     },
-    removed_date: { type: Date, default: null },
-    removed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
 
-    spammed_flag: { type: Boolean, default: false },
-    spammed_date: { type: Date },
-    spammed_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
-    spammed_type: { type: String, default: null },
-    spammed_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
+    reported: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date },
+      type: { type: String, default: null },
 
-    // TODO: add reported_flag, reported_by, reported_type.
-    reported_flag: { type: Boolean, default: false },
-    reported_date: { type: Date },
-    reported_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+      confirmed: { type: Boolean, default: false },
     },
-    reported_type: { type: String, default: null },
+
+    spammed: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date },
+      type: { type: String, default: null },
+
+      confirmed: { type: Boolean, default: false },
+    },
+
+    removed: {
+      flag: { type: Boolean, default: false },
+      by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      date: { type: Date, default: null },
+      type: { type: String, default: null },
+
+      confirmed: { type: Boolean, default: false },
+    },
+
+    edit_history: [
+      {
+        edited_at: { type: Date, default: null},
+        approved_edit_flag: { type: Boolean, default: false },
+        removed_edit_flag: { type: Boolean, default: false },
+      },
+    ],
   },
+
   upvote_users: [{ type: String }], // Array of usernames who upvoted
   downvote_users: [{ type: String }], // Array of usernames who downvoted
 });

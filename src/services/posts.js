@@ -112,9 +112,9 @@ export async function getCommunity(community_name) {
   };
 }
 
-export async function checkBannedUser(community, userId) {
+export async function checkBannedUser(community, username) {
   const isBannedUser = community.banned_users.find(
-    (userBanned) => userBanned.id.toString() == userId.toString()
+    (userBanned) => userBanned.username == username
   );
   if (isBannedUser) {
     return {
@@ -130,9 +130,9 @@ export async function checkBannedUser(community, userId) {
   };
 }
 
-export async function checkApprovedUser(community, userId) {
+export async function checkApprovedUser(community, username) {
   const isApprovedUser = community.approved_users.find(
-    (userApproved) => userApproved.id.toString() == userId.toString()
+    (userApproved) => userApproved.username == username
   );
   // console.log(community.approved_users[0].id,user._id);
   if (!isApprovedUser) {
