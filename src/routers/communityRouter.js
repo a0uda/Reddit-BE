@@ -532,9 +532,11 @@ communityRouter.post("/communities/mute-user", async (req, res, next) => {
 //get all muted users
 communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
     try {
-        console.log(req.params.community_name)
-        //pagination
-        const { pageNumber, pageSizeNumber } = req.query
+
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
 
         const { err, users } = await getMutedUsers(req.params.community_name, pageNumber, pageSizeNumber)
 
@@ -559,7 +561,11 @@ communityRouter.post("/communities/ban-user", async (req, res, next) => {
 //edit banned user details 
 communityRouter.post("/communities/edit-banned-user", async (req, res, next) => {
     try {
+
         const { err, success } = await editBannedUser(req)
+
+
+
         if (err) { return next(err) }
         res.status(200).json({ message: 'OK' });
     } catch (error) {
@@ -569,7 +575,10 @@ communityRouter.post("/communities/edit-banned-user", async (req, res, next) => 
 //get all banned users
 communityRouter.get("/communities/about/banned/:community_name", async (req, res, next) => {
     try {
-        const { err, users } = await getBannedUsers(req.params.community_name)
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+        const { err, users } = await getBannedUsers(req.params.community_name, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
         return res.status(200).send(users)
     } catch (error) {
@@ -601,7 +610,10 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
 
     try {
         //pagination 
-        const { pageNumber, pageSizeNumber } = req.query
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
         const { err, returned_moderators } = await getModerators(req.params.community_name, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
 
@@ -630,8 +642,12 @@ communityRouter.get("/communities/about/invited-moderators/:community_name", asy
 //get editable moderators
 communityRouter.get("/communities/about/editable-moderators/:community_name", async (req, res, next) => {
     try {
-        console.log("hello from router ")
-        const { err, editableModerators } = await getEditableModerators(req)
+        //pagination 
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
+        const { err, editableModerators } = await getEditableModerators(req, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
         return res.status(200).send(editableModerators)
     } catch (error) {
@@ -641,7 +657,12 @@ communityRouter.get("/communities/about/editable-moderators/:community_name", as
 //get moderators sorted by date
 communityRouter.get("/communities/about/moderators-sorted/:community_name", async (req, res, next) => {
     try {
-        const { err, returned_moderators } = await getModeratorsSortedByDate(req)
+        //pagination 
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
+        const { err, returned_moderators } = await getModeratorsSortedByDate(req, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
         return res.status(200).send(returned_moderators)
     } catch (error) {

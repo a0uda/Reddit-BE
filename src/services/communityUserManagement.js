@@ -265,36 +265,89 @@ const editBannedUser = async (request) => {
  * Output:
  * {users: community.banned_users}
  */
-const getBannedUsers = async (community_name) => {
+const getBannedUsers = async (community_name, pageNumber, pageSizeNumber) => {
     try {
         const community = await communityNameExists(community_name);
 
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
+
+        const banned_users = community.banned_users;
+
+        // Calculate pagination offsets
+        const startIndex = (pageNumber - 1) * pageSizeNumber;
+        let endIndex = pageNumber * pageSizeNumber;
+
+        // Adjust endIndex if it exceeds the length of the banned_users array
+        if (endIndex > banned_users.length) {
+            endIndex = banned_users.length;
+        }
+
+
+        // Slice the banned users array based on pagination parameters
+        const paginatedBannedUsers = banned_users.slice(startIndex, endIndex);
         const returned_banned_users = [];
-        for (let i = 0; i < community.banned_users.length; i++) {
-            const user = await User.findOne({
-                username: community.banned_users[i].username,
-            });
+        for (let i = 0; i < paginatedBannedUsers.length; i++) {
+            const user = await User.findOne({ username: paginatedBannedUsers[i].username });
             if (user) {
                 returned_banned_users.push({
                     username: user.username,
-                    banned_date: community.banned_users[i].banned_date,
-                    reason_for_ban: community.banned_users[i].reason_for_ban,
-                    mod_note: community.banned_users[i].mod_note,
-                    permanent_flag: community.banned_users[i].permanent_flag,
-                    banned_until: community.banned_users[i].banned_until,
-                    note_for_ban_message: community.banned_users[i].note_for_ban_message,
+                    banned_date: paginatedBannedUsers[i].banned_date,
+                    reason_for_ban: paginatedBannedUsers[i].reason_for_ban,
+                    mod_note: paginatedBannedUsers[i].mod_note,
+                    permanent_flag: paginatedBannedUsers[i].permanent_flag,
+                    banned_until: paginatedBannedUsers[i].banned_until,
+                    note_for_ban_message: paginatedBannedUsers[i].note_for_ban_message,
                     profile_picture: user.profile_picture,
                 });
-            }
+            } else { console.log("user not found") }
         }
         return { users: returned_banned_users };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 };
+
+// const getBannedUsers = async (community_name, pageNumber, pageSizeNumber) => {
+//     try {
+//         const community = await communityNameExists(community_name);
+
+//         if (!community) {
+//             return { err: { status: 400, message: "Community not found." } };
+//         }
+
+//         const banned_users = community.banned_users;
+
+//         // Calculate pagination offsets
+//         const startIndex = (pageNumber - 1) * pageSizeNumber;
+//         const endIndex = pageNumber * pageSizeNumber;
+
+//         // Slice the banned users array based on pagination parameters
+//         const paginatedBannedUsers = banned_users.slice(startIndex, endIndex);
+
+//         const returned_banned_users = [];
+//         for (let i = 0; i < paginatedBannedUsers.length; i++) {
+//             const user = await User.findOne({ username: paginatedBannedUsers[i].username });
+//             if (user) {
+//                 returned_banned_users.push({
+//                     username: user.username,
+//                     banned_date: paginatedBannedUsers[i].banned_date,
+//                     reason_for_ban: paginatedBannedUsers[i].reason_for_ban,
+//                     mod_note: paginatedBannedUsers[i].mod_note,
+//                     permanent_flag: paginatedBannedUsers[i].permanent_flag,
+//                     banned_until: paginatedBannedUsers[i].banned_until,
+//                     note_for_ban_message: paginatedBannedUsers[i].note_for_ban_message,
+//                     profile_picture: user.profile_picture,
+//                 });
+//             }
+//         }
+//         return { users: returned_banned_users };
+//     } catch (error) {
+//         return { err: { status: 500, message: error.message } };
+//     }
+// };
+
 //////////////////////////////////////////////////////////////////////// Muted /////////////////////////////////////////////////////////////////////////
 /**
  * 
@@ -462,6 +515,42 @@ const muteUser = async (request) => {
  *
  * @returns
  */
+const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+
+        const muted_users = community.muted_users;
+
+        // Calculate pagination offsets
+        const startIndex = (pageNumber - 1) * pageSizeNumber;
+        const endIndex = pageNumber * pageSizeNumber;
+
+        // Slice the muted users array based on pagination parameters
+        const paginatedMutedUsers = muted_users.slice(startIndex, endIndex);
+
+        const returned_muted_users = [];
+        for (let i = 0; i < paginatedMutedUsers.length; i++) {
+            const user = await User.findOne({ username: paginatedMutedUsers[i].username });
+            if (user) {
+                returned_muted_users.push({
+                    username: user.username,
+                    muted_by_username: paginatedMutedUsers[i].muted_by_username,
+                    mute_date: paginatedMutedUsers[i].mute_date,
+                    mute_reason: paginatedMutedUsers[i].mute_reason,
+                    profile_picture: user.profile_picture,
+                });
+            }
+        }
+
+        return { users: returned_muted_users };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
+
 
 // const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
 //     try {
@@ -489,38 +578,6 @@ const muteUser = async (request) => {
 //         return { err: { status: 500, message: error.message } };
 //     }
 // };
-const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
-    try {
-        const community = await communityNameExists(community_name);
-        if (!community) {
-            return { err: { status: 400, message: "Community not found." } };
-        }
-        const muted_users = community.muted_users;
-
-        // Apply pagination to the entire list of muted users
-        const startIndex = (pageNumber - 1) * pageSizeNumber;
-        const endIndex = pageNumber * pageSizeNumber;
-
-        // Slice the muted users array based on pagination parameters
-        const paginatedMutedUsers = muted_users.slice(startIndex, endIndex);
-        const returned_muted_users = [];
-        for (let i = 0; i < paginatedMutedUsers.length; i++) {
-            const user = await User.findOne({ username: paginatedMutedUsers[i].username });
-            if (user) {
-                returned_muted_users.push({
-                    username: user.username,
-                    muted_by_username: paginatedMutedUsers[i].muted_by_username,
-                    mute_date: paginatedMutedUsers[i].mute_date,
-                    mute_reason: paginatedMutedUsers[i].mute_reason,
-                    profile_picture: user.profile_picture,
-                });
-            }
-        }
-        return { users: returned_muted_users };
-    } catch (error) {
-        return { err: { status: 500, message: error.message } };
-    }
-};
 
 //////////////////////////////////////////////////////////////////////// Approved /////////////////////////////////////////////////////////////////////////
 
@@ -1059,101 +1116,194 @@ const getModerators = async (community_name, pageNumber, pageSizeNumber) => {
     }
 };
 
-const getModeratorsSortedByDate = async (request) => {
+// const getModeratorsSortedByDate = async (request) => {
+//     try {
+//         //verify the auth token
+//         const { success, err, status, user, msg } = await verifyAuthToken(request);
+//         if (!user) {
+//             return { err: { status: status, message: msg } };
+//         }
+//         //check if the community exists
+//         const community = await communityNameExists(request.params.community_name);
+//         if (!community) {
+//             return {
+//                 err: { status: 400, message: "Community not found." },
+//             };
+//         }
+//         //get the moderator element from moderators array where username is the user's username
+//         const moderator = community.moderators.find((moderator) => moderator.username === user.username);
+//         if (!moderator) {
+//             return {
+//                 err: { status: 400, message: "User is not a moderator of the community." },
+//             };
+//         }
+//         const returned_moderators = [];
+//         //get the moderators array
+//         const moderators = community.moderators;
+//         //filter pending moderators
+//         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
+//         //sort the moderators array by moderator_since date
+//         filtered_moderators.sort((a, b) => {
+//             return new Date(b.moderator_since) - new Date(a.moderator_since);
+//         }
+//         );
+//         for (let i = 0; i < filtered_moderators.length; i++) {
+//             //get the user object from the user collection where username is the moderator's username
+//             const user = await User.findOne({ username: filtered_moderators[i].username });
+//             returned_moderators.push({
+//                 username: filtered_moderators[i].username,
+//                 profile_picture: user.profile_picture,
+//                 moderator_since: filtered_moderators[i].moderator_since,
+//                 has_access: filtered_moderators[i].has_access,
+//             })
+//         }
+//         return { returned_moderators };
+//     } catch (error) {
+//         return { err: { status: 500, message: error.message } };
+//     }
+
+// };
+const getModeratorsSortedByDate = async (request, pageNumber, pageSizeNumber) => {
     try {
-        //verify the auth token
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user) {
             return { err: { status: status, message: msg } };
         }
-        //check if the community exists
+
         const community = await communityNameExists(request.params.community_name);
         if (!community) {
-            return {
-                err: { status: 400, message: "Community not found." },
-            };
+            return { err: { status: 400, message: "Community not found." } };
         }
-        //get the moderator element from moderators array where username is the user's username
+
         const moderator = community.moderators.find((moderator) => moderator.username === user.username);
         if (!moderator) {
-            return {
-                err: { status: 400, message: "User is not a moderator of the community." },
-            };
+            return { err: { status: 400, message: "User is not a moderator of the community." } };
         }
+
+        const moderators = community.moderators.filter((moderator) => !moderator.pending_flag);
+
+        // Sort the moderators array by moderator_since date
+        moderators.sort((a, b) => new Date(b.moderator_since) - new Date(a.moderator_since));
+
+        // Calculate pagination offsets
+        const startIndex = (pageNumber - 1) * pageSizeNumber;
+        const endIndex = pageNumber * pageSizeNumber;
+
+        // Slice the sorted moderators array based on pagination parameters
+        const paginatedModerators = moderators.slice(startIndex, endIndex);
+
         const returned_moderators = [];
-        //get the moderators array
-        const moderators = community.moderators;
-        //filter pending moderators 
-        const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
-        //sort the moderators array by moderator_since date
-        filtered_moderators.sort((a, b) => {
-            return new Date(b.moderator_since) - new Date(a.moderator_since);
-        }
-        );
-        for (let i = 0; i < filtered_moderators.length; i++) {
-            //get the user object from the user collection where username is the moderator's username
-            const user = await User.findOne({ username: filtered_moderators[i].username });
+
+        for (let i = 0; i < paginatedModerators.length; i++) {
+            const user = await User.findOne({ username: paginatedModerators[i].username });
             returned_moderators.push({
-                username: filtered_moderators[i].username,
+                username: paginatedModerators[i].username,
                 profile_picture: user.profile_picture,
-                moderator_since: filtered_moderators[i].moderator_since,
-                has_access: filtered_moderators[i].has_access,
-            })
+                moderator_since: paginatedModerators[i].moderator_since,
+                has_access: paginatedModerators[i].has_access,
+            });
         }
+
         return { returned_moderators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
-
 };
 
-const getEditableModerators = async (request) => {
+
+// const getEditableModerators = async (request, pageNumber, pageSizeNumber) => {
+//     try {
+//         console.log("inside getEditableModerators")
+//         const { success, err, status, user, msg } = await verifyAuthToken(request);
+//         if (!user) {
+//             return { err: { status: status, message: msg } };
+//         }
+//         console.log("authentication passed")
+//         const community = await communityNameExists(request.params.community_name);
+//         if (!community) {
+//             return {
+//                 err: { status: 400, message: "Community not found." },
+//             };
+//         }
+//         //get the moderator element from moderators array where username is the user's username
+//         const moderator = community.moderators.find((moderator) => moderator.username === user.username);
+//         if (!moderator) {
+//             return {
+//                 err: { status: 400, message: "User is not a moderator of the community." },
+//             };
+//         }
+//         const editableModerators = [];
+//         const moderators = community.moderators;
+//         //  filter to have moderators who pendinq_flag is false
+//         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
+
+//         for (let i = 0; i < filtered_moderators.length; i++) {
+//             //get the user object from the user collection where username is the moderator's username
+//             const user = await User.findOne({
+//                 username: filtered_moderators[i].username,
+//             });
+//             if (filtered_moderators[i].moderator_since > moderator.moderator_since) {
+//                 editableModerators.push({
+//                     username: filtered_moderators[i].username,
+//                     profile_picture: user.profile_picture,
+//                     moderator_since: filtered_moderators[i].moderator_since,
+//                     has_access: filtered_moderators[i].has_access,
+//                 });
+//             }
+//         }
+
+//         //remove has_access from each moderator
+//         return { editableModerators };
+//     } catch (error) {
+//         return { err: { status: 500, message: error.message } };
+//     }
+// }; 
+const getEditableModerators = async (request, pageNumber, pageSizeNumber) => {
     try {
-        console.log("inside getEditableModerators")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user) {
             return { err: { status: status, message: msg } };
         }
-        console.log("authentication passed")
+
         const community = await communityNameExists(request.params.community_name);
         if (!community) {
-            return {
-                err: { status: 400, message: "Community not found." },
-            };
+            return { err: { status: 400, message: "Community not found." } };
         }
-        //get the moderator element from moderators array where username is the user's username
+
         const moderator = community.moderators.find((moderator) => moderator.username === user.username);
         if (!moderator) {
-            return {
-                err: { status: 400, message: "User is not a moderator of the community." },
-            };
+            return { err: { status: 400, message: "User is not a moderator of the community." } };
         }
-        const editableModerators = [];
-        const moderators = community.moderators;
-        //  filter to have moderators who pendinq_flag is false
-        const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
 
-        for (let i = 0; i < filtered_moderators.length; i++) {
-            //get the user object from the user collection where username is the moderator's username
-            const user = await User.findOne({
-                username: filtered_moderators[i].username,
-            });
-            if (filtered_moderators[i].moderator_since > moderator.moderator_since) {
+        const moderators = community.moderators.filter((moderator) => !moderator.pending_flag);
+        console.log(moderators);
+        // Calculate pagination offsets
+        const startIndex = (pageNumber - 1) * pageSizeNumber;
+        const endIndex = pageNumber * pageSizeNumber;
+
+        // Slice the moderators array based on pagination parameters
+        const paginatedModerators = moderators.slice(startIndex, endIndex);
+
+        const editableModerators = [];
+
+        for (let i = 0; i < paginatedModerators.length; i++) {
+            const user = await User.findOne({ username: paginatedModerators[i].username });
+            if (user && paginatedModerators[i].moderator_since > moderator.moderator_since) {
                 editableModerators.push({
-                    username: filtered_moderators[i].username,
+                    username: paginatedModerators[i].username,
                     profile_picture: user.profile_picture,
-                    moderator_since: filtered_moderators[i].moderator_since,
-                    has_access: filtered_moderators[i].has_access,
+                    moderator_since: paginatedModerators[i].moderator_since,
+                    has_access: paginatedModerators[i].has_access,
                 });
             }
         }
 
-        //remove has_access from each moderator
         return { editableModerators };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
     }
 };
+
 /**
  * @param {Object} requestBody
  * @property {String} community_name
