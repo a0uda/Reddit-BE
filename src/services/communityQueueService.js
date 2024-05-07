@@ -69,7 +69,7 @@ const objectItem = async (item_id, item_type, objection_type, objected_by, objec
             [`community_moderator_details.${objection_type}.date`]: new Date(),
             [`community_moderator_details.${objection_type}.type`]: objection_type_value,
             'community_moderator_details.unmoderated.any_action_taken': true,
-           
+
             // Unnecessary code
             [`moderator_details.${objection_type}_flag`]: true,
             [`moderator_details.${objection_type}_by`]: objected_by,
@@ -179,7 +179,7 @@ const handleObjection = async (item_id, item_type, objection_type, action) => {
                 [`moderator_details.${objection_type}_flag`]: false,
                 [`moderator_details.${objection_type}_by`]: null,
                 [`moderator_details.${objection_type}_date`]: null,
-                [`moderator_details.${objection_type}_removal_reason`]: null    
+                [`moderator_details.${objection_type}_removal_reason`]: null
             };
         }
 
@@ -294,7 +294,7 @@ const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
 
 //////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
 
-const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, page, limit) => {
+const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, authenticated_user, page, limit) => {
     try {
         // Validate the time_filter parameter. It should be either 'newest first' or 'oldest first'.
         if (!['newest first', 'oldest first'].includes(time_filter.toLowerCase())) {
@@ -354,8 +354,31 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, pag
 
         let [posts, comments] = await Promise.all([
             (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }).skip((page - 1) * limit).limit(limit) : [],
-            (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }).skip((page - 1) * limit).limit(limit)  : []
+            (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }).skip((page - 1) * limit).limit(limit) : []
         ]);
+
+
+        // Add the userVote attribute to each post and comment
+        posts = posts.map(post => {
+            let userVote = 'none';
+            if (authenticated_user.upvotes_posts_ids.includes(post._id)) {
+                userVote = 'up';
+            } else if (authenticated_user.downvotes_posts_ids.includes(post._id)) {
+                userVote = 'down';
+            }
+            return { ...post._doc, userVote };
+        });
+
+        comments = comments.map(comment => {
+            let userVote = 'none';
+            if (authenticated_user.upvotes_comments_ids.includes(comment._id)) {
+                userVote = 'up';
+            } else if (authenticated_user.downvotes_comments_ids.includes(comment._id)) {
+                userVote = 'down';
+            }
+            return { ...comment._doc, userVote };
+        });
+
 
         // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
         let items = [...posts, ...comments];
