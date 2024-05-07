@@ -1,362 +1,383 @@
-// import { Post } from '../db/models/Post.js';
-// import { Comment } from '../db/models/Comment.js';
-// import { Community } from '../db/models/Community.js';
+import { Post } from '../db/models/Post.js';
+import { Comment } from '../db/models/Comment.js';
+import { Community } from '../db/models/Community.js';
 
-// //////////////////////////////////////////////////////////////////////////// Actions ////////////////////////////////////////////////////////////////////////////
-// const objectItem = async (item_id, item_type, objection_type, objected_by, objection_type_value, community_name) => {
-//   try {
-//     // Validate that the item_type is either post of comment
-//     if (!['post', 'comment'].includes(item_type.toLowerCase())) {
-//       return { err: { status: 400, message: 'Invalid item type' } };
-//     }
+//////////////////////////////////////////////////////////////////////////// Actions ////////////////////////////////////////////////////////////////////////////
+const objectItem = async (item_id, item_type, objection_type, objected_by, objection_type_value, community_name) => {
+    try {
+        // Validate that the item_type is either post of comment
+        if (!['post', 'comment'].includes(item_type.toLowerCase())) {
+            return { err: { status: 400, message: 'Invalid item type' } };
+        }
 
-//     // Validate that the objection type is either 'reported', 'spammed', or 'removed'
-//     if (!['reported', 'spammed', 'removed'].includes(objection_type.toLowerCase())) {
-//       return { err: { status: 400, message: `Invalid objection type, the allowed types are 'reported', 'spammed', 'removed'.` } };
-//     }
+        // Validate that the objection type is either 'reported', 'spammed', or 'removed'
+        if (!['reported', 'spammed', 'removed'].includes(objection_type.toLowerCase())) {
+            return { err: { status: 400, message: `Invalid objection type, the allowed types are 'reported', 'spammed', 'removed'.` } };
+        }
 
-//     const report_reasons = [
-//       "Harassment",
-//       "Threatening violence",
-//       "Hate",
-//       "Minor abuse",
-//       "Sharing personal information",
-//       "Copyright violation",
-//       "Spam",
-//       "Report abuse"
-//     ]
+        const report_reasons = [
+            "Harassment",
+            "Threatening violence",
+            "Hate",
+            "Minor abuse",
+            "Sharing personal information",
+            "Copyright violation",
+            "Spam",
+            "Report abuse"
+        ]
 
-//     // Validate that the objection_type_value is an element in the removal_reasons array or report_reasons array based on the objection_type
-//     if (objection_type_value) {
-//       if (objection_type.toLowerCase() === 'reported') {
-//         if (!report_reasons.includes(objection_type_value)) {
-//           return { err: { status: 400, message: 'Invalid objection type value, check the report reasons' } };
-//         }
-//       } else if (['removed', 'spammed'].includes(objection_type.toLowerCase())) {
-//         const community = await Community.findOne({ name: community_name });
-//         if (!community.removal_reasons.some(reason => reason.removal_reason_title === objection_type_value)) {
-//           return { err: { status: 400, message: 'Invalid objection type value, check the community removal reasons' } };
-//         }
-//       }
-//     }
+        // Validate that the objection_type_value is an element in the removal_reasons array or report_reasons array based on the objection_type
+        if (objection_type_value) {
+            if (objection_type.toLowerCase() === 'reported') {
+                if (!report_reasons.includes(objection_type_value)) {
+                    return { err: { status: 400, message: 'Invalid objection type value, check the report reasons' } };
+                }
+            } else if (['removed', 'spammed'].includes(objection_type.toLowerCase())) {
+                const community = await Community.findOne({ name: community_name });
+                if (!community.removal_reasons.some(reason => reason.removal_reason_title === objection_type_value)) {
+                    return { err: { status: 400, message: 'Invalid objection type value, check the community removal reasons' } };
+                }
+            }
+        }
 
-//     // Determine the model based on the item_type
-//     const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
+        // Determine the model based on the item_type
+        const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
 
-//     // Validate that the item exists in the database
-//     const item = await Model.findById(item_id);
-//     if (!item) {
-//       return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
-//     }
+        // Validate that the item exists in the database
+        const item = await Model.findById(item_id);
+        if (!item) {
+            return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
+        }
 
-//     // Check if the last edit has been approved or removed
-//     const lastEdit = item.moderator_details.edit_history[item.moderator_details.edit_history.length - 1];
-//     if (lastEdit && lastEdit.edited_at !== null && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
-//       return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} has been edited, no action taken on last edit, can't object` } };
-//     }
+        // Check if the last edit has been approved or removed
+        const lastEdit = item.community_moderator_details.edit_history[item.community_moderator_details.edit_history.length - 1];
+        if (lastEdit && lastEdit.edited_at !== null && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
+            return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} has been edited, no action taken on last edit, can't object` } };
+        }
 
-//     // Check if any other objection flags are true
-//     for (let key in item.moderator_details) {
-//       if (item.moderator_details[key].flag) {
-//         return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} already has an objection` } };
-//       }
-//     }
+        // Check if any other objection flags are true
+        for (let key in item.community_moderator_details) {
+            if (item.community_moderator_details[key].flag) {
+                return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} already has an objection` } };
+            }
+        }
 
-//     // Object the item
-//     await Model.findByIdAndUpdate(item_id, {
-//       [`moderator_details.${objection_type}.flag`]: true,
-//       [`moderator_details.${objection_type}.by`]: objected_by,
-//       [`moderator_details.${objection_type}.date`]: new Date(),
-//       [`moderator_details.${objection_type}.type`]: objection_type_value,
-//       'moderator_details.unmoderated.any_action_taken': true
-//     });
+        // Object the item
+        await Model.findByIdAndUpdate(item_id, {
+            [`community_moderator_details.${objection_type}.flag`]: true,
+            [`community_moderator_details.${objection_type}.by`]: objected_by,
+            [`community_moderator_details.${objection_type}.date`]: new Date(),
+            [`community_moderator_details.${objection_type}.type`]: objection_type_value,
+            'community_moderator_details.unmoderated.any_action_taken': true,
+           
+            // Unnecessary code
+            [`moderator_details.${objection_type}_flag`]: true,
+            [`moderator_details.${objection_type}_by`]: objected_by,
+            [`moderator_details.${objection_type}_date`]: new Date(),
+            [`moderator_details.${objection_type}_removal_reason`]: objection_type_value
+        });
 
-//     // Return a success message
-//     return { message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} ${objection_type} successfully` };
+        // Return a success message
+        return { message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} ${objection_type} successfully` };
 
-//   } catch (error) {
-//     // If an error occurs, return an error object with the status code and message
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
+    } catch (error) {
+        // If an error occurs, return an error object with the status code and message
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
-// const editItem = async (item_id, item_type, new_content, editing_user) => {
-//   try {
-//     // Determine the model based on the item_type
-//     const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
+const editItem = async (item_id, item_type, new_content, editing_user) => {
+    try {
+        // Determine the model based on the item_type
+        const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
 
-//     // Validate that the item exists in the database.
-//     const item = await Model.findById(item_id);
-//     if (!item) {
-//       return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
-//     }
+        // Validate that the item exists in the database.
+        const item = await Model.findById(item_id);
+        if (!item) {
+            return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
+        }
 
-//     // Validate the the editing user is the same as the user who created the post or comment.
-//     if (item.username !== editing_user.username) {
-//       return { err: { status: 403, message: 'Access denied. You must be the author of the item to edit it.' } };
-//     }
+        // Validate the the editing user is the same as the user who created the post or comment.
+        if (item.username !== editing_user.username) {
+            return { err: { status: 403, message: 'Access denied. You must be the author of the item to edit it.' } };
+        }
 
-//     // Check if the item has been objected and no action has been taken on the objection
-//     for (let key in item.moderator_details) {
-//       if (item.moderator_details[key].flag) {
-//         return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} has an objection, no action taken on objection, can't edit` } };
-//       }
-//     }
+        // Check if the item has been objected and no action has been taken on the objection
+        for (let key in item.community_moderator_details) {
+            if (item.community_moderator_details[key].flag) {
+                return { err: { status: 400, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} has an objection, no action taken on objection, can't edit` } };
+            }
+        }
 
-//     // Validate that the new_content is provided and of type string.
-//     if (typeof new_content !== 'string') {
-//       return { err: { status: 400, message: 'Invalid new content' } };
-//     }
+        // Validate that the new_content is provided and of type string.
+        if (typeof new_content !== 'string') {
+            return { err: { status: 400, message: 'Invalid new content' } };
+        }
 
-//     // Update the item with the new content and add a new entry to the edit history
-//     await Model.findByIdAndUpdate(item_id, {
-//       description: new_content,
-//       $push: {
-//         'moderator_details.edit_history': {
-//           edited_at: new Date(),
-//         }
-//       }
-//     });
+        // Update the item with the new content and add a new entry to the edit history
+        await Model.findByIdAndUpdate(item_id, {
+            description: new_content,
+            $push: {
+                'community_moderator_details.edit_history': {
+                    edited_at: new Date(),
+                }
+            }
+        });
 
-//     // Return a success message.
-//     return { message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} edited successfully` };
-//   } catch (error) {
-//     // If an error occurs, return an error object with the status code and message.
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
+        // Unnecessary code
+        item.moderator_details.edited_at = new Date();
 
-// //////////////////////////////////////////////////////////////////////////// Handlers ////////////////////////////////////////////////////////////////////////////
-// const handleObjection = async (item_id, item_type, objection_type, action) => {
-//   try {
-//     // Determine the model based on the item_type
-//     const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
+        // Return a success message.
+        return { message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} edited successfully` };
+    } catch (error) {
+        // If an error occurs, return an error object with the status code and message.
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
-//     // Validate that the item exists in the database.
-//     const item = await Model.findById(item_id);
-//     if (!item) {
-//       return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
-//     }
+//////////////////////////////////////////////////////////////////////////// Handlers ////////////////////////////////////////////////////////////////////////////
+const handleObjection = async (item_id, item_type, objection_type, action) => {
+    try {
+        // Determine the model based on the item_type
+        const Model = item_type.toLowerCase() === 'post' ? Post : Comment;
 
-//     // Check if the objection exists
-//     if (!item.moderator_details[objection_type].flag) {
-//       return { err: { status: 400, message: `No ${objection_type} objection exists on this ${item_type}` } };
-//     }
+        // Validate that the item exists in the database.
+        const item = await Model.findById(item_id);
+        if (!item) {
+            return { err: { status: 404, message: `${item_type.charAt(0).toUpperCase() + item_type.slice(1)} not found` } };
+        }
 
-//     // 1. Approve that the action is a valid value
-//     if (!['approve', 'remove'].includes(action)) {
-//       return { err: { status: 400, message: `Invalid action. Action must be either 'approve' or 'remove'` } };
-//     }
+        // Check if the objection exists
+        if (!item.community_moderator_details[objection_type].flag) {
+            return { err: { status: 400, message: `No ${objection_type} objection exists on this ${item_type}` } };
+        }
 
-//     // 2. Confirm that we can perform this action on this item
-//     const is_unhandled_item = item.moderator_details[objection_type].flag && !item.moderator_details[objection_type].confirmed;
+        // 1. Approve that the action is a valid value
+        if (!['approve', 'remove'].includes(action)) {
+            return { err: { status: 400, message: `Invalid action. Action must be either 'approve' or 'remove'` } };
+        }
 
-//     if (!is_unhandled_item) {
-//       return { err: { status: 400, message: `The ${objection_type} objection cannot be ${action}d because it has already been handled.` } };
-//     }
+        // 2. Confirm that we can perform this action on this item
+        const is_unhandled_item = item.community_moderator_details[objection_type].flag && !item.community_moderator_details[objection_type].confirmed;
 
-//     // 3. Write a query object
-//     let updated_attributes = {};
-//     if (action === 'approve') {
-//       query = {
-//         [`moderator_details.${objection_type}.confirmed`]: true,
-//       };
-//     } else if (action === 'remove') {
-//       query = {
-//         [`moderator_details.${objection_type}.flag`]: false,
-//         [`moderator_details.${objection_type}.confirmed`]: false,
-//       };
-//     }
+        if (!is_unhandled_item) {
+            return { err: { status: 400, message: `The ${objection_type} objection cannot be ${action}d because it has already been handled.` } };
+        }
 
-//     try {
-//       // 4. Pass it to the and update method
-//       await Model.findByIdAndUpdate(item_id, updated_attributes);
-//     } catch (error) {
-//       return { err: { status: 500, message: error.message } };
-//     }
+        // 3. Write a query object
+        let updated_attributes = {};
+        if (action === 'approve') {
+            query = {
+                [`community_moderator_details.${objection_type}.confirmed`]: true,
+            };
+        } else if (action === 'remove') {
+            query = {
+                [`community_moderator_details.${objection_type}.flag`]: false,
+                [`community_moderator_details.${objection_type}.confirmed`]: false,
 
-//     // Return a success message.
-//     return { message: `${objection_type.charAt(0).toUpperCase() + objection_type.slice(1)} objection ${action}d successfully` };
+                // Unnecessary code
+                [`moderator_details.${objection_type}_flag`]: false,
+                [`moderator_details.${objection_type}_by`]: null,
+                [`moderator_details.${objection_type}_date`]: null,
+                [`moderator_details.${objection_type}_removal_reason`]: null    
+            };
+        }
 
-//   } catch (error) {
-//     // If an error occurs, return an error object with the status code and message.
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
+        try {
+            // 4. Pass it to the and update method
+            await Model.findByIdAndUpdate(item_id, updated_attributes);
+        } catch (error) {
+            return { err: { status: 500, message: error.message } };
+        }
 
-// const handleEdit = async (item_id, item_type, action) => {
-//   // Determine the model based on the item_type
-//   const Model = item_type === 'post' ? Post : Comment;
+        // Return a success message.
+        return { message: `${objection_type.charAt(0).toUpperCase() + objection_type.slice(1)} objection ${action}d successfully` };
 
-//   let item;
-//   try {
-//     // Fetch the item
-//     item = await Model.findById(item_id);
+    } catch (error) {
+        // If an error occurs, return an error object with the status code and message.
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
-//     // Check if the item exists
-//     if (!item) {
-//       return { err: { status: 404, message: 'Item not found' } };
-//     }
-//   } catch (error) {
-//     return { err: { status: 500, message: error.message } };
-//   }
+const handleEdit = async (item_id, item_type, action) => {
+    // Determine the model based on the item_type
+    const Model = item_type === 'post' ? Post : Comment;
 
-//   // Get the last edit
-//   const lastEdit = item.moderator_details.edit_history[item.moderator_details.edit_history.length - 1];
+    let item;
+    try {
+        // Fetch the item
+        item = await Model.findById(item_id);
 
-//   // Check if the last edit is not approved and not removed
-//   if (lastEdit && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
-//     // Handle the action
-//     if (action === 'approve') {
-//       lastEdit.approved_edit_flag = true;
-//     } else if (action === 'remove') {
-//       lastEdit.removed_edit_flag = true;
-//     } else {
-//       return { err: { status: 400, message: 'Invalid action' } };
-//     }
+        // Check if the item exists
+        if (!item) {
+            return { err: { status: 404, message: 'Item not found' } };
+        }
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
 
-//     item.moderator_details.unmoderated.any_action_taken = true;
+    // Get the last edit
+    const lastEdit = item.community_moderator_details.edit_history[item.community_moderator_details.edit_history.length - 1];
 
-//     try {
-//       // Save the item
-//       await item.save();
-//     } catch (error) {
-//       return { err: { status: 500, message: `Error while saving the item after ${action}ing its edit: ${error.message}` } };
-//     }
+    // Check if the last edit is not approved and not removed
+    if (lastEdit && !lastEdit.approved_edit_flag && !lastEdit.removed_edit_flag) {
+        // Handle the action
+        if (action === 'approve') {
+            lastEdit.approved_edit_flag = true;
+        } else if (action === 'remove') {
+            lastEdit.removed_edit_flag = true;
+        } else {
+            return { err: { status: 400, message: 'Invalid action' } };
+        }
 
-//   } else {
-//     return { err: { status: 400, message: 'The last edit is already approved or removed' } };
-//   }
+        item.community_moderator_details.unmoderated.any_action_taken = true;
 
-//   return { message: `Edit ${action}d successfully` };
-// };
+        try {
+            // Save the item
+            await item.save();
+        } catch (error) {
+            return { err: { status: 500, message: `Error while saving the item after ${action}ing its edit: ${error.message}` } };
+        }
 
-// const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
-//   try {
-//     // Determine the model based on the item_type
-//     const Model = itemType.toLowerCase() === 'post' ? Post : Comment;
+    } else {
+        return { err: { status: 400, message: 'The last edit is already approved or removed' } };
+    }
 
-//     const item = await Model.findById(itemId);
-//     if (!item) {
-//       return { err: { status: 404, message: `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} not found` } };
-//     }
+    return { message: `Edit ${action}d successfully` };
+};
 
-//     // Check if any action has already been taken
-//     if (item.moderator_details.unmoderated.any_action_taken) {
-//       return { err: { status: 400, message: 'This item is already approved or removed' } };
-//     }
+const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
+    try {
+        // Determine the model based on the item_type
+        const Model = itemType.toLowerCase() === 'post' ? Post : Comment;
 
-//     if (action === 'approve') {
-//       item.moderator_details.unmoderated.approved.flag = true;
-//       item.moderator_details.unmoderated.approved.by = userId;
-//       item.moderator_details.unmoderated.approved.date = new Date();
-//     } else if (action === 'remove') {
-//       const { err, message } = await objectItem(itemId, itemType, 'removed', userId, null, null);
-//       if (err) { return { err: { status: 500, message: err } } }
-//     } else {
-//       return { err: { status: 400, message: 'Invalid action' } };
-//     }
+        const item = await Model.findById(itemId);
+        if (!item) {
+            return { err: { status: 404, message: `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} not found` } };
+        }
 
-//     item.moderator_details.unmoderated.any_action_taken = true;
+        // Check if any action has already been taken
+        if (item.community_moderator_details.unmoderated.any_action_taken) {
+            return { err: { status: 400, message: 'This item is already approved or removed' } };
+        }
 
-//     try {
-//       await item.save();
-//     } catch (error) {
-//       return { err: { status: 500, message: `Failed to save the item after ${action}ing it from the unmoderated queue.` } };
-//     }
+        if (action === 'approve') {
+            item.community_moderator_details.unmoderated.approved.flag = true;
+            item.community_moderator_details.unmoderated.approved.by = userId;
+            item.community_moderator_details.unmoderated.approved.date = new Date();
 
-//     return { message: `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} ${action}d successfully` };
-//   } catch (error) {
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
+            // Unnecessary code
+            item.moderator_details.approved_flag = true;
+            item.moderator_details.approved_by = userId;
+            item.moderator_details.approved_date = new Date();
 
-// //////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
+        } else if (action === 'remove') {
+            const { err, message } = await objectItem(itemId, itemType, 'removed', userId, null, null);
+            if (err) { return { err: { status: 500, message: err } } }
+        } else {
+            return { err: { status: 400, message: 'Invalid action' } };
+        }
 
-// const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type) => {
-//   try {
-//     // Validate the time_filter parameter. It should be either 'newest first' or 'oldest first'.
-//     if (!['newest first', 'oldest first'].includes(time_filter.toLowerCase())) {
-//       return ({ err: { status: 400, message: 'Invalid time filter' } });
-//     }
+        item.community_moderator_details.unmoderated.any_action_taken = true;
 
-//     // Validate the posts_or_comments parameter. It should be either 'posts', 'comments', or 'posts and comments'.
-//     if (!['posts', 'comments', 'posts and comments'].includes(posts_or_comments.toLowerCase())) {
-//       return { err: { status: 400, message: 'Invalid posts or comments value' } };
-//     }
+        try {
+            await item.save();
+        } catch (error) {
+            return { err: { status: 500, message: `Failed to save the item after ${action}ing it from the unmoderated queue.` } };
+        }
 
-//     // Define the query object
-//     let query = {};
+        return { message: `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} ${action}d successfully` };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
-//     // If queue_type is 'removed', we need to get items where either 'removed.flag' or 'spammed.flag' is true
-//     if (queue_type === 'removed') {
-//       query = {
-//         $or: [
-//           { [`moderator_details.removed.flag`]: true, [`moderator_details.removed.confirmed`]: false },
-//           { [`moderator_details.spammed.flag`]: true, [`moderator_details.spammed.confirmed`]: false }
-//         ]
-//       };
-//     }
+//////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
 
-//     else if (queue_type === 'reported') {
-//       query = { [`moderator_details.reported.flag`]: true, [`moderator_details.reported.confirmed`]: false };
-//     }
+const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type) => {
+    try {
+        // Validate the time_filter parameter. It should be either 'newest first' or 'oldest first'.
+        if (!['newest first', 'oldest first'].includes(time_filter.toLowerCase())) {
+            return ({ err: { status: 400, message: 'Invalid time filter' } });
+        }
 
-//     else if (queue_type === 'unmoderated') {
-//       query = { 'unmoderated.any_action_taken': false }
-//     }
+        // Validate the posts_or_comments parameter. It should be either 'posts', 'comments', or 'posts and comments'.
+        if (!['posts', 'comments', 'posts and comments'].includes(posts_or_comments.toLowerCase())) {
+            return { err: { status: 400, message: 'Invalid posts or comments value' } };
+        }
 
-//     else if (queue_type === 'edited') {
-//       query = {
-//         $expr: {
-//           $let: {
-//             vars: {
-//               lastEdit: { $arrayElemAt: ['$moderator_details.edit_history', -1] }
-//             },
-//             in: {
-//               $and: [
-//                 { $eq: ['$$lastEdit.approved_edit_flag', false] },
-//                 { $eq: ['$$lastEdit.removed_edit_flag', false] }
-//               ]
-//             }
-//           }
-//         }
-//       };
-//     }
+        // Define the query object
+        let query = {};
 
-//     else {
-//       return { err: { status: 400, message: `Invalid queue type. Queue type must be either 'reported', 'removed', 'spammed', 'unmoderated' or 'edited' ` } };
-//     }
+        // If queue_type is 'removed', we need to get items where either 'removed.flag' or 'spammed.flag' is true
+        if (queue_type === 'removed') {
+            query = {
+                $or: [
+                    { [`community_moderator_details.removed.flag`]: true, [`community_moderator_details.removed.confirmed`]: false },
+                    { [`community_moderator_details.spammed.flag`]: true, [`community_moderator_details.spammed.confirmed`]: false }
+                ]
+            };
+        }
 
-//     // Fetch the items from the database based on the item_type
-//     const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+        else if (queue_type === 'reported') {
+            query = { [`community_moderator_details.reported.flag`]: true, [`community_moderator_details.reported.confirmed`]: false };
+        }
 
-//     let [posts, comments] = await Promise.all([
-//       (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }) : [],
-//       (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }) : []
-//     ]);
+        else if (queue_type === 'unmoderated') {
+            query = { 'unmoderated.any_action_taken': false }
+        }
 
-//     // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
-//     let items = [...posts, ...comments];
-//     items.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
+        else if (queue_type === 'edited') {
+            query = {
+                $expr: {
+                    $let: {
+                        vars: {
+                            lastEdit: { $arrayElemAt: ['$community_moderator_details.edit_history', -1] }
+                        },
+                        in: {
+                            $and: [
+                                { $eq: ['$$lastEdit.approved_edit_flag', false] },
+                                { $eq: ['$$lastEdit.removed_edit_flag', false] }
+                            ]
+                        }
+                    }
+                }
+            };
+        }
 
-//     // Return the items
-//     return { items };
+        else {
+            return { err: { status: 400, message: `Invalid queue type. Queue type must be either 'reported', 'removed', 'spammed', 'unmoderated' or 'edited' ` } };
+        }
 
-//   } catch (error) {
-//     // If an error occurs, return an error object with the status code and message.
-//     return { err: { status: 500, message: error.message } };
-//   }
-// };
+        // Fetch the items from the database based on the item_type
+        const sortOrder = time_filter === 'Newest First' ? -1 : 1;
+
+        let [posts, comments] = await Promise.all([
+            (posts_or_comments.toLowerCase() === 'posts' || posts_or_comments.toLowerCase() === 'posts and comments') ? Post.find(query).sort({ created_at: sortOrder }) : [],
+            (posts_or_comments.toLowerCase() === 'comments' || posts_or_comments.toLowerCase() === 'posts and comments') ? Comment.find(query).sort({ created_at: sortOrder }) : []
+        ]);
+
+        // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
+        let items = [...posts, ...comments];
+        items.sort((a, b) => sortOrder * (new Date(a.created_at) - new Date(b.created_at)));
+
+        // Return the items
+        return { items };
+
+    } catch (error) {
+        // If an error occurs, return an error object with the status code and message.
+        return { err: { status: 500, message: error.message } };
+    }
+};
 
 
-// export {
-//   objectItem,
-//   editItem,
+export {
+    objectItem,
+    editItem,
 
-//   handleObjection,
-//   handleEdit,
+    handleObjection,
+    handleEdit,
 
-//   handleUnmoderatedItem,
-//   getItemsFromQueue
-// };
+    handleUnmoderatedItem,
+    getItemsFromQueue
+};

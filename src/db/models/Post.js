@@ -132,6 +132,7 @@ export const postSchema = new mongoose.Schema({
     reported_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reported_type: { type: String, default: null },
     reported_date: { type: Date },
+    reported_removal_reason: { type: String, default: null }, // TODO: add removal reason (optional).
   
     edited_at: { type: Date },
   },

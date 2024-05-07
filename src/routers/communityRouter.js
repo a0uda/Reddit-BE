@@ -86,16 +86,16 @@ import {
     changeCommunityPostsAndCommentsController
 } from "../controller/communitySettingsController.js";
 
-// import {
-//     objectItemConroller,
-//     editItemController,
+import {
+    objectItemConroller,
+    editItemController,
 
-//     handleObjectionController,
-//     handleEditController,
-//     handleUnmoderatedItemController,
+    handleObjectionController,
+    handleEditController,
+    handleUnmoderatedItemController,
 
-//     getItemsFromQueueController
-// } from '../controller/communityQueueController.js';
+    getItemsFromQueueController
+} from '../controller/communityQueueController.js';
 
 import {
     protectRoute,
@@ -125,14 +125,14 @@ communityRouter.post("/communities/change-content-controls/:community_name", cha
 communityRouter.post("/communities/change-posts-and-comments/:community_name", changeCommunityPostsAndCommentsController);
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
-// communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
-// communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
+communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
+communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
 
-// communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
-// communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
-// communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
+communityRouter.post("/communities/handle-objection/:community_name", protectRoute, protectModeratorRoute, handleObjectionController);
+communityRouter.post("/communities/handle-edit/:community_name", protectRoute, protectModeratorRoute, handleEditController);
+communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
 
-// communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
+communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
