@@ -145,6 +145,7 @@ export async function newComment(request) {
     success: true,
     error: {},
     message: "Comment created successfully",
+    comment_id: comment._id,
   };
 }
 
