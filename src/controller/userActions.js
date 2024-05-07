@@ -379,13 +379,16 @@ export async function joinCommunity(request, leave = false) {
     }
 
     if (leave) {
+      
+      // console.log(joinCommunity)
       const index = community.joined_users.findIndex(
-        (userObj) => userObj.id.toString() == user._id.toString()
+        (userObj) => userObj._id.toString() == user._id.toString()
       );
       console.log(index, "here");
       if (index !== -1) {
         community.joined_users.splice(index, 1);
         community.members_count--;
+        console.log(community.members_count)
         await community.save();
       } else {
         return {
@@ -410,7 +413,7 @@ export async function joinCommunity(request, leave = false) {
     } else {
       // Join the community
 
-      if (community.banned_users.includes(user._id)) {
+      if (community.banned_users.includes(user.username)) {
         return {
           success: false,
           status: 400,
@@ -421,7 +424,7 @@ export async function joinCommunity(request, leave = false) {
       console.log(
         community.joined_users.some(
           (userObj) =>
-            userObj.id && userObj.id.toString() == user._id.toString()
+            userObj._id && userObj._id.toString() == user._id.toString()
         )
       );
       console.log("testtt join community :", request.body.community_name);
@@ -430,7 +433,7 @@ export async function joinCommunity(request, leave = false) {
       if (
         community.joined_users.some(
           (userObj) =>
-            userObj.id && userObj.id.toString() == user._id.toString()
+            userObj._id && userObj._id.toString() == user._id.toString()
         )
       ) {
         return {
@@ -440,7 +443,7 @@ export async function joinCommunity(request, leave = false) {
         };
       }
       console.log("hii");
-      community.joined_users.push(user._id);
+      community.joined_users.push({ _id: user._id });
       community.members_count++;
       await community.save();
       if (
@@ -463,7 +466,7 @@ export async function joinCommunity(request, leave = false) {
       };
     }
   } catch (error) {
-    // //console.error("Error:", error);
+    console.error("Error:", error);
     return {
       success: false,
       status: 500,

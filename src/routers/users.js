@@ -3,6 +3,7 @@ import { User } from "../db/models/User.js";
 import dotenv from "dotenv";
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import { redirectToVerifyEmail } from "../utils/emailSending.js";
 
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -138,21 +139,18 @@ usersRouter.post("/users/connect-to-google", async (req, res) => {
       }
     );
 
-    const {
-      success,
-      err,
-      status,
-      user: authenticatedUser,
-      msg,
-    } = await verifyAuthToken(request);
-    if (!authenticatedUser) {
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
       return { success, err, status, user: authenticatedUser, msg };
     }
-    user = authenticatedUser;
+    // user = authenticatedUser;
     user.gmail = userData.email;
     user.connected_google = true;
 
     await user.save();
+
+    //send verification email to user
+    await redirectToVerifyEmail(user._id, user.email);
 
     res.status(200).send({
       success: true,
@@ -205,9 +203,11 @@ usersRouter.post("/users/signup-google", async (req, res) => {
     }
     const refreshToken = await user.generateAuthToken();
     const token = await user.generateAuthToken();
-    await user.save();
+    const savedUser = await user.save();
     res.header("Authorization", `Bearer ${token} `);
     res.setHeader("RefreshToken", refreshToken);
+    //send verification email to user
+    await redirectToVerifyEmail(savedUser._id, user.email);
     res.status(200).send({ username: user.username });
   } catch (error) {
     console.error("Google OAuth error:", error.message);
