@@ -17,7 +17,7 @@ async function generateRandomComments(communities, posts, users) {
   for (let i = 0; i < COMMENTS_COUNT; i++) {
     const community = getRandomElement(communities);
     const moderator = getRandomElement(community.moderators);
-    let randomPost= getRandomElement(posts);
+    let randomPost = getRandomElement(posts);
     // do {
     //   randomPost = getRandomElement(posts);
     // } while (randomPost.locked_flag);
@@ -54,27 +54,78 @@ async function generateRandomComments(communities, posts, users) {
       community_id: comment_in_community_flag ? community._id : null,
       community_name: comment_in_community_flag ? community.name : null,
 
-      moderator_details: {
-        approved_flag,
-        approved_by: approved_flag ? moderator._id : null,
-        approved_date: approved_flag ? faker.date.past() : null,
+      oderator_details: {
+        approved_flag: false,
+        approved_by: null,
+        approved_date: null,
 
-        removed_flag,
-        removed_by: removed_flag ? moderator._id : null,
-        removed_date: removed_flag ? faker.date.past() : null,
-        removed_removal_reason: removed_flag ? faker.lorem.sentence() : null,
+        removed_flag: false,
+        removed_by: null,
+        removed_date: null,
+        removed_removal_reason: null,
 
-        spammed_flag,
-        spammed_type: spammed_flag ? faker.lorem.word() : null,
-        spammed_date: spammed_flag ? faker.date.past() : null,
-        spammed_removal_reason: spammed_flag ? faker.lorem.sentence() : null,
-        spammed_by: spammed_flag ? moderator._id : null,
+        spammed_flag: false,
+        spammed_by: null,
+        spammed_type: null,
+        spammed_date: null,
+        spammed_removal_reason: null,
 
-        reported_flag,
-        reported_by: reported_flag ? moderator._id : null,
-        reported_type: reported_flag ? faker.lorem.word() : null,
-        reported_date: reported_flag ? faker.date.past() : null,
+        reported_flag: false,
+        reported_by: null,
+        reported_type: null,
+        reported_date: null,
+        reported_removal_reason: null,
+
+        edited_at: null,
       },
+
+      community_moderator_details: {
+        unmoderated: {
+          approved: {
+            flag: false,
+            by: null,
+            date: null,
+          },
+
+          any_action_taken: false,
+        },
+
+        reported: {
+          flag: false,
+          by: null,
+          date: null,
+          type: null,
+
+          confirmed: false,
+        },
+
+        spammed: {
+          flag: false,
+          by: null,
+          date: null,
+          type: null,
+
+          confirmed: false,
+        },
+
+        removed: {
+          flag: false,
+          by: null,
+          date: null,
+          type: null,
+
+          confirmed: false,
+        },
+
+        edit_history: [
+          {
+            edited_at: null,
+            approved_edit_flag: false,
+            removed_edit_flag: false,
+          },
+        ],
+      },
+
       upvote_users: [],
       downvote_users: [],
     };
