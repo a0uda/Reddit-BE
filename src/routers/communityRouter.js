@@ -318,7 +318,12 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 //////////////////////////////////////////////////////////////////////// Approve Users //////////////////////////////////////////////////////////////
 communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {
-        const { err, users } = await getApprovedUsers(req.params.community_name)
+
+        const { page = 1, pageSize = 10 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageSizeNumber = parseInt(pageSize);
+
+        const { err, users } = await getApprovedUsers(req.params.community_name, pageNumber, pageSizeNumber)
 
         if (err) { return next(err) }
 
@@ -528,7 +533,10 @@ communityRouter.post("/communities/mute-user", async (req, res, next) => {
 communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
     try {
         console.log(req.params.community_name)
-        const { err, users } = await getMutedUsers(req.params.community_name)
+        //pagination
+        const { pageNumber, pageSizeNumber } = req.query
+
+        const { err, users } = await getMutedUsers(req.params.community_name, pageNumber, pageSizeNumber)
 
         if (err) { return next(err) }
 
@@ -592,7 +600,9 @@ communityRouter.post("/communities/accept-moderator-invitation", async (req, res
 communityRouter.get("/communities/about/moderators/:community_name", async (req, res, next) => {
 
     try {
-        const { err, returned_moderators } = await getModerators(req.params.community_name)
+        //pagination 
+        const { pageNumber, pageSizeNumber } = req.query
+        const { err, returned_moderators } = await getModerators(req.params.community_name, pageNumber, pageSizeNumber)
         if (err) { return next(err) }
 
 
