@@ -203,6 +203,7 @@ usersRouter.post("/users/signup-google", async (req, res) => {
     }
     const refreshToken = await user.generateAuthToken();
     const token = await user.generateAuthToken();
+    user.connected_google = true;
     const savedUser = await user.save();
     res.header("Authorization", `Bearer ${token} `);
     res.setHeader("RefreshToken", refreshToken);
