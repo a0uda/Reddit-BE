@@ -166,7 +166,9 @@ export const schedulePostController = async (req, res, next) => {
 
 export const getScheduledPostsController = async (req, res, next) => {
     try {
-        const { recurring_posts, non_recurring_posts } = await getScheduledPosts();
+        const community_name = req.params.community_name;
+
+        const { recurring_posts, non_recurring_posts } = await getScheduledPosts(community_name);
 
         return res.status(200).send({ recurring_posts, non_recurring_posts });
 

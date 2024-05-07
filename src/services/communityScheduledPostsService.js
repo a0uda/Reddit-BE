@@ -16,23 +16,6 @@ import schedule from "node-schedule";
 
 const savePostForScheduling = async (scheduling_details, postInput, user) => {
     // Check that the input to create the new post is valid.
-
-    // if (!title || post_in_community_flag === undefined || !type) {
-
-    if (!postInput.title === undefined) {
-        return { err: { status: 400, message: "Title is required." } };
-    }
-
-    if (postInput.post_in_community_flag === undefined) {
-        return { err: { status: 400, message: "Post in community flag is required." } };
-    }
-
-    if (postInput.type === undefined) {
-        return { err: { status: 400, message: "Type is required." } };
-    }
-
-
-
     const { result, message } = await checkNewPostInput(postInput);
 
     if (!result) {
@@ -116,8 +99,9 @@ const savePostForScheduling = async (scheduling_details, postInput, user) => {
 const postScheduledPost = async (post_id) => {
     // Find the scheduled post with the given post id.
 
+    let scheduled_post;
     try {
-        const scheduled_post = await scheduledPost.findById(post_id);
+        scheduled_post = await scheduledPost.findById(post_id);
     } catch (error) {
         console.log(error)
         return { err: { status: 500, message: error.message } };
@@ -153,9 +137,10 @@ const postScheduledPost = async (post_id) => {
     return { successMessage: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
 }
 
-const getScheduledPosts = async () => {
+const getScheduledPosts = async (community_name) => {
+
     // Find all the scheduled posts in the database excluding the 'moderator_details' field.
-    const scheduled_posts = await scheduledPost.find({}).select('-moderator_details').sort('-scheduling_details.schedule_date');
+    const scheduled_posts = await scheduledPost.find({community_name: community_name}).select('-moderator_details').sort('-scheduling_details.schedule_date');
 
     // Filter the scheduled posts into recurring and non-recurring posts.
     const recurring_posts = scheduled_posts.filter(post => post.scheduling_details.repetition_option.toLowerCase() !== "none");
