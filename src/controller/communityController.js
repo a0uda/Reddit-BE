@@ -1,12 +1,14 @@
 import { verifyAuthToken } from "./userAuth.js";
 
-import { addNewCommunity, getCommunityNames, getCommunityNamesByPopularity } from "../services/communityService.js";
+import { addNewCommunity, getCommunityNames, getCommunityNamesByPopularity, getVisiblePosts } from "../services/communityService.js";
 import { savePostForScheduling, postScheduledPost, getScheduledPosts, editScheduledPost, submitScheduledPost } from "../services/communityScheduledPostsService.js";
 
 import { scheduledPostSchema } from "../db/models/scheduledPosts.js";
 import { scheduledPost } from "../db/models/scheduledPosts.js";
+import { Community } from "../db/models/Community.js";
 
 import schedule from "node-schedule";
+
 
 export const addNewCommunityController = async (req, res, next) => {
     try {
@@ -200,5 +202,29 @@ export const submitScheduledPostController = async (req, res, next) => {
     } catch (error) {
         const err = { status: 500, message: error.message };
         return next(err);
+    }
+}
+
+export const getVisiblePostsController = async (req, res, next) => {
+    try {
+        const authenticated_user = req.user;
+
+        const community_name = req.params.community_name;
+
+        const community = await Community.findOne({ name: community_name }).populate('general_settings');
+
+        if (!community) {
+            const err = { status: 404, message: "Community not found." };
+            return next(err);
+        }
+
+        const { err, visiblePosts } = await getVisiblePosts(community, authenticated_user);
+
+        if (err) { return next(err) }
+
+        return res.status(200).send(visiblePosts);
+
+    } catch (error) {
+        next({ err: { status: 500, message: error.message } })
     }
 }
