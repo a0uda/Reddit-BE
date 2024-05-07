@@ -93,6 +93,65 @@ const isUserAlreadyApproved = (community, username) => {
 
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// According to the flags in the moderation_details attribute in the post model,
+// determine whether or not the post should be visible to anyone
+// regardless of the usual listing rules that depend on the relation between users and the community settings.
+
+// If the flag is true in (reported, spammed, removed) then it will not be visible
+
+// moderator_details: {
+//   unmoderated: {
+//     approved: {
+//       flag: { type: Boolean, default: false },
+//       by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//       date: { type: Date },
+//     },
+
+//     any_action_taken: { type: Boolean, default: false },
+//   },
+
+//   reported: {
+//     flag: { type: Boolean, default: false },
+//     by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//     date: { type: Date },
+//     type: { type: String, default: null },
+
+//     confirmed: { type: Boolean, default: false },
+//   },
+
+//   spammed: {
+//     flag: { type: Boolean, default: false },
+//     by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//     date: { type: Date },
+//     type: { type: String, default: null },
+
+//     confirmed: { type: Boolean, default: false },
+//   },
+
+//   removed: {
+//     flag: { type: Boolean, default: false },
+//     by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//     date: { type: Date, default: null },
+//     type: { type: String, default: null },
+
+//     confirmed: { type: Boolean, default: false },
+//   },
+
+//   edit_history: [
+//     {
+//       edited_at: { type: Date, default: null},
+//       approved_edit_flag: { type: Boolean, default: false },
+//       removed_edit_flag: { type: Boolean, default: false },
+//     },
+//   ],
+// },
+
+const isCommunityPostVisible = (community, post) => {
+  
+}
+
 export {
   isUserAlreadyApproved,
   communityNameExists,
