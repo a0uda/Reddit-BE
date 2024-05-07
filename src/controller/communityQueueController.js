@@ -135,11 +135,11 @@ export const handleUnmoderatedItemController = async (req, res, next) => {
     }
 }
 
-// const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type)
+// const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, page, limit) => {
 export const getItemsFromQueueController = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 100;
 
         const authenticated_user = req.user;
 
