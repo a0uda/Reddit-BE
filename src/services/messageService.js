@@ -8,6 +8,8 @@ import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { mapMessageToFormat, mapUserMentionsToFormat, mapPostRepliesToFormat } from "../utils/messages.js";
 import { Post } from "../db/models/Post.js";
+import { Comment } from "../db/models/Comment.js";
+
 const composeNewMessage = async (request, isReply) => {
     try {
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
@@ -250,10 +252,12 @@ const deleteMessage = async (request) => {
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id == user.id)
+        if (message.sender_id.toString() == user.id.toString())
             message.sender_deleted_at = Date.now();
-        else
+        else if (message.receiver_id.toString() == user.id.toString())
             message.receiver_deleted_at = Date.now();
+        else
+            return { err: { status: 400, message: "You are not the sender ot the reciever to delete this message" } };
         await message.save();
 
 
@@ -405,7 +409,42 @@ const getUserUnreadMessagesCount = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
-export { markAllAsRead, getUserUnreadMessagesCount, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
+
+const createUsernameMention = async (request) => {
+    try {
+        const { success, err, status, user, msg } = await verifyAuthToken(request);
+        if (!user || err) {
+            return { success, err, status, user, msg };
+        }
+        const { comment_id, mentioned_username } = request.body;
+
+        const comment = await Comment.findOne({ _id: comment_id }).select("post_id user_id");
+        if (!comment) {
+            return { err: { status: 400, message: "Comment not found" } };
+        }
+        const mentionedUser = await User.findOne({ username: mentioned_username });
+        if (!mentionedUser) {
+            return { err: { status: 400, message: "mentioned User not found" } };
+        }
+
+
+
+
+        const userMention = {
+            post_id: comment.post_id,
+            comment_id: comment_id,
+            sender_username: user.username,
+            unread_flag: true,
+        };
+        mentionedUser.user_mentions.push(userMention);
+        await mentionedUser.save();
+        return { status: 200, message: "User mention saved successfully" };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+}
+export { markAllAsRead, createUsernameMention, getUserUnreadMessagesCount, composeNewMessage, getUserSentMessages, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, getMessagesInbox, markMessageAsRead };
 
 
 

@@ -321,7 +321,7 @@ communityRouter.get("/communities/get-rules/:community_name", async (req, res, n
 communityRouter.get("/communities/about/approved/:community_name", async (req, res, next) => {
     try {
 
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
 
@@ -535,7 +535,7 @@ communityRouter.post("/communities/mute-user", async (req, res, next) => {
 communityRouter.get("/communities/about/muted/:community_name", async (req, res, next) => {
     try {
 
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
 
@@ -577,7 +577,7 @@ communityRouter.post("/communities/edit-banned-user", async (req, res, next) => 
 //get all banned users
 communityRouter.get("/communities/about/banned/:community_name", async (req, res, next) => {
     try {
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
         const { err, users } = await getBannedUsers(req.params.community_name, pageNumber, pageSizeNumber)
@@ -612,7 +612,7 @@ communityRouter.get("/communities/about/moderators/:community_name", async (req,
 
     try {
         //pagination 
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
 
@@ -645,7 +645,7 @@ communityRouter.get("/communities/about/invited-moderators/:community_name", asy
 communityRouter.get("/communities/about/editable-moderators/:community_name", async (req, res, next) => {
     try {
         //pagination 
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
 
@@ -660,7 +660,7 @@ communityRouter.get("/communities/about/editable-moderators/:community_name", as
 communityRouter.get("/communities/about/moderators-sorted/:community_name", async (req, res, next) => {
     try {
         //pagination 
-        const { page = 1, pageSize = 10 } = req.query;
+        const { page = 1, pageSize = 100 } = req.query;
         const pageNumber = parseInt(page);
         const pageSizeNumber = parseInt(pageSize);
 

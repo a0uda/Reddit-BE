@@ -1,5 +1,5 @@
 
-import { markAllAsRead, composeNewMessage, getUserSentMessages, getUserUnreadMessagesCount, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
+import { markAllAsRead, composeNewMessage, getUserSentMessages, createUsernameMention, getUserUnreadMessagesCount, getUserUnreadMessages, getAllMessages, deleteMessage, getUserMentions, getUserPostReplies, markMessageAsRead, getMessagesInbox } from "../services/messageService.js";
 import express from "express";
 const messageRouter = express.Router();
 messageRouter.post("/messages/compose", async (req, res, next) => {
@@ -157,6 +157,19 @@ messageRouter.get("/messages/unread-count", async (req, res, next) => {
         if (err) { return next(err) }
 
         res.status(200).json({ count });
+
+    } catch (error) {
+        next(error)
+    }
+})
+//post username mention 
+messageRouter.post("/messages/new-username-mention", async (req, res, next) => {
+    try {
+        const { err, message } = await createUsernameMention(req)
+
+        if (err) { return next(err) }
+
+        res.status(200).json({ message: 'OK' });
 
     } catch (error) {
         next(error)
