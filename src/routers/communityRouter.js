@@ -113,7 +113,7 @@ const communityRouter = express.Router();
 //////////////////////////////////////////////////////////////////////// Miscellaneous //////////////////////////////////////////////////////////////
 communityRouter.post("/communities/add-community", addNewCommunityController);
 communityRouter.get("/communities/get-community-names", protectRoute, getCommunityNamesController);
-communityRouter.get("/communities/get-community-names-by-popularity", protectRoute, getCommunityNamesByPopularityController);
+communityRouter.get("/communities/get-community-names-by-popularity", getCommunityNamesByPopularityController);
 communityRouter.get("/communities/get-visible-posts/:community_name", protectRoute, getVisiblePostsController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
