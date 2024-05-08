@@ -127,7 +127,7 @@ const getUserSentMessages = async (request) => {
         }
 
         const user_id = user._id;
-        const messages = await Message.find({ sender_id: user_id }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        const messages = await Message.find({ sender_id: user_id }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at receiver_deleted_at sender_deleted_at unread_flag parent_message_id subject sender_via_id');
 
         let messagesToSend = await Promise.all(messages.map(async (message) => {
             const type = "getUserSentMessages"
@@ -252,8 +252,13 @@ const deleteMessage = async (request) => {
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id.toString() == user.id.toString())
+        if (message.sender_id.toString() == user.id.toString()) {
             message.sender_deleted_at = Date.now();
+
+
+        }
+
+
         else if (message.receiver_id.toString() == user.id.toString())
             message.receiver_deleted_at = Date.now();
         else
