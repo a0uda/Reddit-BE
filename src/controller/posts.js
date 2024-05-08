@@ -130,10 +130,11 @@ export async function createPost(request) {
   post.username = user.username;
   post.created_at = Date.now();
 
-  if (post.upvotes_count + post.downvotes_count != 0) {
-    post.user_details.upvote_rate =
-      (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100;
-  }
+  // if (post.upvotes_count + post.downvotes_count != 0) {
+  //   console.log(post);
+  //   post.user_details.upvote_rate =
+  //     (post.upvotes_count / (post.upvotes_count + post.downvotes_count)) * 100;
+  // }
 
   const savedPost = await post.save();
   savedPost.upvotes_count++;
@@ -278,6 +279,7 @@ export async function sharePost(request) {
     await savedSharedPost.save();
 
     const postObj = await Post.findById(post._id);
+    console.log(postObj);
     postObj.shares_count++;
     postObj.user_details.total_shares++;
     await postObj.save();
