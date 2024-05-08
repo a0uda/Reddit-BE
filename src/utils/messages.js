@@ -126,19 +126,17 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
     } else {
         postCreatorType = "user";
     }
-    // const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
-    //     (user) => user.id
-    // );
-    // TODO:TEST THIS AND UNCOMMENT
-    // let is_blocked = false;
-    // const sender_id = await User.findOne({ username: userMentions.sender_username }).select('_id');
-    // for (let i = 0; i < blockedUsers.length; i++) {
-    //     if (blockedUsers[i].toString() == message.sender_id.toString()) {
-    //         is_blocked = true;
-    //         break;
-    //     }
-    // }
-    // if (is_blocked) return null;
+    const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+        (user) => user.id
+    );
+    let is_blocked = false;
+    for (let i = 0; i < blockedUsers.length; i++) {
+        if (blockedUsers[i].toString() == comment.user_id.toString()) {
+            is_blocked = true;
+            break;
+        }
+    }
+    if (is_blocked) return null;
     const mappedMessages = {
         created_at: comment.created_at,
         senderUsername: userMentions.sender_username,
