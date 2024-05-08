@@ -127,7 +127,7 @@ const getUserSentMessages = async (request) => {
         }
 
         const user_id = user._id;
-        const messages = await Message.find({ sender_id: user_id }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        const messages = await Message.find({ sender_id: user_id })
 
         let messagesToSend = await Promise.all(messages.map(async (message) => {
             const type = "getUserSentMessages"
@@ -156,7 +156,7 @@ const getUserUnreadMessages = async (request) => {
             receiver_type: "user",
             receiver_id: user_id,
             unread_flag: true
-        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        })
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id and unread_flag is true
         let moderatorMessages = await Message.find({
@@ -164,7 +164,7 @@ const getUserUnreadMessages = async (request) => {
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id }, // Assuming user.communities holds the IDs of communities the user is a moderator of
             unread_flag: true
-        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        })
 
         // Combine the results from both queries
         let messages = [...userMessages, ...moderatorMessages];
@@ -195,18 +195,18 @@ const getAllMessages = async (request) => {
         const userMessages = await Message.find({
             receiver_type: "user",
             receiver_id: user_id
-        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        })
 
         // Query for messages where the receiver is a moderator of the community referenced by sender_via_id
         const moderatorMessages = await Message.find({
             receiver_type: "moderator",
             //  sender_id: { $ne: user._id }, // Exclude messages where the sender is the user
             sender_via_id: { $in: user.moderated_communities.id } // Assuming user.communities holds the IDs of communities the user is a moderator of
-        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        })
         //Query for messages where the sender is the user
         const userSentMessages = await Message.find({
             sender_id: user_id
-        }).select('_id is_invitation sender_id sender_type receiver_type receiver_id message created_at deleted_at unread_flag parent_message_id subject sender_via_id');
+        })
         // //Query  for messages where the sender is a moderator of the community referenced by sender_via_id 
         // const moderatorSentMessages = await Message.find({
         //     sender_type: "moderator",
@@ -248,6 +248,9 @@ const deleteMessage = async (request) => {
         const { _id } = request.body;
         console.log(_id);
         const message = await Message.findById(_id);
+        console.log("message.sender id :")
+        console.log(message._id)
+
 
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };

@@ -153,7 +153,7 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
         upvotes_count: comment.upvotes_count,
         downvotes_count: comment.downvotes_count,
         isSent: false,
-        is_username_mention: false,
+        is_username_mention: true,
 
 
 
