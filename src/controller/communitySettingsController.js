@@ -134,13 +134,13 @@ async function changeCommunityGeneralSettingsController(req, res, next) {
             return next(err);
         }
 
-        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+        const moderator = community.moderators.find(moderator => moderator.username === authenticated_user.username);
 
-        if (!isModerator) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to change this community's General Settings." };
+        if (!moderator || (!moderator.has_access.manage_settings && !moderator.has_access.everything)) {
+            const err = { status: 403, message: "Access denied. You must be a moderator with the 'manage settings' permission to change this community's General Settings." };
             return next(err);
         }
-        
+
         const general_settings = req.body;
 
         const { err, updated_general_settings } = await changeCommunityGeneralSettings(community_name, general_settings);
@@ -177,7 +177,7 @@ async function changeCommunityContentControlsController(req, res, next) {
             const err = { status: 403, message: "Access denied. You must be a moderator to change this community's Content Controls." };
             return next(err);
         }
-           
+
         const content_controls = req.body;
 
         const { err, updated_content_controls } = await changeCommunityContentControls(community_name, content_controls);
@@ -208,13 +208,13 @@ async function changeCommunityPostsAndCommentsController(req, res, next) {
             return next(err);
         }
 
-        const isModerator = community.moderators.some(moderator => moderator.username === authenticated_user.username);
+        const moderator = community.moderators.find(moderator => moderator.username === authenticated_user.username);
 
-        if (!isModerator) {
-            const err = { status: 403, message: "Access denied. You must be a moderator to change this community's Posts and Comments Settings." };
+        if (!moderator || (!moderator.has_access.manage_posts_and_comments && !moderator.has_access.everything)) {
+            const err = { status: 403, message: "Access denied. You must be a moderator with the 'manage posts and comments' permission to change this community's General Settings." };
             return next(err);
         }
-        
+
         const posts_and_comments = req.body;
 
         const { err, updated_posts_and_comments } = await changeCommunityPostsAndComments(community_name, posts_and_comments);
