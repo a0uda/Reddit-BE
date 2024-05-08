@@ -286,9 +286,11 @@ const getUserMentions = async (request) => {
         }
 
         const mentions = user.user_mentions;
-        const mappedMentions = await Promise.all(mentions.map(async (mention) => {
+        let mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
         }));
+        //filter this array from nulls 
+        mappedMentions = mappedMentions.filter((mention) => mention !== null);
         return { status: 200, mentions: mappedMentions };
     }
     catch (error) {
