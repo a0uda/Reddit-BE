@@ -155,7 +155,7 @@ export async function disconnectGoogle(request) {
     }
 
     user.connected_google = false;
-    user.gmail = null;
+    //user.gmail = null;
     await user.save();
 
     return generateResponse(
