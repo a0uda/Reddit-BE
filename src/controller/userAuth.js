@@ -11,7 +11,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import { generateResponse } from "../utils/generalUtils.js";
-
+import axios from "axios";
 export async function isUsernameAvailable(username) {
   const user = await User.findOne({ username });
   if (user)
@@ -155,7 +155,7 @@ export async function disconnectGoogle(request) {
     }
 
     user.connected_google = false;
-    // user.gmail = null;
+    user.gmail = null;
     await user.save();
 
     return generateResponse(
@@ -168,7 +168,48 @@ export async function disconnectGoogle(request) {
     return generateResponse(false, 500, "Internal server error");
   }
 }
+export async function connectToGoogle(request) {
+  try {
+    const accessToken = request.body.access_token;
+    const { data: userData } = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+      return generateResponse(success, status, err);
+    }
+
+    // Check if a user with the same Gmail address already exists
+    const existingUser = await User.findOne({
+      gmail: userData.email,
+      connected_google: true,
+    });
+    if (existingUser) {
+      return generateResponse(
+        false,
+        409,
+        "Gmail address is already connected to another account."
+      );
+    }
+
+    // Update user data and save
+    user.gmail = userData.email;
+    user.connected_google = true;
+
+    await user.save();
+
+    return generateResponse(true, 200, "Connected to Google successfully.");
+  } catch (error) {
+    console.error("Google OAuth error:", error.message);
+    return generateResponse(false, 500, "Google OAuth error");
+  }
+}
 export async function verifyEmail(requestParams, isUserEmailVerify) {
   const token = await Token.findOne({
     token: requestParams.token,
