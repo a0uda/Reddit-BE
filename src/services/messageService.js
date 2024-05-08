@@ -248,6 +248,9 @@ const deleteMessage = async (request) => {
         const { _id } = request.body;
         console.log(_id);
         const message = await Message.findById(_id);
+        console.log("message.sender id :")
+        console.log(message._id)
+
 
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
