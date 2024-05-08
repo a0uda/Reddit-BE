@@ -525,17 +525,18 @@ const getVisiblePosts = async (community, user, sortBy, page, limit) => {
 
     // Validate that the author of the post has not blocked the user browsing the community and vice versa.
     const visiblePosts = posts.filter(async (post) => {
+      console.log("HSH");
       const browsingUser = await User.findById(userId);
 
       const author = await User.findOne({ username: post.username });
 
       const authorBlockedBrowsingUser =
         author.safety_and_privacy_settings.blocked_users.some(
-          (user) => user.toString() === userId.toString()
+          (user) => user.id.toString() == userId.toString()
         );
       const browsingUserBlockedAuthor =
         browsingUser.safety_and_privacy_settings.blocked_users.some(
-          (user) => user.toString() === post.username._id.toString()
+          (user) => user.id.toString() == post.user_id.toString()
         );
 
       const someoneIsBlocked =

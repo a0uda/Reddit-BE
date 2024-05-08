@@ -239,101 +239,120 @@ describe("pushNotification", () => {
   });
 });
 
-// describe("getNotifications", () => {
-//   beforeEach(() => {
-//     jest.clearAllMocks();
-//   });
+describe("getNotifications", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-//   it("should retrieve notifications successfully", async () => {
-//     const request = {
-//       headers: {
-//         authorization: "Bearer valid_token",
-//       },
-//     };
+  it("should return error if token is missing", async () => {
+    const request = {
+      headers: {},
+    };
+    const result = await getNotifications(request);
+    
+    expect(result.success).toBe(false);
+    expect(result.error.status).toEqual(401);
+    expect(result.error.message).toEqual("Access Denied");
+  });
 
-//     const mockUser = {
-//       _id: "user_id",
-//       token: ["valid_token"],
-//       profile_picture: "user_profile_picture",
-//       generateAuthToken: jest.fn(),
-//       save: jest.fn(),
-//     };
+  // it("should retrieve notifications successfully", async () => {
+  //   const request = {
+  //     headers: {
+  //       authorization: "Bearer valid_token",
+  //     },
+  //   };
 
-//     const mockNotifications = [
-//       {
-//         _id: "notification_id_1",
-//         created_at: new Date(),
-//         post_id: "post_id_1",
-//         comment_id: "comment_id_1",
-//         sending_user_username: "sending_user_1",
-//         community_name: "community_1",
-//         unread_flag: true,
-//         hidden_flag: false,
-//         type: "notification_type_1",
-//       },
-//       {
-//         _id: "notification_id_2",
-//         created_at: new Date(),
-//         post_id: "post_id_2",
-//         comment_id: "comment_id_2",
-//         sending_user_username: "sending_user_2",
-//         community_name: "community_2",
-//         unread_flag: false,
-//         hidden_flag: true,
-//         type: "notification_type_2",
-//       },
-//     ];
+  //   const mockUser = {
+  //     _id: "user_id",
+  //     token: ["valid_token"],
+  //     profile_picture: "user_profile_picture",
+  //     generateAuthToken: jest.fn(),
+  //     save: jest.fn(),
+  //   };
 
-//     const mockCommunities = [
-//       {
-//         name: "community_1",
-//         profile_picture: "community_1_profile_picture",
-//       },
-//       {
-//         name: "community_2",
-//         profile_picture: "community_2_profile_picture",
-//       },
-//     ];
+  //   const mockNotifications = [
+  //     {
+  //       _id: "notification_id_1",
+  //       user_id: "user_id",
+  //       created_at: new Date(),
+  //       post_id: "post_id_1",
+  //       comment_id: null,
+  //       sending_user_username: "sending_user_1",
+  //       community_name: "community_1",
+  //       unread_flag: true,
+  //       hidden_flag: false,
+  //       type: "upvotes_posts",
+  //     },
+  //     {
+  //       _id: "notification_id_2",
+  //       user_id: "user_id",
+  //       created_at: new Date(),
+  //       post_id: null,
+  //       comment_id: "comment_id_2",
+  //       sending_user_username: "sending_user_2",
+  //       community_name: "community_2",
+  //       unread_flag: false,
+  //       hidden_flag: true,
+  //       type: "comments",
+  //     },
+  //   ];
 
-//     const mockSendingUsers = [
-//       {
-//         username: "sending_user_1",
-//         profile_picture: "sending_user_1_profile_picture",
-//       },
-//       {
-//         username: "sending_user_2",
-//         profile_picture: "sending_user_2_profile_picture",
-//       },
-//     ];
+  //   const mockCommunities = [
+  //     {
+  //       name: "community_1",
+  //       profile_picture: "community_1_profile_picture",
+  //     },
+  //     {
+  //       name: "community_2",
+  //       profile_picture: "community_2_profile_picture",
+  //     },
+  //   ];
 
-//     User.findById.mockResolvedValueOnce(mockUser);
-//     jwt.verify.mockReturnValue({ _id: mockUser._id });
+  //   const mockSendingUsers = [
+  //     {
+  //       username: "sending_user_1",
+  //       profile_picture: "sending_user_1_profile_picture",
+  //     },
+  //     {
+  //       username: "sending_user_2",
+  //       profile_picture: "sending_user_2_profile_picture",
+  //     },
+  //   ];
 
-//     Notification.find.mockResolvedValueOnce(mockNotifications);
-//     Community.find.mockResolvedValueOnce(mockCommunities);
-//     User.find.mockResolvedValueOnce(mockSendingUsers);
+  //   User.findById.mockResolvedValueOnce(mockUser);
+  //   jwt.verify.mockReturnValue({ _id: mockUser._id });
 
-//     const expectedResult = {
-//       success: true,
-//       message: "Notifications retrieved successfully",
-//       notifications: mockNotifications.map((notification) => ({
-//         id: notification._id,
-//         created_at: notification.created_at,
-//         post_id: notification.post_id,
-//         comment_id: notification.comment_id,
-//         sending_user_username: notification.sending_user_username,
-//         community_name: notification.community_name,
-//         unread_flag: notification.unread_flag,
-//         hidden_flag: notification.hidden_flag,
-//         type: notification.type,
-//         profile_picture: !!notification.community_name
-//           ? "community_1_profile_picture"
-//           : "sending_user_1_profile_picture",
-//         is_in_community: !!notification.community_name,
-//       })),
-//     };
+  //   const mockFindNotif = jest.fn().mockResolvedValue(mockNotifications);
+  //   const mockSort = jest.fn(() => ({ exec: mockFindNotif }));
+  //   Notification.find.mockReturnValueOnce({ sort: mockSort });
 
-//     const result = await getNotifications(request);
-//     expect(result).toEqual(expectedResult);
-//   });
-// });
+  //   const mockFindCom = jest.fn().mockResolvedValue(mockCommunities);
+  //   Community.find.mockReturnValueOnce({ exec: mockFindCom });
+
+  //   const mockFindUsers = jest.fn().mockResolvedValue(mockSendingUsers);
+  //   User.find.mockResolvedValueOnce({ exec: mockFindUsers });
+
+  //   const expectedResult = {
+  //     success: true,
+  //     message: "Notifications retrieved successfully",
+  //     notifications: mockNotifications.map((notification) => ({
+  //       id: notification._id,
+  //       created_at: notification.created_at,
+  //       post_id: notification.post_id,
+  //       comment_id: notification.comment_id,
+  //       sending_user_username: notification.sending_user_username,
+  //       community_name: notification.community_name,
+  //       unread_flag: notification.unread_flag,
+  //       hidden_flag: notification.hidden_flag,
+  //       type: notification.type,
+  //       profile_picture: !!notification.community_name
+  //         ? "community_1_profile_picture"
+  //         : "sending_user_1_profile_picture",
+  //       is_in_community: !!notification.community_name,
+  //     })),
+  //   };
+
+  //   const result = await getNotifications(request);
+  //   expect(result).toEqual(expectedResult);
+  // });
+});
