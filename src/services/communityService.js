@@ -384,18 +384,20 @@ const getCommunity = async (request) => {
     console.log(user);
     console.log(user.moderated_communities);
     const moderator_flag = user.moderated_communities.some(
-      (community) => community.id == community.id
+      (com) => com.id.toString() == community._id.toString()
     );
     console.log(moderator_flag);
     const muted_flag = user.safety_and_privacy_settings.muted_communities.some(
-      (community) => community.id == community.id
+      (com) => com.id.toString() == community._id.toString()
     );
     const favorite_flag =
       user.communities.some(
-        (community) => community.id == community.id && community.favorite_flag
+        (com) =>
+          com.id.toString() == community._id.toString() && com.favorite_flag
       ) ||
       user.moderated_communities.some(
-        (community) => community.id == community.id && community.favorite_flag
+        (com) =>
+          com.id.toString() == community._id.toString() && com.favorite_flag
       );
 
     const returned_community = {
@@ -428,7 +430,10 @@ const getCommunityNames = async () => {
   try {
     // The second argument { name: 1 } is a projection object, which specifies the fields to include in the returned documents.
     // In this case, only the name field is included. The 1 means true (include) in this context.
-    const communities = await Community.find({}, { name: 1, profile_picture: 1, members_count: 1 });
+    const communities = await Community.find(
+      {},
+      { name: 1, profile_picture: 1, members_count: 1 }
+    );
     return { communities };
   } catch (error) {
     return {
@@ -443,7 +448,10 @@ const getCommunityNames = async () => {
 // Get the names of all communities sorted by popularity indicated by the members count, with the most popular community first.
 const getCommunityNamesByPopularity = async () => {
   try {
-    const communities = await Community.find({}, { name: 1, profile_picture: 1, members_count: 1 }).sort({ members_count: -1 });
+    const communities = await Community.find(
+      {},
+      { name: 1, profile_picture: 1, members_count: 1 }
+    ).sort({ members_count: -1 });
     return { communities };
   } catch (error) {
     return {
@@ -465,8 +473,6 @@ const getCommunityNamesByPopularity = async () => {
 // community.banned_users.username != user.username (This is an array to make sure that it does not contain the name)
 // User.safety_and_privacy_settings.blocked_users.id != user.id (This is an array to make sure that it does not contain the id)
 
-
-
 const getVisiblePosts = async (community, user, sortBy, page, limit) => {
   try {
     const username = user.username;
@@ -475,19 +481,32 @@ const getVisiblePosts = async (community, user, sortBy, page, limit) => {
     const community_name = community.name;
 
     // If the community is restricted, posts are only visible to approved users.
-    const userIsApproved = community.general_settings.type === 'Restricted'
-      ? community.approved_users.some(user => user.username === username)
-      : true;
+    const userIsApproved =
+      community.general_settings.type === "Restricted"
+        ? community.approved_users.some((user) => user.username === username)
+        : true;
 
     if (!userIsApproved) {
-      return { err: { status: 400, message: "The community is restricted and the user is not approved." } };
+      return {
+        err: {
+          status: 400,
+          message: "The community is restricted and the user is not approved.",
+        },
+      };
     }
 
     // If the user is banned from the community, they should not see any posts.
-    const userIsBanned = community.banned_users.some(user => user.username === username);
+    const userIsBanned = community.banned_users.some(
+      (user) => user.username === username
+    );
 
     if (userIsBanned) {
-      return { err: { status: 400, message: "The user is banned from this community." } };
+      return {
+        err: {
+          status: 400,
+          message: "The user is banned from this community.",
+        },
+      };
     }
 
     // Get sort criteria.
@@ -495,36 +514,41 @@ const getVisiblePosts = async (community, user, sortBy, page, limit) => {
 
     // Find all posts in the community that follow these conditions.
     const posts = await Post.find({
-      'community_name': community_name,
-      'moderator_details.reported.flag': false,
-      'moderator_details.spammed.flag': false,
-      'moderator_details.removed.flag': false,
+      community_name: community_name,
+      "moderator_details.reported.flag": false,
+      "moderator_details.spammed.flag": false,
+      "moderator_details.removed.flag": false,
     })
-    .sort(sortCriteria)
-    .skip((page - 1) * limit)
-    .limit(limit);
+      .sort(sortCriteria)
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     // Validate that the author of the post has not blocked the user browsing the community and vice versa.
-    const visiblePosts = posts.filter(async post => {
+    const visiblePosts = posts.filter(async (post) => {
       const browsingUser = await User.findById(userId);
 
       const author = await User.findOne({ username: post.username });
 
-      const authorBlockedBrowsingUser = author.safety_and_privacy_settings.blocked_users.some(user => user.toString() === userId.toString());
-      const browsingUserBlockedAuthor = browsingUser.safety_and_privacy_settings.blocked_users.some(user => user.toString() === post.username._id.toString());
+      const authorBlockedBrowsingUser =
+        author.safety_and_privacy_settings.blocked_users.some(
+          (user) => user.toString() === userId.toString()
+        );
+      const browsingUserBlockedAuthor =
+        browsingUser.safety_and_privacy_settings.blocked_users.some(
+          (user) => user.toString() === post.username._id.toString()
+        );
 
-      const someoneIsBlocked = authorBlockedBrowsingUser || browsingUserBlockedAuthor;
+      const someoneIsBlocked =
+        authorBlockedBrowsingUser || browsingUserBlockedAuthor;
 
       return !someoneIsBlocked;
     });
 
     return { visiblePosts };
-    
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
 };
-
 
 export {
   addNewCommunity,
@@ -541,6 +565,5 @@ export {
   getCommunity,
   getCommunityNames,
   getCommunityNamesByPopularity,
-
   getVisiblePosts,
 };

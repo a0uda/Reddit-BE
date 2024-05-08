@@ -144,7 +144,7 @@ export async function getFollowingCount(request) {
       const followersUsers = user.following_ids;
       return {
         success: true,
-        message: "User followers count retrieved successfully",
+        message: "User following count retrieved successfully",
         count: followersUsers.length,
       };
     }
