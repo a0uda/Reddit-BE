@@ -5,6 +5,7 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import { redirectToVerifyEmail } from "../utils/emailSending.js";
 import { verifyAuthToken } from "../controller/userAuth.js";
+
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -30,6 +31,7 @@ import {
   isEmailAvailable,
   changeUsername,
   disconnectGoogle,
+  connectToGoogle,
 } from "../controller/userAuth.js";
 
 import {
@@ -129,45 +131,14 @@ usersRouter.post("/users/logout", async (req, res) => {
 });
 usersRouter.post("/users/connect-to-google", async (req, res) => {
   try {
-    const accessToken = req.body.access_token;
-    const { data: userData } = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const { success, err, status, user, msg } = await verifyAuthToken(req);
-    if (!user) {
-      return res.status(status).json({ success, err, msg });
+    const { success, error, message } = await connectToGoogle(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
     }
-
-    // Check if a user with the same Gmail address already exists
-    const existingUser = await User.findOne({ gmail: userData.email });
-    if (existingUser) {
-      return res
-        .status(409)
-        .json({
-          error: "Gmail address is already connected to another account.",
-        });
-    }
-
-    // Update user data and save
-    user.gmail = userData.email;
-    user.connected_google = true;
-
-    await user.save();
-
-    res.status(200).send({
-      success: true,
-      status: 200,
-      msg: "Connected to Google successfully.",
-    });
+    res.status(200).send({ message });
   } catch (error) {
-    console.error("Google OAuth error:", error.message);
-    res.status(500).json({ error: "Google OAuth error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
