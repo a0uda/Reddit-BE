@@ -373,11 +373,11 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, com
 
         comments = comments.map(comment => {
             let userVote = 'none';
-            if (authenticated_user.upvotes_comments_ids.includes(comment._id)) {
-                userVote = 'up';
-            } else if (authenticated_user.downvotes_comments_ids.includes(comment._id)) {
-                userVote = 'down';
-            }
+            // if (authenticated_user.upvotes_comments_ids.includes(comment._id)) {
+            //     userVote = 'up';
+            // } else if (authenticated_user.downvotes_comments_ids.includes(comment._id)) {
+            //     userVote = 'down';
+            // }
             return { ...comment._doc, userVote };
         });
 
