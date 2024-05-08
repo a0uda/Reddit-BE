@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { redirectToVerifyEmail } from "../utils/emailSending.js";
-
+import { verifyAuthToken } from "../controller/userAuth.js";
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -139,23 +139,31 @@ usersRouter.post("/users/connect-to-google", async (req, res) => {
       }
     );
 
-    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    const { success, err, status, user, msg } = await verifyAuthToken(req);
     if (!user) {
-      return { success, err, status, user: authenticatedUser, msg };
+      return res.status(status).json({ success, err, msg });
     }
-    // user = authenticatedUser;
+
+    // Check if a user with the same Gmail address already exists
+    const existingUser = await User.findOne({ gmail: userData.email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({
+          error: "Gmail address is already connected to another account.",
+        });
+    }
+
+    // Update user data and save
     user.gmail = userData.email;
     user.connected_google = true;
 
     await user.save();
 
-    //send verification email to user
-    await redirectToVerifyEmail(user._id, user.email);
-
     res.status(200).send({
       success: true,
       status: 200,
-      msg: "connected to google successfully.",
+      msg: "Connected to Google successfully.",
     });
   } catch (error) {
     console.error("Google OAuth error:", error.message);
