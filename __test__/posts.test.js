@@ -1,6 +1,6 @@
 import { Post } from "../src/db/models/Post.js";
 import { User } from "../src/db/models/User.js";
-import { createPost } from "../src/controller/posts.js";
+import { createPost, sharePost } from "../src/controller/posts.js";
 import {
   checkBannedUser,
   getCommentRepliesHelper,
@@ -9,6 +9,7 @@ import {
   checkApprovedUser,
   checkPostSettings,
   checkContentSettings,
+  checkVotesMiddleware,
 } from "../src/services/posts.js";
 import jwt from "jsonwebtoken";
 import {
@@ -19,6 +20,7 @@ import {
 
 jest.mock("jsonwebtoken");
 jest.mock("../src/db/models/User");
+jest.mock("../src/db/models/Post");
 jest.mock("../src/services/posts.js");
 jest.mock("../src/services/communitySettingsService.js");
 
@@ -44,7 +46,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -73,7 +75,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -102,7 +104,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -129,7 +131,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -169,7 +171,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -199,7 +201,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -232,7 +234,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -265,7 +267,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -297,7 +299,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -339,7 +341,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -384,7 +386,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -440,7 +442,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -488,7 +490,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -537,7 +539,7 @@ describe("New Post", () => {
     };
     const mockUser = {
       _id: "mockUserId",
-      token: ["valid_token"]
+      token: ["valid_token"],
     };
     User.findById.mockResolvedValue(mockUser);
     jwt.verify.mockReturnValue({ _id: mockUser._id });
@@ -566,5 +568,170 @@ describe("New Post", () => {
     expect(result.success).toBe(false);
     expect(result.error.status).toEqual(400);
     expect(result.error.message).toEqual("Post title contains banned words. ");
+  });
+
+  it("should create a post successfully in a community", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer valid_token",
+      },
+      body: {
+        title: "Title Test",
+        description: "Test Description",
+        post_in_community_flag: true,
+        type: "text",
+        community_name: "TestCommunity",
+        community_id: "mockCommunityId",
+      },
+    };
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      upvotes_posts_ids: [],
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    jwt.verify.mockReturnValue({ _id: mockUser._id });
+    // Mock community
+    const mockCommunity = { _id: "mockCommunityId", name: "TestCommunity" };
+    getCommunity.mockResolvedValue({ success: true, community: mockCommunity });
+
+    // Mock community settings
+    const mockCommunitySettings = { type: "Public", nsfw_flag: false };
+    getCommunityGeneralSettings.mockResolvedValue({
+      success: true,
+      general_settings: mockCommunitySettings,
+    });
+
+    // Mock user checks
+    checkApprovedUser.mockResolvedValue({ success: true });
+    checkBannedUser.mockResolvedValue({ success: true });
+
+    // Mock post creation
+    const mockPost = {
+      _id: "mockPostId",
+      upvotes_count: 0,
+      downvotes_count: 0,
+      user_details: {
+        upvote_rate: 0,
+      },
+      save: jest.fn(),
+    };
+    Post.mockReturnValueOnce({
+      save: jest.fn().mockResolvedValue(mockPost),
+    });
+
+    // Mock content and post settings
+    checkPostSettings.mockResolvedValue({ success: true });
+    checkContentSettings.mockResolvedValue({ success: true });
+
+    // Execute the function
+    const result = await createPost(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.error).toEqual({});
+    expect(result.message).toBe("Post created sucessfully ");
+  });
+});
+
+describe("sharePost", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should successfully share a post in a community", async () => {
+    // Mock the request object
+    const request = {
+      headers: {
+        authorization: "Bearer valid_token",
+      },
+      body: {
+        id: "postId",
+        post_in_community_flag: true,
+        community_name: "TestCommunity",
+        caption: "Test caption",
+        oc_flag: false,
+        spoiler_flag: false,
+        nsfw_flag: false,
+      },
+    };
+    const mockUser = {
+      _id: "mockUserId",
+      token: ["valid_token"],
+      upvotes_posts_ids: [],
+      save: jest.fn(),
+    };
+    User.findById.mockResolvedValue(mockUser);
+    jwt.verify.mockReturnValue({ _id: mockUser._id });
+
+    const mockPost = new Post({
+      _id: "postId",
+      upvotes_count: 0,
+      downvotes_count: 0,
+      user_details: {
+        upvote_rate: 0,
+        total_shares: 0,
+      },
+      shares_count: 0,
+      save: jest.fn(),
+    });
+    const posts_and_comments = {
+      posts: {
+        allow_crossposting_of_posts: true,
+      },
+    };
+    Post.findById.mockReturnValueOnce(mockPost);
+    checkVotesMiddleware.mockResolvedValue([mockPost]);
+    // Mock the getCommunity function to return a successful response
+    getCommunity.mockResolvedValue({
+      success: true,
+      community: {
+        _id: "communityId",
+      },
+    });
+    getCommunityPostsAndComments.mockResolvedValue({
+      posts_and_comments,
+    });
+    getCommunityGeneralSettings.mockResolvedValue({
+      general_settings: { type: "Public", nsfw_flag: false },
+    });
+    checkBannedUser.mockResolvedValue({ success: true });
+    checkPostSettings.mockResolvedValue({ success: true });
+    checkContentSettings.mockResolvedValue({ success: true });
+
+    const mockSharedPost = {
+      _id: "mockCharedPostId",
+      upvotes_count: 0,
+      downvotes_count: 0,
+      user_details: {
+        upvote_rate: 0,
+        total_shares: 0,
+      },
+      shares_count: 0,
+      save: jest.fn(),
+    };
+    Post.mockReturnValueOnce({
+      save: jest.fn().mockReturnValueOnce(mockSharedPost),
+    });
+    const mockPost2 = {
+      _id: "postId",
+      upvotes_count: 0,
+      downvotes_count: 0,
+      user_details: {
+        upvote_rate: 0,
+        total_shares: 0,
+      },
+      shares_count: 0,
+      save: jest.fn(),
+    };
+    Post.findById.mockReturnValueOnce(mockPost2);
+
+    const result = await sharePost(request);
+
+    // Check the expected result
+    expect(result.success).toBe(true);
+    expect(result.error).toEqual({});
+    expect(result.message).toBe("Shared post sucessfully");
   });
 });

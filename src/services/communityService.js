@@ -515,17 +515,17 @@ const getVisiblePosts = async (community, user, sortBy, page, limit) => {
     // Find all posts in the community that follow these conditions.
     const posts = await Post.find({
       community_name: community_name,
-      "moderator_details.reported.flag": false,
-      "moderator_details.spammed.flag": false,
-      "moderator_details.removed.flag": false,
+      "community_moderator_details.reported.flag": false,
+      "community_moderator_details.spammed.flag": false,
+      "community_moderator_details.removed.flag": false,
     })
       .sort(sortCriteria)
       .skip((page - 1) * limit)
       .limit(limit);
 
+      console.log(posts);
     // Validate that the author of the post has not blocked the user browsing the community and vice versa.
     const visiblePosts = posts.filter(async (post) => {
-      console.log("HSH");
       const browsingUser = await User.findById(userId);
 
       const author = await User.findOne({ username: post.username });
