@@ -149,6 +149,7 @@ export async function markAsRead(request, markAllFlag) {
       const notifications = await Notification.find({
         user_id: user._id,
       }).exec();
+      
       await Promise.all(
         notifications.map(async (notification) => {
           notification.unread_flag = false;
