@@ -298,75 +298,89 @@ export async function sharePost(request) {
 }
 
 export async function getPost(request, verifyUser) {
-  let user;
-  if (verifyUser) {
-    const {
-      success,
-      err,
-      status,
-      user: verifiedUser,
-      msg,
-    } = await verifyAuthToken(request);
-    if (!verifiedUser) {
-      return { success, error: { status, message: err } };
+  try {
+    let user;
+    if (verifyUser) {
+      const {
+        success,
+        err,
+        status,
+        user: verifiedUser,
+        msg,
+      } = await verifyAuthToken(request);
+      if (!verifiedUser) {
+        return { success, error: { status, message: err } };
+      }
+      user = verifiedUser;
     }
-    user = verifiedUser;
-  }
-  const postId = request?.body?.id || request?.query?.id;
-  if (postId == undefined || postId == null) {
+    const postId = request?.body?.id || request?.query?.id;
+    if (postId == undefined || postId == null) {
+      return {
+        success: false,
+        error: { status: 400, message: "Post id is required" },
+      };
+    }
+    var post = await Post.findById(postId);
+
+    if (!post) {
+      return {
+        success: false,
+        error: { status: 404, message: "Post Not found" },
+      };
+    }
+    const { user: loggedInUser } = await verifyAuthToken(request);
+    if (loggedInUser) {
+      var result = await checkVotesMiddleware(loggedInUser, [post]);
+      post = result[0];
+    }
+
+    return {
+      success: true,
+      post,
+      user,
+      message: "Post Retrieved sucessfully",
+    };
+  } catch (e) {
     return {
       success: false,
-      error: { status: 400, message: "Post id is required" },
+      error: { status: 500, message: "Internal server error" },
     };
   }
-  var post = await Post.findById(postId);
-
-  if (!post) {
-    return {
-      success: false,
-      error: { status: 404, message: "Post Not found" },
-    };
-  }
-  const { user: loggedInUser } = await verifyAuthToken(request);
-  if (loggedInUser) {
-    var result = await checkVotesMiddleware(loggedInUser, [post]);
-    post = result[0];
-  }
-
-  return {
-    success: true,
-    post,
-    user,
-    message: "Post Retrieved sucessfully",
-  };
 }
 
 export async function getPostComments(request) {
-  const { success, error, post, message } = await getPost(request, false);
-  if (!success) {
-    return { success, error };
-  }
-  const { user } = await verifyAuthToken(request);
-  var comments = await Comment.find({ post_id: post._id })
-    .populate("replies_comments_ids")
-    .exec();
-  if (user) {
-    comments = await checkCommentVotesMiddleware(user, comments);
+  try {
+    const { success, error, post, message } = await getPost(request, false);
+    if (!success) {
+      return { success, error };
+    }
+    const { user } = await verifyAuthToken(request);
+    var comments = await Comment.find({ post_id: post._id })
+      .populate("replies_comments_ids")
+      .exec();
+    if (user) {
+      comments = await checkCommentVotesMiddleware(user, comments);
 
-    await Promise.all(
-      comments.map(async (comment) => {
-        comment.replies_comments_ids = await checkCommentVotesMiddleware(
-          user,
-          comment.replies_comments_ids
-        );
-      })
-    );
+      await Promise.all(
+        comments.map(async (comment) => {
+          comment.replies_comments_ids = await checkCommentVotesMiddleware(
+            user,
+            comment.replies_comments_ids
+          );
+        })
+      );
+    }
+    return {
+      success: true,
+      comments,
+      message: "Comments Retrieved sucessfully",
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: { status: 500, message: "Internal server error" },
+    };
   }
-  return {
-    success: true,
-    comments,
-    message: "Comments Retrieved sucessfully",
-  };
 }
 
 export async function getViewsCount(request) {
@@ -384,7 +398,7 @@ export async function getViewsCount(request) {
   } catch (e) {
     return {
       success: false,
-      error: { status: 500, message: e },
+      error: { status: 500, message: "Internal server error" },
     };
   }
 }
@@ -406,7 +420,7 @@ export async function marknsfw(request) {
   } catch (e) {
     return {
       success: false,
-      error: { status: 500, message: e },
+      error: { status: 500, message: "Internal server error" },
     };
   }
 }
@@ -430,7 +444,7 @@ export async function allowReplies(request) {
   } catch (e) {
     return {
       success: false,
-      error: { status: 500, message: e },
+      error: { status: 500, message: "Internal server error" },
     };
   }
 }
@@ -475,7 +489,7 @@ export async function setSuggestedSort(request) {
   } catch (e) {
     return {
       success: false,
-      error: { status: 500, message: e },
+      error: { status: 500, message: "Internal server error" },
     };
   }
 }
@@ -1024,7 +1038,11 @@ export async function getTrendingPosts(request) {
     var posts = [];
 
     for (const titleInfo of postsTitles) {
-      const post = await Post.findOne({ title: titleInfo._id }); // Assuming title is unique
+      const post = await Post.findOne({
+        title: titleInfo._id,
+        type: "image_and_videos",
+        images: { $elemMatch: { path: { $exists: true, $ne: null } } },
+      }); // Assuming title is unique
       posts.push(post);
     }
 
