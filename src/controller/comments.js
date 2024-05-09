@@ -119,9 +119,10 @@ export async function newComment(request) {
     community_name: post.community_name,
     upvotes_count: 1, //when i first make comment
     spoiler_flag: post.spoiler_flag,
+    upvote_users: [user._id],
   });
 
-  comment.upvote_users.push(user._id);
+  // comment.upvote_users.push(user._id);
   await comment.save();
 
   console.log(post);
@@ -212,13 +213,14 @@ export async function replyToComment(request) {
     community_name: comment.community_name,
     upvotes_count: 1, //when i first make comment
     spoiler_flag: comment.spoiler_flag,
+    upvote_users:[user._id]
   });
 
-  console.log("J");
+  console.log("J", reply);
   comment.replies_comments_ids.push(reply._id);
 
   await comment.save();
-  reply.upvote_users.push(user._id);
+  // reply.upvote_users.push(user._id);
   await reply.save();
   post.comments_count++;
   await post.save();

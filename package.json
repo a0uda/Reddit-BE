@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "jest ./__test__/posts.test.js",
+    "test": "jest ./__test__/community",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
     "seed": "node ./seeds/seed.js",
     "coverage": "jest --coverage"
