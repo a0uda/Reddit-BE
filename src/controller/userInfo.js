@@ -1,3 +1,7 @@
+/**
+ * @module users/controller/userInfo
+ */
+
 import { User } from "../db/models/User.js";
 import mongoose from "mongoose";
 import { getAboutFormat, getFriendsFormat } from "../utils/userInfo.js";

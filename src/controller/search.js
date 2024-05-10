@@ -1,3 +1,6 @@
+/**
+ * @module search/controller
+ */
 import { User } from "../db/models/User.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { Post } from "../db/models/Post.js";
@@ -10,6 +13,18 @@ import {
   getTimeSortCriteria,
 } from "../utils/lisitng.js";
 
+/**
+ * Searches for users based on a query string, filtering by username, display name, and about section.
+ *
+ * @param {Object} request - The HTTP request object containing the query string.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of users to return per page (default is 10).
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - users {Array} - An array of users matching the search criteria.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchUsers(request, pageNumber = 1, pageSize = 10) {
   try {
     let user = null;
@@ -61,6 +76,20 @@ export async function searchUsers(request, pageNumber = 1, pageSize = 10) {
   }
 }
 
+/**
+ * Searches for posts based on a query string and specified search criteria.
+ *
+ * @param {Object} request - The HTTP request object containing the query string and search parameters.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of posts to return per page (default is 10).
+ * @param {string} sortBy - The field to sort the posts by (default is "relevance").
+ * @param {string} sortTime - The time range to filter the posts by (default is "allTime").
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - posts {Array} - An array of posts matching the search criteria.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchPosts(
   request,
   pageNumber = 1,
@@ -140,6 +169,19 @@ export async function searchPosts(
   }
 }
 
+/**
+ * Searches for comments based on a query string and specified search criteria.
+ *
+ * @param {Object} request - The HTTP request object containing the query string and search parameters.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of comments to return per page (default is 10).
+ * @param {string} sortBy - The field to sort the comments by (default is "relevance").
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - comments {Array} - An array of comments matching the search criteria.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchComments(
   request,
   pageNumber = 1,
@@ -204,6 +246,18 @@ export async function searchComments(
   }
 }
 
+/**
+ * Searches for communities based on a query string.
+ *
+ * @param {Object} request - The HTTP request object containing the query string and pagination parameters.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of communities to return per page (default is 10).
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - communities {Array} - An array of communities matching the search criteria.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchCommunities(
   request,
   pageNumber = 1,
@@ -256,6 +310,20 @@ export async function searchCommunities(
   }
 }
 
+/**
+ * Searches for posts within a specific community based on a query string.
+ *
+ * @param {Object} request - The HTTP request object containing the query string and other parameters.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of posts to return per page (default is 10).
+ * @param {string} sortBy - The sorting criteria for posts (default is "relevance").
+ * @param {string} sortTime - The time range for sorting posts (default is "allTime").
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - posts {Array} - An array of posts matching the search criteria within the specified community.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchPostCommunities(
   request,
   pageNumber = 1,
@@ -343,6 +411,19 @@ export async function searchPostCommunities(
   }
 }
 
+/**
+ * Searches for comments within a specific community based on a query string.
+ *
+ * @param {Object} request - The HTTP request object containing the query string and other parameters.
+ * @param {number} pageNumber - The page number for pagination (default is 1).
+ * @param {number} pageSize - The number of comments to return per page (default is 10).
+ * @param {string} sortBy - The sorting criteria for comments (default is "relevance").
+ * @returns {Object} An object containing the search results.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code.
+ *   - comments {Array} - An array of comments matching the search criteria within the specified community.
+ *   - message {string} - A descriptive message of the operation outcome.
+ */
 export async function searchCommentCommunities(
   request,
   pageNumber = 1,

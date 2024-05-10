@@ -1,3 +1,6 @@
+/**
+ * @module userActions/controller
+ */
 import { User } from "../db/models/User.js";
 import { Community } from "../db/models/Community.js";
 import { verifyAuthToken } from "./userAuth.js";
@@ -201,6 +204,20 @@ export async function muteCommunity(request) {
     };
   }
 }
+
+/**
+ * Toggle the favorite status of a community for the authenticated user.
+ * @param {Object} request - The request object containing user authentication and community details.
+ * @returns {Object} An object representing the result of the favorite community operation.
+ * @throws {Error} Will throw an error if there's an issue with the request or server.
+ * @example
+ * // Returns a success response when the community favorite status is updated successfully.
+ * {
+ *   success: true,
+ *   status: 200,
+ *   message: "Community favorite status updated successfully."
+ * }
+ */
 export async function favoriteCommunity(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -503,6 +520,19 @@ export async function clearHistory(request) {
   }
 }
 
+/**
+ * Delete the user account if authentication and validation checks pass.
+ * @param {Object} request - The request object containing user authentication and deletion details.
+ * @returns {Object} An object representing the result of the account deletion operation.
+ * @throws {Error} Will throw an error if there's an issue with the request or server.
+ * @example
+ * // Returns a success response when the account is deleted successfully.
+ * {
+ *   success: true,
+ *   status: 200,
+ *   message: "Account deleted successfully."
+ * }
+ */
 export async function deleteAccount(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -555,6 +585,24 @@ export async function deleteAccount(request) {
   }
 }
 
+/**
+ * Follow or unfollow a post based on user interaction.
+ * @param {Object} request - The request object containing details about the post and user.
+ * @returns {Object} An object indicating the success or failure of the follow/unfollow operation.
+ * @throws {Error} Will throw an error if there's an issue with the request or server.
+ * @example
+ * // Example of following a post successfully.
+ * {
+ *   success: true,
+ *   error: {},
+ *   message: "User has followed post successfully"
+ * }
+ * // Example of unfollowing a post successfully.
+ * {
+ *   success: true,
+ *   message: "User has unfollowed post successfully"
+ * }
+ */
 export async function followPost(request) {
   try {
     const { success, error, post, user, message } = await getPost(
@@ -592,6 +640,24 @@ export async function followPost(request) {
   }
 }
 
+/**
+ * Hide or unhide a post based on user interaction.
+ * @param {Object} request - The request object containing details about the post and user.
+ * @returns {Object} An object indicating the success or failure of the hide/unhide operation.
+ * @throws {Error} Will throw an error if there's an issue with the request or server.
+ * @example
+ * // Example of hiding a post successfully.
+ * {
+ *   success: true,
+ *   error: {},
+ *   message: "Post hidden successfully"
+ * }
+ * // Example of unhiding a post successfully.
+ * {
+ *   success: true,
+ *   message: "Post unhidden successfully"
+ * }
+ */
 export async function hidePost(request) {
   const { success, error, post, user, message } = await getPost(request, true);
   if (!success) {

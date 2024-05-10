@@ -1,5 +1,7 @@
 // Mod Tools --> Moderation --> Rules and Removal Reasons --> (Rules, Removal Reasons)
-
+/**
+ * @module community/services/addCommunityRulesAndRemovalReasons
+ */
 
 import { Rule } from "../db/models/Rule.js";
 

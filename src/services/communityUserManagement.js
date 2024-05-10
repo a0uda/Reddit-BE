@@ -1,5 +1,7 @@
 // Mod Tools --> Overview --> User Management --> (Banned, Muted, Approved, Moderators) Users
-
+/**
+ * @module community/services/communityUserManagement
+ */
 import { verifyAuthToken } from "../controller/userAuth.js";
 import { Community } from "../db/models/Community.js";
 import { Message } from "../db/models/Message.js";
@@ -23,7 +25,7 @@ import {
  * @param {String} requestBody.note_for_ban_message
  * @param {Date} requestBody.banned_until
  *
- * @returns
+ * @returns {Object}
  * {err: {status: 400, message: "Invalid action."}}
  * {err: {status: 400, message: "Username , community name , action are required."}}
  * {err: {status: 400, message: "Community not found."}}
@@ -255,7 +257,7 @@ const editBannedUser = async (request) => {
 
 /**
  * @param {String} community_name
- * @returns
+ * @returns {Object}
  * {users: community.banned_users}
  * {err: {status: 400, message: "Community not found."}}
  * {err: {status: 500, message: error.message}}
@@ -356,7 +358,7 @@ const getBannedUsers = async (community_name, pageNumber, pageSizeNumber) => {
  * @property {String} action
  * @property {String} reason
  * @property {String} username
- * @returns
+ * @returns {Object}
  * {success: true}
  * or
  * {err: {status: 400, message: "Community not found."}}
@@ -492,7 +494,7 @@ const muteUser = async (request) => {
 /**
  *
  * @param {String} community_name
- * @returns
+ * @returns {Object}
  * {users: muted_users}
  * or
  * {err: {status: 400, message: "Community not found."}}
@@ -513,8 +515,8 @@ const muteUser = async (request) => {
  * ]
  * }
  *
- * @returns
- */
+ * @returns {Object}
+ */ 
 const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
     try {
         const community = await communityNameExists(community_name);
@@ -586,7 +588,7 @@ const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
  * @param {Object} requestBody
  * @property {String} username
  * @property {String} community_name
- * @returns
+ * @returns {Object}
  * {success: true}
  * or
  * {err: {status: 400, message: "Username not found."}}
@@ -888,7 +890,7 @@ const getApprovedUsers = async (community_name, pageNumber, pageSizeNumber) => {
  * @property {Boolean} has_access.manage_users
  * @property {Boolean} has_access.manage_settings
  * @property {Boolean} has_access.manage_posts_and_comments
- * @returns
+ * @returns {Object}
  * {success: true}
  * or
  * {err: {status: 400, message: "Community not found."}}
@@ -898,7 +900,7 @@ const getApprovedUsers = async (community_name, pageNumber, pageSizeNumber) => {
  * {err: {status: 400, message: "User is already a moderator of the community."}}
  * or
  * {err: {status: 500, message: error.message}}
- * @returns
+ * @returns {Object}
  */
 const addModerator = async (request) => {
 
@@ -1025,7 +1027,7 @@ const acceptModeratorInvitation = async (request) => {
 /**
  *
  * @param {String} community_name
- * @returns
+ * @returns {Object}
  * {moderators: [
  * {username: "user1", profile_picture: "profile_picture1", moderator_since: "2021-09-01T00:00:00.000Z"},
  * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
@@ -1308,7 +1310,7 @@ const getEditableModerators = async (request, pageNumber, pageSizeNumber) => {
  * @param {Object} requestBody
  * @property {String} community_name
  * @property {String} username
- * @returns
+ * @returns {Object}
  * {success: true}
  * or
  * {err: {status: 400, message: "Community not found."}}
@@ -1378,7 +1380,7 @@ const deleteModerator = async (requestBody) => {
  * @param {Object} request
  * @property {Object} request.body
  * @property {String} request.body.community_name
- * @returns
+ * @returns {Object}
  * {success: true}
  * or
  * {err: {status: 400, message: "Community not found."}}
