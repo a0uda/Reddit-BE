@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest ./__test__/messages.test.js",
+    "test": "jest ./__test__",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
     "seed": "node ./seeds/seed.js",
     "coverage": "jest --coverage"
