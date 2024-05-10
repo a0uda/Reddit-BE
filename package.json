@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest ./__test__/messages.test.js",
     "docs": "jsdoc -c src/config/jsdocsconfig.json",
