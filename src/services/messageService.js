@@ -255,8 +255,13 @@ const deleteMessage = async (request) => {
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id.toString() == user.id.toString())
+        if (message.sender_id.toString() == user.id.toString()) {
             message.sender_deleted_at = Date.now();
+
+
+        }
+
+
         else if (message.receiver_id.toString() == user.id.toString())
             message.receiver_deleted_at = Date.now();
         else
