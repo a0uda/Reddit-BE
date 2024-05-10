@@ -31,6 +31,7 @@ const addNewCommunity = async (requestBody, creator) => {
     name,
     category,
     owner: creator._id,
+    members_count: 1,
     moderators: [
       {
         username: creator.username,
@@ -523,7 +524,7 @@ const getVisiblePosts = async (community, user, sortBy, page, limit) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
-      console.log(posts);
+    console.log(posts);
     // Validate that the author of the post has not blocked the user browsing the community and vice versa.
     const visiblePosts = posts.filter(async (post) => {
       const browsingUser = await User.findById(userId);
