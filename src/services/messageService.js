@@ -396,6 +396,7 @@ const markAllAsRead = async (request) => {
 }
 const getUserUnreadMessagesCount = async (request) => {
     try {
+        console.log("here")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user || err) {
             return { success, err, status, user, msg };
@@ -404,6 +405,8 @@ const getUserUnreadMessagesCount = async (request) => {
         const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
             (user) => user.id
         );
+        console.log(blockedUsers)
+        console.log(messages)
         for (let i = 0; i < blockedUsers.length; i++) {
             messages = messages.filter(
                 (message) => message.sender_id.toString() != blockedUsers[i].toString()
@@ -423,7 +426,7 @@ const createUsernameMention = async (request) => {
         }
         const { comment_id, mentioned_username } = request.body;
 
-        const comment = await Comment.findOne({ _id: comment_id }).select("post_id user_id");
+        const comment = await Comment.findOne({ _id: comment_id })
         if (!comment) {
             return { err: { status: 400, message: "Comment not found" } };
         }
@@ -431,9 +434,6 @@ const createUsernameMention = async (request) => {
         if (!mentionedUser) {
             return { err: { status: 400, message: "mentioned User not found" } };
         }
-
-
-
 
         const userMention = {
             post_id: comment.post_id,
