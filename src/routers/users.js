@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { redirectToVerifyEmail } from "../utils/emailSending.js";
+import { verifyAuthToken } from "../controller/userAuth.js";
 
 dotenv.config();
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -30,6 +31,7 @@ import {
   isEmailAvailable,
   changeUsername,
   disconnectGoogle,
+  connectToGoogle,
 } from "../controller/userAuth.js";
 
 import {
@@ -129,37 +131,14 @@ usersRouter.post("/users/logout", async (req, res) => {
 });
 usersRouter.post("/users/connect-to-google", async (req, res) => {
   try {
-    const accessToken = req.body.access_token;
-    const { data: userData } = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const { success, err, status, user, msg } = await verifyAuthToken(request);
-    if (!user) {
-      return { success, err, status, user: authenticatedUser, msg };
+    const { success, error, message } = await connectToGoogle(req);
+    if (!success) {
+      res.status(error.status).send({ error });
+      return;
     }
-    // user = authenticatedUser;
-    user.gmail = userData.email;
-    user.connected_google = true;
-
-    await user.save();
-
-    //send verification email to user
-    await redirectToVerifyEmail(user._id, user.email);
-
-    res.status(200).send({
-      success: true,
-      status: 200,
-      msg: "connected to google successfully.",
-    });
+    res.status(200).send({ message });
   } catch (error) {
-    console.error("Google OAuth error:", error.message);
-    res.status(500).json({ error: "Google OAuth error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

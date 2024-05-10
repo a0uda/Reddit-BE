@@ -4,6 +4,7 @@ import {
   getCommunityPostsAndComments,
   getCommunityContentControls,
 } from "../services/communitySettingsService.js";
+import { Post } from "../db/models/Post.js";
 import mongoose from "mongoose";
 
 export async function checkNewPostInput(requestBody) {
@@ -308,17 +309,20 @@ export async function checkContentSettings(post, community_name) {
       created_at: {
         $gte: new Date(Date.now() - numberOfDays * 24 * 60 * 60 * 1000),
       },
-    }).exec();
-
-    const sameLinkPosted = lastPosts.some((p) => p.link_url === post.link_url);
-    if (sameLinkPosted) {
-      return {
-        success: false,
-        error: {
-          status: 400,
-          message: `This link has already been posted within the last ${numberOfDays} days.`,
-        },
-      };
+    });
+    if (lastPosts.length > 0) {
+      const sameLinkPosted = lastPosts.some(
+        (p) => p.link_url === post.link_url
+      );
+      if (sameLinkPosted) {
+        return {
+          success: false,
+          error: {
+            status: 400,
+            message: `This link has already been posted within the last ${numberOfDays} days.`,
+          },
+        };
+      }
     }
   }
   return {

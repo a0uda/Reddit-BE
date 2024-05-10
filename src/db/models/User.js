@@ -59,8 +59,9 @@ const userSchema = new mongoose.Schema({
 
   gmail: {
     type: String,
-    unique: true,
-    sparse: true,
+    default: null,
+    // unique: true,
+    // sparse: true,
   },
   display_name: {
     type: String,
