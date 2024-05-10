@@ -9,3 +9,4 @@ coverage
 mapping 
 .gitignore
 migrations
+mongo-db-backup
