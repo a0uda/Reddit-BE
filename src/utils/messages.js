@@ -100,7 +100,7 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 
     const post = await Post.findOne({ _id: userMentions.post_id });
 
-    const comment = await Comment.findOne({ _id: userMentions.comment_id }).select('created_at sender_username description upvotes_count downvotes_count downvote_users upvote_users');
+    const comment = await Comment.findOne({ _id: userMentions.comment_id }).select('created_at user_id sender_username description upvotes_count downvotes_count downvote_users upvote_users');
 
     const postCreator = await User.findOne({ _id: post.user_id }).select('username');
 
@@ -119,26 +119,28 @@ const mapUserMentionsToFormat = async (userMentions, user) => {
 
 
     if (post.post_in_community_flag) {
-        const community = await Community.findOne({ _id: post.community_id }).select('moderators');
-        //check if post creator is in moderators 
+        const community = await Community.findOne({ name: post.community_name }).select('moderators');
+
         postCreatorType = community.moderators.includes(postCreator.username) ? "moderator" : "user";
+
 
     } else {
         postCreatorType = "user";
     }
-    // const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
-    //     (user) => user.id
-    // );
-    // TODO:TEST THIS AND UNCOMMENT
-    // let is_blocked = false;
-    // const sender_id = await User.findOne({ username: userMentions.sender_username }).select('_id');
-    // for (let i = 0; i < blockedUsers.length; i++) {
-    //     if (blockedUsers[i].toString() == message.sender_id.toString()) {
-    //         is_blocked = true;
-    //         break;
-    //     }
-    // }
-    // if (is_blocked) return null;
+    const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
+        (user) => user.id
+    );
+    let is_blocked = false;
+    console.log("comment.user_id", comment.user_id)
+    for (let i = 0; i < blockedUsers.length; i++) {
+        console.log("blockedUsers[i]", blockedUsers[i])
+
+        if (blockedUsers[i].toString() == comment.user_id.toString()) {
+            is_blocked = true;
+            break;
+        }
+    }
+    if (is_blocked) return null;
     const mappedMessages = {
         created_at: comment.created_at,
         senderUsername: userMentions.sender_username,

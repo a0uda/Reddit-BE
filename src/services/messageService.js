@@ -255,8 +255,13 @@ const deleteMessage = async (request) => {
         if (!message) {
             return { err: { status: 404, message: "Message not found" } };
         }
-        if (message.sender_id.toString() == user.id.toString())
+        if (message.sender_id.toString() == user.id.toString()) {
             message.sender_deleted_at = Date.now();
+
+
+        }
+
+
         else if (message.receiver_id.toString() == user.id.toString())
             message.receiver_deleted_at = Date.now();
         else
@@ -286,9 +291,11 @@ const getUserMentions = async (request) => {
         }
 
         const mentions = user.user_mentions;
-        const mappedMentions = await Promise.all(mentions.map(async (mention) => {
+        let mappedMentions = await Promise.all(mentions.map(async (mention) => {
             return await mapUserMentionsToFormat(mention, user);
         }));
+        //filter this array from nulls 
+        mappedMentions = mappedMentions.filter((mention) => mention !== null);
         return { status: 200, mentions: mappedMentions };
     }
     catch (error) {
@@ -394,6 +401,7 @@ const markAllAsRead = async (request) => {
 }
 const getUserUnreadMessagesCount = async (request) => {
     try {
+        console.log("here")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user || err) {
             return { success, err, status, user, msg };
@@ -402,6 +410,8 @@ const getUserUnreadMessagesCount = async (request) => {
         const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
             (user) => user.id
         );
+        console.log(blockedUsers)
+        console.log(messages)
         for (let i = 0; i < blockedUsers.length; i++) {
             messages = messages.filter(
                 (message) => message.sender_id.toString() != blockedUsers[i].toString()
@@ -421,7 +431,7 @@ const createUsernameMention = async (request) => {
         }
         const { comment_id, mentioned_username } = request.body;
 
-        const comment = await Comment.findOne({ _id: comment_id }).select("post_id user_id");
+        const comment = await Comment.findOne({ _id: comment_id })
         if (!comment) {
             return { err: { status: 400, message: "Comment not found" } };
         }
@@ -429,9 +439,6 @@ const createUsernameMention = async (request) => {
         if (!mentionedUser) {
             return { err: { status: 400, message: "mentioned User not found" } };
         }
-
-
-
 
         const userMention = {
             post_id: comment.post_id,
