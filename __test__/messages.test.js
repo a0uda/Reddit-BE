@@ -1,5 +1,5 @@
 
-import { composeNewMessage, createUsernameMention, getUserSentMessages, markMessageAsRead, markAllAsRead, getUserUnreadMessagesCount } from "../src/Services/messageService.js";
+import { composeNewMessage, createUsernameMention, getUserSentMessages, markMessageAsRead, markAllAsRead, getUserUnreadMessagesCount } from "../src/services/messageService.js";
 import { Message } from "../src/db/models/Message.js";
 import { User } from '../src/db/models/User';
 import { verifyAuthToken } from '../src/controller/userAuth';
