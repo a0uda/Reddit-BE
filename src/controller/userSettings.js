@@ -1,3 +1,7 @@
+/**
+ * @module users/controller/userSettings
+ */
+
 import {
   getBlockedUserHelper,
   getMutedCommunitiesHelper,

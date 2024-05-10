@@ -1,5 +1,32 @@
-import mongoose from "mongoose";
+/**
+ * @module comments/services
+ */
 
+import mongoose from "mongoose";
+/**
+ * Middleware function to fetch and populate comments with voting and saved status for the current user.
+ *
+ * @param {Object} currentUser - The authenticated user object.
+ * @param {Array} comments - An array of comments to be populated with user-specific voting and save status.
+ *
+ * @returns {Array} An array of comments with added attributes:
+ *   - {Number} vote: Indicates the voting status of the current user on the comment (-1 for downvoted, 0 for neutral, 1 for upvoted).
+ *   - {Boolean} saved: Indicates whether the comment is saved by the current user.
+ *
+ * @example
+ * // Example usage of checkCommentVotesMiddleware function
+ * const currentUser = {
+ *   username: "john_doe",
+ *   saved_comments_ids: ["comment1", "comment3"],
+ * };
+ * const comments = [
+ *   { _id: "comment1", upvote_users: ["john_doe", "alice"], downvote_users: [] },
+ *   { _id: "comment2", upvote_users: [], downvote_users: ["john_doe"] },
+ *   { _id: "comment3", upvote_users: ["john_doe"], downvote_users: ["alice"] },
+ * ];
+ * const updatedComments = await checkCommentVotesMiddleware(currentUser, comments);
+ * console.log(updatedComments);
+ */
 export async function checkCommentVotesMiddleware(currentUser, comments) {
   if (currentUser) {
     const username = currentUser.username;

@@ -1,3 +1,6 @@
+/**
+ * @module comments/controller
+ */
 import { Post } from "../db/models/Post.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { User } from "../db/models/User.js";
@@ -7,6 +10,15 @@ import { getPost } from "./posts.js";
 import { checkBannedUser, getCommunity } from "../services/posts.js";
 import { checkCommentVotesMiddleware } from "../services/comments.js";
 import { pushNotification } from "./notifications.js";
+
+/**
+ * Retrieve a specific comment by its ID and populate its replies.
+ *
+ * @param {Object} request - The request object containing comment ID in the body or query.
+ * @param {Boolean} verifyUser - A flag indicating whether to verify the user's authentication token.
+ * 
+ * @returns {Object} An object containing the retrieved comment and user information (if authenticated).
+ */
 export async function getComment(request, verifyUser) {
   let user;
   if (verifyUser) {
@@ -46,6 +58,18 @@ export async function getComment(request, verifyUser) {
   };
 }
 
+/**
+ * Retrieve a comment with its replies and handle user authentication for vote status.
+ *
+ * @param {Object} request - The request object containing the comment ID.
+ * @returns {Object} An object containing the retrieved comment with votes and authenticated user.
+ *
+ * @typedef {Object} CommentDataWithReplies
+ * @property {Boolean} success - Indicates if the operation was successful.
+ * @property {Object|null} comment - The retrieved comment object with populated replies.
+ * @property {Object|null} user - The authenticated user object (or null if not verified or authenticated).
+ * @property {String|null} message - A descriptive message indicating the result of the operation.
+ */
 export async function getCommentWithReplies(request) {
   const { success, error, comment, message } = await getComment(request, false);
   // console.log(comment);
@@ -69,6 +93,21 @@ export async function getCommentWithReplies(request) {
     message: "Comment Retrieved sucessfully",
   };
 }
+
+/**
+ * Create a new comment on a post and handle related validations and operations.
+ *
+ * @param {Object} request - The request object containing the necessary data for creating a comment.
+ * @returns {Object} An object indicating the success status and details of the created comment.
+ *
+ * @typedef {Object} NewCommentResult
+ * @property {Boolean} success - Indicates whether the operation was successful.
+ * @property {Object} error - Details of any error encountered during the operation.
+ * @property {String} [error.status] - The HTTP status code associated with the error (if applicable).
+ * @property {String} [error.message] - A descriptive message explaining the error (if applicable).
+ * @property {String} message - A descriptive message indicating the outcome of the operation.
+ * @property {String} [comment_id] - The ID of the newly created comment (if successful).
+ */
 
 export async function newComment(request) {
   const { success, error, post, user, message } = await getPost(request, true);
@@ -150,6 +189,19 @@ export async function newComment(request) {
   };
 }
 
+/**
+ * Create a reply to an existing comment and handle related validations and operations.
+ *
+ * @param {Object} request - The request object containing the necessary data for creating a reply.
+ * @returns {Object} An object indicating the success status and details of the created reply.
+ *
+ * @typedef {Object} ReplyToCommentResult
+ * @property {Boolean} success - Indicates whether the operation was successful.
+ * @property {Object} error - Details of any error encountered during the operation.
+ * @property {String} [error.status] - The HTTP status code associated with the error (if applicable).
+ * @property {String} [error.message] - A descriptive message explaining the error (if applicable).
+ * @property {String} message - A descriptive message indicating the outcome of the operation.
+ */
 export async function replyToComment(request) {
   const { success, error, comment, user, message } = await getComment(
     request,
