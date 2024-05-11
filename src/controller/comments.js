@@ -138,7 +138,7 @@ export async function newComment(request) {
       return { success, error };
     }
     // console.log(community.banned_users,user._id)
-    const result = await checkBannedUser(community, user._id);
+    const result = await checkBannedUser(community, user.username);
     if (!result.success) {
       return result;
     }
