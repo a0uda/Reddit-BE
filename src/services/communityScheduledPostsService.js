@@ -1,5 +1,5 @@
 /**
- * @module community/scheduled-posts/service
+ * @module community/service/scheduled-posts
  */
 
 // TODO: Scheduled posts appear in the unmoderated queue.

@@ -1,5 +1,5 @@
 /**
- * @module community/queue/service
+ * @module community/service/queue
  */
 
 import { Post } from '../db/models/Post.js';

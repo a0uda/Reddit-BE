@@ -1,5 +1,5 @@
 /**
- * @module community/settings/service
+ * @module community/service/settings
  */
 
 // Mod Tools --> Settings --> General Settings
