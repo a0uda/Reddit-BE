@@ -107,7 +107,7 @@ const savePostForScheduling = async (scheduling_details, postInput, user) => {
     }
 
     // Return the saved post.
-    console.log(`Post with id ${savedPost._id} and title ${savedPost.title} saved successfully to be posted in the future!`)
+    // console.log(`Post with id ${savedPost._id} and title ${savedPost.title} saved successfully to be posted in the future!`)
     return { saved_post_id: savedPost._id };
 }
 
@@ -128,7 +128,7 @@ const postScheduledPost = async (post_id) => {
     try {
         scheduled_post = await scheduledPost.findById(post_id);
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         return { err: { status: 500, message: error.message } };
     }
 
@@ -140,7 +140,7 @@ const postScheduledPost = async (post_id) => {
     try {
         post = await post.save();
     } catch (error) {
-        console.log(error)
+        // console.log(error)
         return { err: { status: 500, message: error.message } };
     }
 
@@ -150,15 +150,15 @@ const postScheduledPost = async (post_id) => {
             await scheduledPost.deleteOne({ _id: scheduled_post._id });
         }
         catch (error) {
-            console.log(error)
+            // console.log(error)
             return { err: { status: 500, message: error.message } };
         }
 
-        console.log(`Scheduled post with id ${scheduled_post._id} and title ${scheduledPost.title} removed successfully!`);
+        // console.log(`Scheduled post with id ${scheduled_post._id} and title ${scheduledPost.title} removed successfully!`);
     }
 
     // Return a success message.
-    console.log(`Post with id ${post._id} and title ${post.title} posted successfully on ${post.created_at}!`)
+    // console.log(`Post with id ${post._id} and title ${post.title} posted successfully on ${post.created_at}!`)
     return { successMessage: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
 }
 
@@ -208,7 +208,7 @@ const editScheduledPost = async (post_id, new_description) => {
         post.description = new_description;
         post.edited_at = Date.now();
 
-        console.log(post)
+        // console.log(post)
 
         try {
             await post.save();
