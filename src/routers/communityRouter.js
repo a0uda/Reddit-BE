@@ -117,6 +117,10 @@ communityRouter.get("/communities/get-community-names-by-popularity", getCommuni
 communityRouter.get("/communities/get-visible-posts/:community_name", protectRoute, getVisiblePostsController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
+// Unit Tests Coverage      ==> 100%
+// Functional Documentation ==> Done
+// API Documentation        ==> -
+
 communityRouter.get("/communities/get-general-settings/:community_name", getCommunityGeneralSettingsController);
 communityRouter.get("/communities/get-content-controls/:community_name", getCommunityContentControlsController);
 communityRouter.get("/communities/get-posts-and-comments/:community_name", getCommunityPostsAndCommentsController);
@@ -126,6 +130,10 @@ communityRouter.post("/communities/change-content-controls/:community_name", cha
 communityRouter.post("/communities/change-posts-and-comments/:community_name", changeCommunityPostsAndCommentsController);
 
 //////////////////////////////////////////////////////////////////////// Mod Queue ////////////////////////////////////////////////////////////////////
+// Unit Tests Coverage      ==> 95.86%
+// Functional Documentation ==> Done
+// API Documentation        ==> -
+
 communityRouter.post("/communities/object-item/:community_name", protectRoute, protectModeratorRoute, objectItemConroller);
 communityRouter.post("/communities/edit-item/:community_name", protectRoute, editItemController);
 
@@ -134,7 +142,12 @@ communityRouter.post("/communities/handle-edit/:community_name", protectRoute, p
 communityRouter.post("/communities/handle-unmoderated-item/:community_name", protectRoute, protectModeratorRoute, handleUnmoderatedItemController);
 
 communityRouter.get("/communities/get-items-from-queue/:community_name", protectRoute, protectModeratorRoute, getItemsFromQueueController);
+
 //////////////////////////////////////////////////////////////////////// Schedule Posts //////////////////////////////////////////////////////////////
+// Unit Tests Coverage      ==> -
+// Functional Documentation ==> Done
+// API Documentation        ==> -
+
 communityRouter.post("/communities/schedule-post/:community_name", protectRoute, protectModeratorRoute, schedulePostController);
 communityRouter.get("/communities/get-scheduled-posts/:community_name", protectRoute, protectModeratorRoute, getScheduledPostsController);
 communityRouter.post("/communities/edit-scheduled-post/:community_name", protectRoute, protectModeratorRoute, editScheduledPostController);

@@ -11,6 +11,11 @@ import {
 
 const chatRouter = express.Router();
 
+// Unit Tests Coverage      ==> -
+// Functional Documentation ==> Done
+// API Documentation        ==> -
+
+
 // The receiver's username is passed in the URL.
 chatRouter.post("/chats/send/:username", protectRoute, sendMessageController);
 // The other user's username is passed in the URL.

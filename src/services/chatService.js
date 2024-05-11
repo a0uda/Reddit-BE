@@ -1,3 +1,7 @@
+/**
+ * @module community/service/chat
+ */
+
 import ChatModel from "../db/models/ChatModel.js";
 import MessageModel from "../db/models/MessageModel.js";
 import { User } from "../db/models/User.js";
@@ -5,8 +9,19 @@ import { User } from "../db/models/User.js";
 // TODO: Uncomment.
 import { getReceiverSocketId, io } from "../socket/socket.js";
 
+/**
+ * Sends a message from a sender to a receiver. If a chat between the sender and receiver does not exist, it creates a new chat.
+ *
+ * @param {Object} sender - The sender of the message. This is an object that represents a User.
+ * @param {string} receiverUsername - The username of the receiver of the message.
+ * @param {string} message - The message to be sent.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'newMessage' property with the new message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const sendMessage = async (sender, receiverUsername, message) => {
-  console.log("ANA HENAAA FOOOOOOOOOOOOOOOOOOOOOOOOOO  ", message);
   // Validating the sender and receiver.
   let receiver;
   try {
@@ -117,21 +132,24 @@ const sendMessage = async (sender, receiverUsername, message) => {
   }
 
   const receiverSocketId = getReceiverSocketId(receiver._id);
-  console.log("receiverSocketId", receiverSocketId);
-  console.log("savedMessage", savedMessage);
-  console.log(
-    "AOUDA BARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-  );
   if (receiverSocketId) {
     // io.to(<socket_id>).emit() used to send events to specific client
-    console.log("receiverSocketId", receiverSocketId);
-    console.log("savedMessage", savedMessage);
-    console.log("AOUDA");
     io.to(receiverSocketId).emit("newMessage", savedMessage);
   }
 
   return { newMessage };
 };
+
+/**
+ * Retrieves all messages between a sender and a receiver.
+ *
+ * @param {Object} sender - The sender of the messages. This is an object that represents a User.
+ * @param {string} receiverUsername - The username of the receiver of the messages.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'messages' property with all the messages between the sender and receiver. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const getMessages = async (sender, receiverUsername) => {
   // Validate sender and receiver
@@ -202,6 +220,16 @@ const getMessages = async (sender, receiverUsername) => {
   return { messages };
 };
 
+/**
+ * Retrieves all chats for a logged-in user, formatted for display in a sidebar.
+ *
+ * @param {string} loggedInUserId - The ID of the logged-in user.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'sideBarChats' property with all the chats for the logged-in user, formatted for display in a sidebar. Each chat includes the chat ID, the username and profile picture of the other participant, and the sender, text, and timestamp of the last message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const getSideBarChats = async (loggedInUserId) => {
   let chats;
   try {
@@ -270,6 +298,18 @@ const getSideBarChats = async (loggedInUserId) => {
   const sideBarChats = formattedChats.filter((chat) => chat !== null); // Remove any null values
   return { sideBarChats };
 };
+
+/**
+ * Reports a message for a given reason by a user.
+ *
+ * @param {string} messageId - The ID of the message to be reported.
+ * @param {string} reason - The reason for reporting the message.
+ * @param {string} reportingUserId - The ID of the user reporting the message.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'successMessage' property with the success message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const reportMessage = async (messageId, reason, reportingUserId) => {
   if (!messageId || !reason || !reportingUserId) {
@@ -345,6 +385,17 @@ const reportMessage = async (messageId, reason, reportingUserId) => {
 
   return { successMessage: "Message reported successfully" };
 };
+
+/**
+ * Removes a message by a user.
+ *
+ * @param {string} messageId - The ID of the message to be removed.
+ * @param {string} removingUserId - The ID of the user removing the message.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'successMessage' property with the success message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const removeMessage = async (messageId, removingUserId) => {
   if (!messageId) {
