@@ -974,7 +974,7 @@ describe('deleteMessage', () => {
 
         const { deleteMessage } = require('../../src/services/messageService.js');
         const { verifyAuthToken } = require('../../src/controller/userAuth');
-        jest.mock('../../src/db/models/message.js');
+        jest.mock('../../src/db/models/Message.js');
         jest.mock('../../src/controller/userAuth');
         const request = {
             Headers: {
