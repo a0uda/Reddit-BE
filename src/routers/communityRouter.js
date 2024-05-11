@@ -40,7 +40,7 @@ import {
     acceptModeratorInvitation,
     getInvitedModerators,
 
-    getAllUsers,
+
 } from "../services/communityUserManagement.js";
 
 import {
@@ -350,19 +350,7 @@ communityRouter.get("/communities/about/approved/:community_name", async (req, r
 })
 //unapprove user
 
-//i use this api just for testing because i cant open the database :) , it has nothing todo with community endpoints 
-communityRouter.get("/all-users", async (req, res, next) => {
-    try {
-        const { err, users } = await getAllUsers()
 
-        if (err) { return next(err) }
-
-        return res.status(200).send(users)
-
-    } catch (error) {
-        next(error)
-    }
-})
 //testing done
 //documenation updated
 communityRouter.post("/communities/approve-user", async (req, res, next) => {

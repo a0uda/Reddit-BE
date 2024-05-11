@@ -38,7 +38,8 @@ const composeNewMessage = async (request, isReply) => {
 
         ///////CASE 1: MODERATOR->USER////////////////////////
         //TODO: CHECK IF THE USER IS MUTING THIS COMMUNITY 
-        if (sender_type === "moderator") {
+        if (sender_type == "moderator") {
+            console.log("sender is moderaor type")
             const community = await Community.findOne({ name: senderVia });
             if (!community) {
                 return { err: { status: 400, message: "the provided senderVia Community id does not exist" } };
@@ -50,9 +51,18 @@ const composeNewMessage = async (request, isReply) => {
             }
             global_sender_id = sender._id;
             global_sender_via_id = community._id;
-            if (receiver_type === "user") {
+            if (receiver_type == "user") {
+                console.log("receiver is user type")
+                console.log("*****************")
                 const receiver = await User.findOne({ username: receiver_username });
+                if (receiver == null) {
+                    console.log("null ya heba")
+
+                } else {
+                    console.log("not null ya heba , it is : ", receiver)
+                }
                 if (!receiver) {
+                    console.log("reciever User does not exist")
                     return { err: { status: 400, message: "reciever User does not exist" } };
 
                 }
@@ -61,7 +71,7 @@ const composeNewMessage = async (request, isReply) => {
             ///////CASE 2: MODERATOR->COMMUNITY////////////////////////TODO: IS THIS A VALID ACTION ?
             else
 
-                if (receiver_type === "moderator") {
+                if (receiver_type == "moderator") {
                     const receiver = await Community.findOne({ name: receiver_username })
                     if (!receiver) {
                         return { err: { status: 400, message: "reciever Community does not exist" } };
@@ -75,7 +85,7 @@ const composeNewMessage = async (request, isReply) => {
             global_sender_id = sender._id;
             global_sender_via_id = null;
             ///////CASE 3: USER->MODERATOR////////////////////////
-            if (receiver_type === "moderator") {
+            if (receiver_type == "moderator") {
                 const receiver = await Community.findOne({ name: receiver_username })
                 if (!receiver) {
                     return { err: { status: 400, message: "reciever Community does not exist" } };
@@ -239,8 +249,10 @@ const getAllMessages = async (request) => {
 const deleteMessage = async (request) => {
 
     try {
+        console.log("inside delete message function")
+        console.log("inside delete message function")
         const { success, err, status, user, msg } = await verifyAuthToken(request);
-
+        console.log("auth passed")
         if (!user) {
             return { success, err, status, user, msg };
         }
@@ -248,12 +260,19 @@ const deleteMessage = async (request) => {
         const { _id } = request.body;
         console.log(_id);
         const message = await Message.findById(_id);
-        console.log("message.sender id :")
-        console.log(message._id)
+        console.log("ya hebaaaaaaaaaaaaaaaaaa")
+        console.log("message zefta is  :")
+        console.log(message)
+        console.log("the consition is :")
+        console.log(message == null)
 
 
-        if (!message) {
-            return { err: { status: 404, message: "Message not found" } };
+
+        if (message == null) {
+            console.log("message not found")
+            return {
+                err: { status: 404, message: "Message not found" }
+            };
         }
         if (message.sender_id.toString() == user.id.toString()) {
             message.sender_deleted_at = Date.now();
