@@ -3,6 +3,27 @@ import { Comment } from '../db/models/Comment.js';
 import { Community } from '../db/models/Community.js';
 
 //////////////////////////////////////////////////////////////////////////// Actions ////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Objects an item by setting the appropriate flags and details in the database.
+ *
+ * @param {string} item_id - The UUID of the item to be objected.
+ * @param {string} item_type - The type of the item. Can be either 'post' or 'comment'.
+ * @param {string} objection_type - The type of the objection. Can be either 'reported', 'spammed', or 'removed'.
+ * @param {string} objected_by - The UUID of the user who is objecting the item. This is a reference to a User object.
+ * @param {string} objection_type_value - The reason for the objection. Must be a valid reason based on the objection type.
+ * @param {string} community_name - The name of the community where the item is posted.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ *
+ * @example
+ * objectItem('123e4567-e89b-12d3-a456-426614174000', 'post', 'reported', '123e4567-e89b-12d3-a456-426614174000', 'Harassment', 'community1')
+ *     .then(result => console.log(result))
+ *     .catch(err => console.error(err));
+ */
+
 const objectItem = async (item_id, item_type, objection_type, objected_by, objection_type_value, community_name) => {
     try {
         // Validate that the item_type is either post of comment
@@ -167,11 +188,11 @@ const handleObjection = async (item_id, item_type, objection_type, action) => {
         // 3. Write a query object
         let updated_attributes = {};
         if (action === 'approve') {
-            query = {
+            updated_attributes = {
                 [`community_moderator_details.${objection_type}.confirmed`]: true,
             };
         } else if (action === 'remove') {
-            query = {
+            updated_attributes = {
                 [`community_moderator_details.${objection_type}.flag`]: false,
                 [`community_moderator_details.${objection_type}.confirmed`]: false,
 
@@ -371,15 +392,15 @@ const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, com
             return { ...post._doc, userVote };
         });
 
-        comments = comments.map(comment => {
-            let userVote = 'none';
-            // if (authenticated_user.upvotes_comments_ids.includes(comment._id)) {
-            //     userVote = 'up';
-            // } else if (authenticated_user.downvotes_comments_ids.includes(comment._id)) {
-            //     userVote = 'down';
-            // }
-            return { ...comment._doc, userVote };
-        });
+        // comments = comments.map(comment => {
+        //     let userVote = 'none';
+        //     if (authenticated_user.upvotes_comments_ids.includes(comment._id)) {
+        //         userVote = 'up';
+        //     } else if (authenticated_user.downvotes_comments_ids.includes(comment._id)) {
+        //         userVote = 'down';
+        //     }
+        //     return { ...comment._doc, userVote };
+        // });
 
 
         // Merge and sort the posts and comments. This will create a single array of posts and comments, sorted by creation date.
