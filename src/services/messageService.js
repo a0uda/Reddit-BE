@@ -10,6 +10,14 @@ import { mapMessageToFormat, mapUserMentionsToFormat, mapPostRepliesToFormat } f
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 
+/**
+ * Compose and send a new message based on the provided request and settings.
+ *
+ * @param {Object} request - The request object containing message data.
+ * @param {boolean} isReply - Indicates whether the message is a reply to an existing message.
+ * @returns {Object} An object indicating the success status and details of the message sending operation. 
+ */
+
 const composeNewMessage = async (request, isReply) => {
     try {
         const { success, err, status, user: sender, msg } = await verifyAuthToken(request);
@@ -122,7 +130,12 @@ const composeNewMessage = async (request, isReply) => {
 };
 
 // //////////////////////SENT //////////////////////////
-
+/**
+ * Retrieve messages sent by the user based on the provided request.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and messages sent by the user.
+ */
 const getUserSentMessages = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -188,6 +201,12 @@ const getUserUnreadMessages = async (request) => {
     }
 };
 //////////////////////ALL MESSAGES //////////////////////////
+/**
+ * Retrieve unread messages for the user based on the provided request.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and unread messages for the user.
+ */
 const getAllMessages = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -241,6 +260,12 @@ const getAllMessages = async (request) => {
     }
 };
 //////////////////////DELETE MESSAGE //////////////////////////
+/**
+ * Delete a message based on the provided request and user authentication.
+ *
+ * @param {Object} request - The request object containing user authentication token and message ID.
+ * @returns {Object} An object indicating the success status and details of the message deletion operation.
+ */
 const deleteMessage = async (request) => {
 
     try {
@@ -288,7 +313,13 @@ const deleteMessage = async (request) => {
     }
 };
 
-//////////////////////////////GET USER MENTIONS///////////////////////////////////// 
+//////////////////////////////GET USER MENTIONS/////////////////////////////////////
+/**
+ * Retrieve user mentions based on the provided request and user authentication.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and user mentions for the user.
+ */
 const getUserMentions = async (request) => {
 
     try {
@@ -314,6 +345,12 @@ const getUserMentions = async (request) => {
 
 };
 //////////////////////////////GET POSTS REPLIES/////////////////////////////////////
+/**
+ * Retrieve post replies authored by the user based on the provided request and user authentication.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and post replies authored by the user.
+ */
 const getUserPostReplies = async (request) => {
     try {
 
@@ -337,6 +374,12 @@ const getUserPostReplies = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+/**
+ * Retrieve messages, post replies, and user mentions for the user's inbox based on the provided request and user authentication.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and messages, post replies, and user mentions for the user's inbox.
+ */
 const getMessagesInbox = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -367,6 +410,12 @@ const getMessagesInbox = async (request) => {
     }
 };
 //////////////////////////MARK MESSAGE AS READ //////////////////////////
+/**
+ * Mark messages as read based on the provided request and user authentication.
+ *
+ * @param {Object} request - The request object containing user authentication token and message IDs.
+ * @returns {Object} An object indicating the success status and details of the message marking operation.
+ */
 const markMessageAsRead = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -391,7 +440,12 @@ const markMessageAsRead = async (request) => {
     }
 }
 //mark all user messages as read
-
+/**
+ * Mark all messages as read for the authenticated user.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object indicating the success status and details of marking all messages as read.
+ */
 const markAllAsRead = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -408,6 +462,12 @@ const markAllAsRead = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
+/**
+ * Retrieve the count of unread messages for the authenticated user.
+ *
+ * @param {Object} request - The request object containing user authentication token.
+ * @returns {Object} An object containing the status and count of unread messages for the user.
+ */
 const getUserUnreadMessagesCount = async (request) => {
     try {
 
@@ -429,7 +489,12 @@ const getUserUnreadMessagesCount = async (request) => {
         return { err: { status: 500, message: error.message } };
     }
 }
-
+/**
+ * Create a username mention for the authenticated user and save it to the mentioned user's profile.
+ *
+ * @param {Object} request - The request object containing user authentication token and mention details.
+ * @returns {Object} An object indicating the success status and details of the mention creation operation.
+ */
 const createUsernameMention = async (request) => {
     try {
         const { success, err, status, user, msg } = await verifyAuthToken(request);

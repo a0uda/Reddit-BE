@@ -118,10 +118,6 @@ const banUser = async (request) => {
                     },
                 };
             }
-
-            if (!community.banned_users) {
-                community.banned_users = [];
-            }
             community.banned_users.push({
                 username: user.username,
                 banned_date: new Date(),
@@ -304,7 +300,7 @@ const getBannedUsers = async (community_name, pageNumber = 1, pageSizeNumber = 1
                     note_for_ban_message: paginatedBannedUsers[i].note_for_ban_message,
                     profile_picture: user.profile_picture,
                 });
-            } else { console.log("user not found") }
+            }
         }
         return { users: returned_banned_users };
     } catch (error) {
@@ -446,9 +442,7 @@ const muteUser = async (request) => {
             }
             // Perform mute or unmute action
             if (action === "mute") {
-                if (!community.muted_users) {
-                    community.muted_users = [];
-                }
+
                 // Push muting user's ID, mute date, and reason to muted_users array
                 community.muted_users.push({
                     username: user.username,
