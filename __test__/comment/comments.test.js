@@ -27,7 +27,7 @@ describe("Get Comment", () => {
     jest.clearAllMocks();
   });
 
-  it("should return error if token is missing", async () => {
+  it("should return error if token is missin", async () => {
     const request = {
       headers: {},
     };
