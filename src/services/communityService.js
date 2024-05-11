@@ -86,9 +86,11 @@ const addNewCommunity = async (requestBody, creator) => {
       disable_updates: false,
     });
     await creator.save();
+    //find the id of the user who is named reddit 
+    const redditUser = await User.findOne({ username: "reddit" });
     //add new message to the creator inbox
     const message = new Message({
-      sender_id: new mongoose.Types.ObjectId("66356010be06bf92b669eda3"),
+      sender_id: redditUser._id,
       sender_type: "user",
       subject: "You started a reddit community , now what ?:",
       receiver_id: creator._id,
