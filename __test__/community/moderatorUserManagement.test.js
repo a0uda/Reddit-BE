@@ -1,21 +1,32 @@
 
 import {
-    approveUser, getApprovedUsers,
-    muteUser, getMutedUsers,
-    banUser, getBannedUsers,
-    getModerators, getEditableModerators,
-    moderatorLeaveCommunity, addModerator,
-    deleteModerator, editBannedUser, getInvitedModerators,
-    getModeratorsSortedByDate
+    approveUser,
+    getApprovedUsers,
+    muteUser,
+    getMutedUsers,
+    banUser,
+    getBannedUsers,
+    getModerators,
+    getEditableModerators,
+    moderatorLeaveCommunity,
+    addModerator,
+    deleteModerator,
+    editBannedUser,
+    getInvitedModerators,
+    getModeratorsSortedByDate,
+    unapproveUser,
+    acceptModeratorInvitation
 } from '../../src/services/communityUserManagement';
 import { User } from '../../src/db/models/User';
 import { communityNameExists, isUserAlreadyApproved } from '../../src/utils/communities';
 import { verifyAuthToken } from '../../src/controller/userAuth';
 import { Message } from '../../src/db/models/Message';
+import { Community } from '../../src/db/models/Community';
 jest.mock("../../src/controller/userAuth");
 jest.mock("../../src/utils/communities");
 jest.mock("../../src/db/models/User");
 jest.mock("../../src/db/models/Message");
+jest.mock("../../src/db/models/Community");
 //todos : unapprove , should return the editable moderators commented 
 
 describe("banUser", () => {
@@ -69,6 +80,48 @@ describe("banUser", () => {
 
 
         expect(result.err.status).toBe(500);
+
+    })
+    it('should return an error if the user is not found ', async () => {
+        jest.resetAllMocks();
+        const request = {
+            headers: {
+                authorization: 'Bearer token'
+            },
+            body: {
+                username: "user3",
+                community_name: "community1",
+                action: "ban",
+                reason_for_ban: "reason",
+                mod_note: "note",
+                permanent_flag: "flag",
+                note_for_ban_message: "message",
+                banned_until: "until"
+
+            }
+        }
+        const mockCommunity = {
+            moderators: [{
+                username: "user1",
+                has_access: {
+                    everything: false,
+                    manage_users: false,
+
+                }
+            }],
+            name: "community1",
+
+        }
+        const banningUser = { username: "user3" }
+        const bannedUser = { username: "user5" }
+        User.findOne.mockResolvedValueOnce(null);
+
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: banningUser, status: 200, msg: 'error' });
+
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        const result = await banUser(request);
+        expect(result).toEqual({ err: { status: 400, message: "Username not found." } });
+
 
     })
     it('should return an error if the user is not a moderator', async () => {
@@ -386,6 +439,7 @@ describe("editBannedUser", () => {
         jest.resetAllMocks();
 
     });
+
     it('should return an error if the user is not authenticated', async () => {
         jest.resetAllMocks();
         const request = {
@@ -572,6 +626,70 @@ describe("editBannedUser", () => {
         expect(result).toEqual({ success: true });
 
     })
+    it('should error user not found ', async () => {
+        //reset the mocks 
+        jest.resetAllMocks();
+        const request = {
+            headers: {
+                authorization: 'Bearer token'
+            },
+            body: {
+                username: "user3",
+                community_name: "community1",
+                newDetails: {
+                    reason_for_ban: "reason",
+                    mod_note: "note",
+                    permanent_flag: "flag",
+                    note_for_ban_message: "message",
+                    banned_until: "until"
+
+                }
+
+
+            }
+        }
+        const mockCommunity = {
+            moderators: [{
+                username: "user1",
+                has_access: {
+                    everything: false,
+                    manage_users: false,
+
+                }
+            }],
+            name: "community1",
+            banned_users: [],
+            save: jest.fn()
+
+        }
+        const moderator =
+        {
+            username: "user1",
+            has_access: {
+                everything: true,
+                manage_users: true,
+            }
+        }
+        const banningUser = { username: "user3" }
+        const bannedUser = { username: "user5" }
+        User.findOne.mockResolvedValueOnce(null);
+        mockCommunity.moderators.some = jest.fn().mockReturnValue(true);
+
+        mockCommunity.moderators.find = jest.fn().mockReturnValue(moderator);
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: banningUser, status: 200, msg: 'error' });
+        // Mock communityNameExists to return an object with moderators
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        mockCommunity.banned_users.findIndex = jest.fn().mockReturnValue(1);
+        //        Object.assign(community.banned_users[bannedUserIndex], newDetails);
+        //mock object.assign 
+        Object.assign = jest.fn();
+
+        const result = await editBannedUser(request);
+        expect(result.err.status).toBe(400);
+        expect(result.err.message).toBe("Username not found.");
+
+    })
+
 
 })
 
@@ -1763,6 +1881,7 @@ describe('getEditableModerators', () => {
         expect(result.err.status).toEqual(400);
         expect(result.err.message).toEqual("User is not a moderator of the community.");
     })
+
     // it('should return the editable moderators', async () => {
     //     jest.resetAllMocks();
     //     const request = {
@@ -1822,5 +1941,694 @@ describe('getEditableModerators', () => {
     // })
 
 
+
+})
+//un approve user
+/*const unapproveUser = async (request) => {
+    try {
+        const {
+            success,
+            err,
+            status,
+            user: approvingUser,
+            msg,
+        } = await verifyAuthToken(request);
+        if (!approvingUser) {
+            return { success, err, status, approvingUser, msg };
+        }
+
+        const { username, community_name } = request.body;
+        const user_to_be_unapproved = await User.findOne({ username: username });
+        if (!user_to_be_unapproved) {
+            return { err: { status: 400, message: "Username not found." } };
+        }
+
+        const community = await communityNameExists(community_name);
+
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+        const moderators = community.moderators;
+        // search if  approvingUser username exists in moderators .username
+        const isModerator = moderators.some(
+            (moderator) => moderator.username === approvingUser.username
+        );
+        if (!isModerator) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not a moderator in this community",
+                },
+            };
+        }
+
+        //get the community.moderator object of the muting user
+        const moderator = community.moderators.find(
+            (moderator) => moderator.username === approvingUser.username
+        );
+        //check if moderator object is allowed to mute
+        if (
+            !moderator.has_access.everything &&
+            !moderator.has_access.manage_users
+        ) {
+            return {
+                err: {
+                    status: 400,
+                    message: "You are not allowed to unapprove users. permission denied",
+                },
+            };
+        }
+        // Check if user username  already exists in the approved_users array of the community
+        const isAlreadyApproved = isUserAlreadyApproved(
+            community,
+            user_to_be_unapproved.username
+        );
+        if (!isAlreadyApproved) {
+            return {
+                err: {
+                    status: 400,
+                    message: "User is not approved in this community.",
+                },
+            };
+        }
+        //get the approved_user object of the user to be unapproved
+        const approved_user = community.approved_users.find(
+            (user) => user.username === user_to_be_unapproved.username
+        );
+        //get the index of the approved_user object in the approved_users array
+        const index = community.approved_users.indexOf(approved_user);
+        //remove the approved_user object from the approved_users array
+        community.approved_users.splice(index, 1);
+        await community.save();
+        const message = new Message({
+            sender_id: approvingUser._id,
+            sender_via_id: community._id,
+            sender_type: "moderator",
+            receiver_id: approved_user._id,
+            receiver_type: "user",
+            message: "You are unapproved by the moderator " + approvingUser.username + " in the subreddit  r/" + community_name,
+            subject: "You are unapproved in the subreddit  /r/ " + community_name,
+        });
+        await message.save();
+
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}; */
+describe('unapproveUser', () => {
+    it('should return an error if the user is not authenticated', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: false, err: { status: 400, message: "Invalid token." } });
+        const result = await unapproveUser(request);
+        expect(result).toEqual({ success: false, err: { status: 400, message: "Invalid token." } });
+    })
+
+    it('should return an error if the user to be unapproved is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce(null);
+        const result = await unapproveUser(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Username not found.");
+    })
+
+    it('should return an error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(null);
+        const result = await unapproveUser(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Community not found.");
+    })
+
+    it('should return an error if the user is not a moderator in the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "moderator2"
+                }
+            ]
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        const result = await unapproveUser(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("You are not a moderator in this community");
+    })
+
+    it('should return an error if the user is not allowed to unapprove users', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "moderator1",
+                    has_access: {
+                        everything: false,
+                        manage_users: false
+                    }
+                }
+            ]
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        const result = await unapproveUser(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("You are not allowed to unapprove users. permission denied");
+    })
+    it('should return an error if the user is not approved in the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "moderator1",
+                    has_access: {
+                        everything: true,
+                        manage_users: true
+                    }
+                }
+            ],
+            approved_users: []
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        const result = await unapproveUser(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User is not approved in this community.");
+    })
+    //server error 500 
+    it('should return an error if there is a server error', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1"
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "moderator1",
+                    has_access: {
+                        everything: true,
+                        manage_users: true
+                    }
+                }
+            ],
+            approved_users: [
+                {
+                    username: "user1"
+                }
+            ]
+        }
+        //verify auth token throw error 
+        verifyAuthToken.mockImplementationOnce(() => {
+            throw new Error('error');
+        });
+        const result = await unapproveUser(request);
+
+        expect(result.err.status).toEqual(500);
+
+    })
+})
+
+describe('addModerator', () => {
+
+    it('should return an error if the user is already a moderator in the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1",
+                has_access: {
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
+                }
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "user1"
+                }
+            ]
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        const result = await addModerator(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User is already a moderator of the community.");
+    })
+
+    it('should return an error if the user is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1",
+                has_access: {
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
+                }
+            }
+        }
+        communityNameExists.mockResolvedValueOnce({ moderators: [] });
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce(null);
+        const result = await addModerator(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User not found.");
+    })
+    it('should return an error if the community is not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1",
+                has_access: {
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
+                }
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(null);
+        const result = await addModerator(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Community not found.");
+    })
+
+
+
+    it('should return an error if the user is already a moderator in the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1",
+                has_access: {
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
+                }
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "user1"
+                }
+            ]
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        mockCommunity.moderators.find = jest.fn().mockReturnValueOnce({ username: "user1", pending_flag: false });
+        const result = await addModerator(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User is already a moderator of the community.");
+    })
+    it('should return an error if the user is already invited to be a moderator in the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                username: "user1",
+                community_name: "community1",
+                has_access: {
+                    everything: true,
+                    manage_users: true,
+                    manage_settings: true,
+                    manage_posts_and_comments: true
+                }
+            }
+        }
+        const mockCommunity = {
+            moderators: [
+                {
+                    username: "user2",
+                    pending_flag: true
+                }
+            ]
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        communityNameExists.mockResolvedValueOnce(mockCommunity);
+        mockCommunity.moderators.find = jest.fn().mockReturnValueOnce({ username: "user1", pending_flag: true });
+
+        const result = await addModerator(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("An invitation was already sent to this user .");
+    })
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockRejectedValueOnce(new Error("An error occurred"));
+
+        // Execute the function and capture the result
+        const result = await addModerator(request);
+
+
+        expect(result.err.status).toBe(500);
+
+    })
+
+
+
+})
+/*const acceptModeratorInvitation = async (request) => {
+    try {
+        const { success, err, status, user: acceptingModerator, msg } = await verifyAuthToken(request);
+        if (!acceptingModerator) {
+            return { err: { status: status, message: msg } };
+        }
+        const { _id: message_id } = request.body;
+        const invitation = await Message.findOne({
+            _id: message_id
+        })
+        console.log("invitation: ", invitation);
+        if (!invitation) {
+            return { err: { status: 400, message: "Invitation with this id not found." } };
+ 
+        }
+ 
+        const community = await Community.findOne({
+            _id: invitation.sender_via_id
+        })
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+ 
+        const index = community.moderators.findIndex((moderator) => moderator.username === acceptingModerator.username);
+        if (index === -1) {
+            return { err: { status: 400, message: "error ,can't accept invitation , could find the invitation in the db " } };
+        }
+        community.moderators[index].pending_flag = false;
+        await community.save();
+        acceptingModerator.moderated_communities.push({
+            id: community._id,
+            favorite_flag: false,
+        });
+        await acceptingModerator.save();
+ 
+ 
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+} */
+describe('acceptModeratorInvitation', () => {
+    // Test case 1 return error 500 
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                _id: "message1"
+            }
+        }
+        verifyAuthToken.mockRejectedValueOnce(new Error("An error occurred"));
+        const result = await acceptModeratorInvitation(request);
+        expect(result.err.status).toEqual(500);
+    })
+    // Test case 2 return error 400 if user not auth 
+    it('should return an error if the user is not authenticated', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                _id: "message1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: false, err: null, status: 401, msg: "User not authenticated" });
+        const result = await acceptModeratorInvitation(request);
+        expect(result.err.status).toEqual(401);
+    })
+    //test case 3 return error 400 if community not found 
+    it('should return an error if the message not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                _id: "message1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        Message.findOne.mockResolvedValueOnce(null);
+        const result = await acceptModeratorInvitation(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Invitation with this id not found.");
+    })
+    //test case 4 return error 400 if community not found 
+    it('should return an error if the community not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                _id: "message1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "moderator1" } });
+        Message.findOne.mockResolvedValueOnce({ sender_via_id: "community1" });
+        Community.findOne.mockResolvedValueOnce(null);
+        const result = await acceptModeratorInvitation(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Community not found.");
+    })
+
+
+
+})
+/*const deleteModerator = async (requestBody) => {
+    try {
+        const { community_name, username } = requestBody;
+ 
+        // Find the community by name
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+ 
+        // Find the user by username
+        const user = await User.findOne({ username });
+        if (!user) {
+            return { err: { status: 400, message: "User not found." } };
+        }
+ 
+        // Check if the user is a moderator of the community
+        const moderatorIndex = community.moderators.findIndex(
+            (moderator) => moderator.username == user.username
+        );
+        if (moderatorIndex === -1) {
+            return {
+                err: {
+                    status: 400,
+                    message: "User is not a moderator of the community.",
+                },
+            };
+        }
+ 
+        // Remove the user from the moderators array
+        community.moderators.splice(moderatorIndex, 1);
+ 
+        user.moderated_communities = user.moderated_communities.filter(
+            (moderated_community) => (moderated_community.id).toString() != community._id.toString()
+        )
+        await user.save();
+ 
+        // Save the updated community
+        await community.save();
+ 
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}; */
+describe('deleteModerator', () => {
+    // Test case 1 return error 500 
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: "community1",
+            username: "user1"
+        }
+        communityNameExists.mockRejectedValueOnce(new Error("An error occurred"));
+        const result = await deleteModerator(requestBody);
+        expect(result.err.status).toEqual(500);
+    })
+    // Test case 2 return error 400 if community not found 
+    it('should return an error if the community not found', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: "community1",
+            username: "user1"
+        }
+        communityNameExists.mockResolvedValueOnce(null);
+        const result = await deleteModerator(requestBody);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Community not found.");
+    })
+    // Test case 3 return error 400 if user not found 
+    it('should return an error if the user not found', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: "community1",
+            username: "user1"
+        }
+        communityNameExists.mockResolvedValueOnce({ _id: "community1" });
+        User.findOne.mockResolvedValueOnce(null);
+        const result = await deleteModerator(requestBody);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User not found.");
+    })
+    // Test case 4 return error 400 if user is not a moderator 
+    it('should return an error if the user is not a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const requestBody = {
+            community_name: "community1",
+            username: "user1"
+        }
+        communityNameExists.mockResolvedValueOnce({ _id: "community1", moderators: [] });
+        User.findOne.mockResolvedValueOnce({ username: "user1" });
+        const result = await deleteModerator(requestBody);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User is not a moderator of the community.");
+    })
+
+})
+/*const moderatorLeaveCommunity = async (request) => {
+    //use verify token to get the username
+ 
+    const { success, err, status, user, msg } = await verifyAuthToken(request);
+    if (!user) {
+        //return error in auth token
+        return { err: { status: status, message: msg } };
+    }
+    const { community_name } = request.body;
+ 
+    const { username } = user;
+    try {
+        const community = await communityNameExists(community_name);
+        if (!community) {
+            return { err: { status: 400, message: "Community not found." } };
+        }
+        const moderatorIndex = community.moderators.findIndex(moderator => moderator.username == (username));
+        if (moderatorIndex === -1) {
+            return { err: { status: 400, message: "User is not a moderator of the community." } };
+        }
+        community.moderators.splice(moderatorIndex, 1);
+        await community.save();
+        user.moderated_communities = user.moderated_communities.filter(
+            (moderated_community) => (moderated_community.id).toString() != community._id.toString()
+        )
+        user.save();
+        return { success: true };
+    }
+    catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+}
+  */
+describe('moderatorLeaveCommunity', () => {
+    // Test case 1 return error 400 if community not found 
+    it('should return an error if the community not found', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "user1" } });
+        communityNameExists.mockResolvedValueOnce(null);
+        const result = await moderatorLeaveCommunity(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("Community not found.");
+    })
+    //not authenticaed 
+    it('should return an error if the user is not authenticated', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: false, err: null, status: 401, user: null });
+        const result = await moderatorLeaveCommunity(request);
+        expect(result.err.status).toEqual(401);
+    })
+    // // Test case 2 return error 400 if user is not a moderator 
+    it('should return an error if the user is not a moderator of the community', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: "community1"
+            }
+        }
+        communityNameExists.mockResolvedValueOnce({ _id: "community1", moderators: [] });
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "user1" } });
+        const result = await moderatorLeaveCommunity(request);
+        expect(result.err.status).toEqual(400);
+        expect(result.err.message).toEqual("User is not a moderator of the community.");
+    })
+    // // Test case 3 return error 500 
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            body: {
+                community_name: "community1"
+            }
+        }
+        verifyAuthToken.mockResolvedValueOnce({ success: true, err: null, status: 200, user: { username: "user1" } });
+        communityNameExists.mockRejectedValueOnce(new Error("An error occurred"));
+        const result = await moderatorLeaveCommunity(request);
+        expect(result.err.status).toEqual(500);
+    })
 
 })

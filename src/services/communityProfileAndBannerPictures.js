@@ -42,7 +42,7 @@ const addCommunityProfilePicture = async (requestBody) => {
         community.profile_picture = profile_picture;
         const savedCommunity = await community.save();
 
-        console.log(savedCommunity);
+
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -82,7 +82,7 @@ const deleteCommunityProfilePicture = async (requestBody) => {
         community.profile_picture = "";
         const savedCommunity = await community.save();
 
-        console.log(savedCommunity);
+
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -163,7 +163,7 @@ const deleteCommunityBannerPicture = async (requestBody) => {
         community.banner_picture = "";
         const savedCommunity = await community.save();
 
-        console.log(savedCommunity);
+
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
