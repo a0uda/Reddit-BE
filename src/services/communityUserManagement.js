@@ -521,7 +521,7 @@ const muteUser = async (request) => {
  * }
  *
  * @returns {Object}
- */ 
+ */
 const getMutedUsers = async (community_name, pageNumber, pageSizeNumber) => {
     try {
         const community = await communityNameExists(community_name);
@@ -1320,6 +1320,7 @@ const moderatorLeaveCommunity = async (request) => {
         user.moderated_communities = user.moderated_communities.filter(
             (moderated_community) => (moderated_community.id).toString() != community._id.toString()
         )
+        user.save();
         return { success: true };
     }
     catch (error) {
