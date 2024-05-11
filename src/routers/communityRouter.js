@@ -114,7 +114,7 @@ const communityRouter = express.Router();
 communityRouter.post("/communities/add-community", addNewCommunityController);
 communityRouter.get("/communities/get-community-names", protectRoute, getCommunityNamesController);
 communityRouter.get("/communities/get-community-names-by-popularity", getCommunityNamesByPopularityController);
-communityRouter.get("/communities/get-visible-posts/:community_name", protectRoute, getVisiblePostsController);
+communityRouter.get("/communities/get-visible-posts/:community_name", getVisiblePostsController);
 
 //////////////////////////////////////////////////////////////////////// Get & Change Settings //////////////////////////////////////////////////////////////
 // Unit Tests Coverage      ==> 100%
