@@ -479,77 +479,87 @@ const getCommunityNamesByPopularity = async () => {
 
 const getVisiblePosts = async (community, user, sortBy, page, limit) => {
   try {
-    const username = user.username;
-    const userId = user._id;
+    if (user) {
+      // There are some checks that are only done if the community is being viewed by a logged in user.
+      const community_name = community.name;
 
-    const community_name = community.name;
+      const username = user.username;
+      const userId = user._id;
 
-    // If the community is restricted, posts are only visible to approved users.
-    const userIsApproved =
-      community.general_settings.type === "Restricted"
-        ? community.approved_users.some((user) => user.username === username)
-        : true;
+      // If the community is restricted, posts are only visible to approved users.
+      const userIsApproved =
+        community.general_settings.type === "Restricted"
+          ? community.approved_users.some((user) => user.username === username)
+          : true;
 
-    if (!userIsApproved) {
-      return {
-        err: {
-          status: 400,
-          message: "The community is restricted and the user is not approved.",
-        },
-      };
+      if (!userIsApproved) { return { err: { status: 400, message: "The community is restricted and the user is not approved." } } }
+
+      // If the user is banned from the community, they should not see any posts.
+      const userIsBanned = community.banned_users.some((user) => user.username === username);
+
+      if (userIsBanned) { return { err: { status: 400, message: "The user is banned from this community." } } }
+
+      // Get sort criteria.
+      const sortCriteria = getSortCriteria(sortBy);
+
+      // Find all posts in the community that follow these conditions.
+      const posts = await Post.find({
+        community_name: community_name,
+        "community_moderator_details.reported.flag": false,
+        "community_moderator_details.spammed.flag": false,
+        "community_moderator_details.removed.flag": false,
+      })
+        .sort(sortCriteria)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      // Validate that the author of the post has not blocked the user browsing the community and vice versa.
+      const visiblePosts = posts.filter(async (post) => {
+        const browsingUser = await User.findById(userId);
+
+        const author = await User.findOne({ username: post.username });
+
+        const authorBlockedBrowsingUser =
+          author.safety_and_privacy_settings.blocked_users.some(
+            (user) => user.id.toString() == userId.toString()
+          );
+        const browsingUserBlockedAuthor =
+          browsingUser.safety_and_privacy_settings.blocked_users.some(
+            (user) => user.id.toString() == post.user_id.toString()
+          );
+
+        const someoneIsBlocked =
+          authorBlockedBrowsingUser || browsingUserBlockedAuthor;
+
+        return !someoneIsBlocked;
+      });
+
+      return { visiblePosts };
     }
 
-    // If the user is banned from the community, they should not see any posts.
-    const userIsBanned = community.banned_users.some(
-      (user) => user.username === username
-    );
+    if (!user) {
+      // If the user is not logged in, they can only see posts that are not removed, reported, or spammed, and are not in a restricted community.
+      
+      // Restricted community check
+      if (community.general_settings.type === "Restricted") {
+        return { err: { status: 400, message: "The community is restricted and the user is not logged in." } }
+      }
 
-    if (userIsBanned) {
-      return {
-        err: {
-          status: 400,
-          message: "The user is banned from this community.",
-        },
-      };
+      // Get sort criteria.
+      const sortCriteria = getSortCriteria(sortBy);
+
+      const posts = await Post.find({
+        community_name: community.name,
+        "community_moderator_details.reported.flag": false,
+        "community_moderator_details.spammed.flag": false,
+        "community_moderator_details.removed.flag": false,
+      })
+        .sort(sortCriteria)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      return { visiblePosts: posts };
     }
-
-    // Get sort criteria.
-    const sortCriteria = getSortCriteria(sortBy);
-
-    // Find all posts in the community that follow these conditions.
-    const posts = await Post.find({
-      community_name: community_name,
-      "community_moderator_details.reported.flag": false,
-      "community_moderator_details.spammed.flag": false,
-      "community_moderator_details.removed.flag": false,
-    })
-      .sort(sortCriteria)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    console.log(posts);
-    // Validate that the author of the post has not blocked the user browsing the community and vice versa.
-    const visiblePosts = posts.filter(async (post) => {
-      const browsingUser = await User.findById(userId);
-
-      const author = await User.findOne({ username: post.username });
-
-      const authorBlockedBrowsingUser =
-        author.safety_and_privacy_settings.blocked_users.some(
-          (user) => user.id.toString() == userId.toString()
-        );
-      const browsingUserBlockedAuthor =
-        browsingUser.safety_and_privacy_settings.blocked_users.some(
-          (user) => user.id.toString() == post.user_id.toString()
-        );
-
-      const someoneIsBlocked =
-        authorBlockedBrowsingUser || browsingUserBlockedAuthor;
-
-      return !someoneIsBlocked;
-    });
-
-    return { visiblePosts };
   } catch (error) {
     return { err: { status: 500, message: error.message } };
   }
