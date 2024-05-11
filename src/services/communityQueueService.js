@@ -1,3 +1,7 @@
+/**
+ * @module community/queue/service
+ */
+
 import { Post } from '../db/models/Post.js';
 import { Comment } from '../db/models/Comment.js';
 import { Community } from '../db/models/Community.js';
@@ -10,18 +14,13 @@ import { Community } from '../db/models/Community.js';
  * @param {string} item_id - The UUID of the item to be objected.
  * @param {string} item_type - The type of the item. Can be either 'post' or 'comment'.
  * @param {string} objection_type - The type of the objection. Can be either 'reported', 'spammed', or 'removed'.
- * @param {string} objected_by - The UUID of the user who is objecting the item. This is a reference to a User object.
+ * @param {string} objected_by - The user who is objecting the item. This user must be a moderator of the community.
  * @param {string} objection_type_value - The reason for the objection. Must be a valid reason based on the objection type.
  * @param {string} community_name - The name of the community where the item is posted.
  *
  * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
  *
  * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
- *
- * @example
- * objectItem('123e4567-e89b-12d3-a456-426614174000', 'post', 'reported', '123e4567-e89b-12d3-a456-426614174000', 'Harassment', 'community1')
- *     .then(result => console.log(result))
- *     .catch(err => console.error(err));
  */
 
 const objectItem = async (item_id, item_type, objection_type, objected_by, objection_type_value, community_name) => {
@@ -107,6 +106,19 @@ const objectItem = async (item_id, item_type, objection_type, objected_by, objec
     }
 };
 
+/**
+ * Edits an item (post or comment) by updating its content in the database.
+ *
+ * @param {string} item_id - The UUID of the item to be edited.
+ * @param {string} item_type - The type of the item. Can be either 'post' or 'comment'.
+ * @param {string} new_content - The new content for the item. Must be a string.
+ * @param {Object} editing_user - The user who is editing the item. This user must be the author of the item.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const editItem = async (item_id, item_type, new_content, editing_user) => {
     try {
         // Determine the model based on the item_type
@@ -157,6 +169,20 @@ const editItem = async (item_id, item_type, new_content, editing_user) => {
 };
 
 //////////////////////////////////////////////////////////////////////////// Handlers ////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Handles an objection on an item (post or comment) by either approving or removing it.
+ *
+ * @param {string} item_id - The UUID of the item to handle the objection on.
+ * @param {string} item_type - The type of the item. Can be either 'post' or 'comment'.
+ * @param {string} objection_type - The type of the objection. Can be either 'reported', 'spammed', or 'removed'.
+ * @param {string} action - The action to take on the objection. Can be either 'approve' or 'remove'.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const handleObjection = async (item_id, item_type, objection_type, action) => {
     try {
         // Determine the model based on the item_type
@@ -220,6 +246,18 @@ const handleObjection = async (item_id, item_type, objection_type, action) => {
     }
 };
 
+/**
+ * Handles an edit on an item (post or comment) by either approving or removing it.
+ *
+ * @param {string} item_id - The UUID of the item to handle the edit on.
+ * @param {string} item_type - The type of the item. Can be either 'post' or 'comment'.
+ * @param {string} action - The action to take on the edit. Can be either 'approve' or 'remove'.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const handleEdit = async (item_id, item_type, action) => {
     // Determine the model based on the item_type
     const Model = item_type === 'post' ? Post : Comment;
@@ -266,6 +304,19 @@ const handleEdit = async (item_id, item_type, action) => {
 
     return { message: `Edit ${action}d successfully` };
 };
+
+/**
+ * Handles an unmoderated item (post or comment) by either approving or removing it.
+ *
+ * @param {string} itemId - The UUID of the item to handle.
+ * @param {string} itemType - The type of the item. Can be either 'post' or 'comment'.
+ * @param {string} userId - The UUID of the user performing the action.
+ * @param {string} action - The action to take on the item. Can be either 'approve' or 'remove'.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a message indicating the success. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
     try {
@@ -314,6 +365,22 @@ const handleUnmoderatedItem = async (itemId, itemType, userId, action) => {
 };
 
 //////////////////////////////////////////////////////////////////////////// Pages ////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Fetches items (posts or comments) from a specified queue of a community.
+ *
+ * @param {string} time_filter - The order in which to return the items. Can be either 'newest first' or 'oldest first'.
+ * @param {string} posts_or_comments - The type of items to return. Can be either 'posts', 'comments', or 'posts and comments'.
+ * @param {string} queue_type - The type of queue from which to fetch the items. Can be either 'reported', 'removed', 'unmoderated' or 'edited'.
+ * @param {string} community_name - The name of the community from which to fetch the items.
+ * @param {Object} authenticated_user - The user who is fetching the items. This user must be a moderator of the community.
+ * @param {number} page - The page number to return in the pagination.
+ * @param {number} limit - The number of items to return per page.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains an 'items' property with the fetched items. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const getItemsFromQueue = async (time_filter, posts_or_comments, queue_type, community_name, authenticated_user, page, limit) => {
     try {

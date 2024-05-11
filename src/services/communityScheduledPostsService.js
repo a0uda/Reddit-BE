@@ -1,3 +1,7 @@
+/**
+ * @module community/scheduled-posts/service
+ */
+
 // TODO: Scheduled posts appear in the unmoderated queue.
 import { Post } from "../db/models/Post.js";
 import { scheduledPost } from "../db/models/scheduledPosts.js";
@@ -13,6 +17,17 @@ import { getCommunityGeneralSettings } from "./communitySettingsService.js";
 
 import schedule from "node-schedule";
 
+/**
+ * Saves a post for future scheduling.
+ *
+ * @param {Object} scheduling_details - The details for when the post should be scheduled.
+ * @param {Object} postInput - The input for the post. This object should contain the necessary attributes for a post.
+ * @param {Object} user - The user who is creating the post.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'saved_post_id' property with the id of the saved post. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const savePostForScheduling = async (scheduling_details, postInput, user) => {
     // Check that the input to create the new post is valid.
@@ -96,6 +111,16 @@ const savePostForScheduling = async (scheduling_details, postInput, user) => {
     return { saved_post_id: savedPost._id };
 }
 
+/**
+ * Posts a scheduled post immediately and removes it from the scheduled posts if it is not recurring.
+ *
+ * @param {string} post_id - The id of the scheduled post to post.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'successMessage' property with a success message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const postScheduledPost = async (post_id) => {
     // Find the scheduled post with the given post id.
 
@@ -137,6 +162,14 @@ const postScheduledPost = async (post_id) => {
     return { successMessage: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
 }
 
+/**
+ * Retrieves all scheduled posts for a given community and separates them into recurring and non-recurring posts.
+ *
+ * @param {string} community_name - The name of the community for which to retrieve the scheduled posts.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. The object contains two properties: 'recurring_posts' and 'non_recurring_posts'. Each property is an array of posts.
+ */
+
 const getScheduledPosts = async (community_name) => {
 
     // Find all the scheduled posts in the database excluding the 'moderator_details' field.
@@ -149,6 +182,17 @@ const getScheduledPosts = async (community_name) => {
     // Return the recurring and non-recurring posts.
     return { recurring_posts, non_recurring_posts };
 }
+
+/**
+ * Edits the description of a scheduled post.
+ *
+ * @param {string} post_id - The id of the scheduled post to edit.
+ * @param {string} new_description - The new description for the scheduled post.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains an 'edited_post' property with the edited post. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const editScheduledPost = async (post_id, new_description) => {
     try {
@@ -178,6 +222,16 @@ const editScheduledPost = async (post_id, new_description) => {
         return { err: { status: 500, message: error.message } };
     }
 }
+
+/**
+ * Submits a scheduled post immediately and removes it from the scheduled posts if it is not recurring.
+ *
+ * @param {string} post_id - The id of the scheduled post to submit.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'message' property with a success message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 // submitScheduledPost can only be called with an id of a post from those in the scheduledPosts table and that are non recurring.
 // it should delete the post from the scheduledPosts table and post it to the posts table.
@@ -225,6 +279,16 @@ const submitScheduledPost = async (post_id) => {
     // Return a success message.
     return { message: `Post with title ${post.title} posted successfully on ${post.created_at}!` };
 }
+
+/**
+ * Cancels a scheduled post and removes it from the scheduled posts.
+ *
+ * @param {string} post_id - The id of the scheduled post to cancel.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'message' property with a success message. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const cancelScheduledPost = async (post_id) => {
     // Find the scheduled post with the given post id.
