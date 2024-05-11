@@ -1,3 +1,6 @@
+/**
+ * @module community/services/communityService
+ */
 import mongoose from "mongoose";
 
 import { Community } from "../db/models/Community.js";
@@ -294,7 +297,7 @@ const getDetailsWidget = async (community_name) => {
  * @property {String} currently_viewing_nickname
  * @property {String} description
  *
- * @returns
+ * @returns {Object}
  * {
  * success: true
  * }

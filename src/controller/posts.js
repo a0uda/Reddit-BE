@@ -1,3 +1,7 @@
+/**
+ * @module posts/controller
+ */
+
 import { Post } from "../db/models/Post.js";
 import { Comment } from "../db/models/Comment.js";
 import { User } from "../db/models/User.js";
@@ -23,6 +27,18 @@ import { generateResponse } from "../utils/generalUtils.js";
 import { pushNotification } from "./notifications.js";
 import { getCommentsHelper } from "../services/users.js";
 
+
+/**
+ * Creates a new post based on the provided request.
+ *
+ * @param {Object} request - The HTTP request object containing the post details.
+ * @returns {Object} An object indicating the outcome of creating the post.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ *   - message {string} - A message describing the outcome of the operation.
+ */
 export async function createPost(request) {
   const { success, err, status, user, msg } = await verifyAuthToken(request);
   if (!user) {
@@ -150,6 +166,17 @@ export async function createPost(request) {
   };
 }
 
+/**
+ * Shares a post by creating a new reposted post based on the provided request.
+ *
+ * @param {Object} request - The HTTP request object containing the post details.
+ * @returns {Object} An object indicating the outcome of sharing the post.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ *   - message {string} - A message describing the outcome of the operation.
+ */
 export async function sharePost(request) {
   try {
     const { success, error, post, user, message } = await getPost(
@@ -297,6 +324,21 @@ export async function sharePost(request) {
   }
 }
 
+/**
+ * Retrieves a post based on the provided request, optionally verifying the user.
+ *
+ * @param {Object} request - The HTTP request object containing the post ID.
+ * @param {boolean} verifyUser - A flag indicating whether to verify the user.
+ * @returns {Object} An object indicating the outcome of retrieving the post.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - post {Object} - The retrieved post object.
+ *   - user {Object} - The authenticated user object (if `verifyUser` is `true`).
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ *   - message {string} - A message describing the outcome of the operation.
+ */
+
 export async function getPost(request, verifyUser) {
   try {
     let user;
@@ -348,6 +390,18 @@ export async function getPost(request, verifyUser) {
   }
 }
 
+/**
+ * Retrieves comments associated with a specific post.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post.
+ * @returns {Object} An object indicating the outcome of retrieving the comments.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - comments {Array} - An array of comment objects associated with the post.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function getPostComments(request) {
   try {
     const { success, error, post, message } = await getPost(request, false);
@@ -383,6 +437,18 @@ export async function getPostComments(request) {
   }
 }
 
+/**
+ * Retrieves the views count for a specific post.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post.
+ * @returns {Object} An object indicating the outcome of retrieving the views count.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - views_count {number} - The number of views for the post.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function getViewsCount(request) {
   try {
     const { success, error, post, message } = await getPost(request, false);
@@ -403,6 +469,17 @@ export async function getViewsCount(request) {
   }
 }
 
+/**
+ * Toggles the NSFW (Not Safe For Work) flag for a specific post.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post.
+ * @returns {Object} An object indicating the outcome of updating the NSFW flag.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function marknsfw(request) {
   try {
     const { success, error, post, message } = await getPost(request, true);
@@ -425,6 +502,17 @@ export async function marknsfw(request) {
   }
 }
 
+/**
+ * Toggles the allow replies flag for a specific post, enabling or disabling replies.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post.
+ * @returns {Object} An object indicating the outcome of updating the allow replies flag.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function allowReplies(request) {
   try {
     const { success, error, post, message } = await getPost(request, true);
@@ -449,6 +537,17 @@ export async function allowReplies(request) {
   }
 }
 
+/**
+ * Sets the suggested sort option for a specific post.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post and the suggested sort option.
+ * @returns {Object} An object indicating the outcome of updating the suggested sort option.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function setSuggestedSort(request) {
   try {
     const { success, error, post, message } = await getPost(request, true);
@@ -950,6 +1049,17 @@ export async function postDelete(request) {
   }
 }
 
+/**
+ * Allows a user to vote on a poll associated with a specific post.
+ *
+ * @param {Object} request - The HTTP request object containing details about the post and the vote option.
+ * @returns {Object} An object indicating the outcome of the voting operation.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function pollVote(request) {
   try {
     const { success, error, post, user, message } = await getPost(
@@ -1003,6 +1113,17 @@ export async function pollVote(request) {
   }
 }
 
+/**
+ * Fetches the top trending posts based on the number of occurrences of post titles among posts of type "image_and_videos" with valid images.
+ *
+ * @param {Object} request - The HTTP request object (not used in the function).
+ * @returns {Object} An object containing the top trending posts.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - posts {Array} - An array of trending posts.
+ *   - error {Object} - An object containing error details if the operation failed.
+ *     - status {number} - The HTTP status code indicating the error.
+ *     - message {string} - A descriptive message of the error.
+ */
 export async function getTrendingPosts(request) {
   try {
     const postsTitles = await Post.aggregate([

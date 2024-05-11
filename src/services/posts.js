@@ -1,3 +1,6 @@
+/**
+ * @module posts/services
+ */
 import { communityNameExists } from "../utils/communities.js";
 import {
   getCommunityGeneralSettings,
@@ -7,6 +10,42 @@ import {
 import { Post } from "../db/models/Post.js";
 import mongoose from "mongoose";
 
+/**
+ * Helper function to validate input parameters for creating a new post.
+ *
+ * @param {Object} requestBody - The request body containing post creation parameters.
+ * @param {String} requestBody.title - The title of the post.
+ * @param {Boolean} requestBody.post_in_community_flag - Flag indicating whether the post is in a community.
+ * @param {String} requestBody.type - The type of post ('image_and_videos', 'polls', 'url', 'text', 'hybrid').
+ * @param {Array<Object>} requestBody.images - Array of image objects for image_and_videos type.
+ * @param {Array<Object>} requestBody.videos - Array of video objects for image_and_videos type.
+ * @param {String} requestBody.link_url - URL for url type post.
+ * @param {Array<String>} requestBody.polls - Array of options for polls type post.
+ * @param {Number} requestBody.polls_voting_length - Length of time (in days) for polls type post.
+ * @param {String} requestBody.community_name - Name of the community for community-specific posts.
+ * 
+ * @returns {Object} An object containing a result flag and optional message:
+ *   - {Boolean} result: Indicates whether the input parameters are valid (true) or not (false).
+ *   - {String} [message]: Optional message indicating the reason for validation failure.
+ * 
+ * @example
+ * // Example usage of checkNewPostInput function
+ * const requestBody = {
+ *   title: "Exciting News!",
+ *   post_in_community_flag: true,
+ *   type: "image_and_videos",
+ *   images: [{ path: "image1.jpg" }, { path: "image2.jpg" }],
+ *   videos: [{ path: "video1.mp4" }],
+ *   community_name: "community1",
+ * };
+ * 
+ * const validation = await checkNewPostInput(requestBody);
+ * if (validation.result) {
+ *   console.log("Input parameters are valid. Proceed to create the post.");
+ * } else {
+ *   console.error("Invalid input parameters:", validation.message);
+ * }
+ */
 export async function checkNewPostInput(requestBody) {
   const {
     title,
@@ -96,6 +135,28 @@ export async function checkNewPostInput(requestBody) {
   };
 }
 
+/**
+ * Retrieve a community by its name.
+ *
+ * @param {String} community_name - The name of the community to retrieve.
+ * 
+ * @returns {Object} An object containing the result of the operation:
+ *   - {Boolean} success: Indicates whether the operation was successful (`true`) or not (`false`).
+ *   - {Object} [community]: The community object if found (only present if `success` is `true`).
+ *   - {Object} [error]: The error details if the community is not found (only present if `success` is `false`).
+ *     - {Number} status: The HTTP status code indicating the error (e.g., 404 for "Community not found").
+ *     - {String} message: A descriptive error message indicating the reason for failure.
+ * 
+ * @example
+ * // Example usage of getCommunity function
+ * const communityName = "community1";
+ * const result = await getCommunity(communityName);
+ * if (result.success) {
+ *   console.log("Community found:", result.community);
+ * } else {
+ *   console.error("Failed to retrieve community:", result.error.message);
+ * }
+ */
 export async function getCommunity(community_name) {
   const community = await communityNameExists(community_name);
   if (!community) {
@@ -113,6 +174,34 @@ export async function getCommunity(community_name) {
   };
 }
 
+/**
+ * Check if a user is banned from performing actions within a community.
+ *
+ * @param {Object} community - The community object containing information about banned users.
+ * @param {String} username - The username of the user to check for ban status.
+ * 
+ * @returns {Object} An object indicating the result of the ban check:
+ *   - {Boolean} success: Indicates whether the user is allowed to perform actions (`true`) or not (`false`).
+ *   - {Object} [error]: The error details if the user is banned (only present if `success` is `false`).
+ *     - {Number} status: The HTTP status code indicating the error (e.g., 400 for "User is banned").
+ *     - {String} message: A descriptive error message indicating the reason for the ban.
+ * 
+ * @example
+ * // Example usage of checkBannedUser function
+ * const community = {
+ *   banned_users: [
+ *     { username: "user1" },
+ *     { username: "user2" }
+ *   ]
+ * };
+ * const username = "user1";
+ * const result = await checkBannedUser(community, username);
+ * if (result.success) {
+ *   console.log("User is not banned. Allow action.");
+ * } else {
+ *   console.error("User is banned:", result.error.message);
+ * }
+ */
 export async function checkBannedUser(community, username) {
   const isBannedUser = community.banned_users.find(
     (userBanned) => userBanned.username == username
@@ -131,6 +220,34 @@ export async function checkBannedUser(community, username) {
   };
 }
 
+/**
+ * Check if a user is approved to perform actions within a community.
+ *
+ * @param {Object} community - The community object containing information about approved users.
+ * @param {String} username - The username of the user to check for approval status.
+ * 
+ * @returns {Object} An object indicating the result of the approval check:
+ *   - {Boolean} success: Indicates whether the user is allowed to perform actions (`true`) or not (`false`).
+ *   - {Object} [error]: The error details if the user is not approved (only present if `success` is `false`).
+ *     - {Number} status: The HTTP status code indicating the error (e.g., 400 for "User is not approved").
+ *     - {String} message: A descriptive error message indicating the reason for the approval check failure.
+ * 
+ * @example
+ * // Example usage of checkApprovedUser function
+ * const community = {
+ *   approved_users: [
+ *     { username: "user1" },
+ *     { username: "user2" }
+ *   ]
+ * };
+ * const username = "user1";
+ * const result = await checkApprovedUser(community, username);
+ * if (result.success) {
+ *   console.log("User is approved. Allow action.");
+ * } else {
+ *   console.error("User is not approved:", result.error.message);
+ * }
+ */
 export async function checkApprovedUser(community, username) {
   const isApprovedUser = community.approved_users.find(
     (userApproved) => userApproved.username == username
@@ -150,6 +267,34 @@ export async function checkApprovedUser(community, username) {
   };
 }
 
+/**
+ * Check post settings against community-specific rules to determine if the post is allowed.
+ *
+ * @param {Object} post - The post object containing details of the post to be validated.
+ * @param {String} community_name - The name of the community to which the post belongs.
+ * 
+ * @returns {Object} An object indicating the result of the post validation:
+ *   - {Boolean} success: Indicates whether the post settings are valid (`true`) or not (`false`).
+ *   - {Object} [error]: The error details if the post settings violate community rules (only present if `success` is `false`).
+ *     - {Number} status: The HTTP status code indicating the error (e.g., 400 for "Community rules violation").
+ *     - {String} message: A descriptive error message indicating the reason for the validation failure.
+ * 
+ * @example
+ * // Example usage of checkPostSettings function
+ * const post = {
+ *   type: "image_and_videos",
+ *   polls: [],
+ *   images: [{ path: "image1.jpg" }, { path: "image2.jpg" }],
+ *   videos: []
+ * };
+ * const communityName = "community1";
+ * const result = await checkPostSettings(post, communityName);
+ * if (result.success) {
+ *   console.log("Post settings are valid. Allow posting.");
+ * } else {
+ *   console.error("Post settings are not valid:", result.error.message);
+ * }
+ */
 export async function checkPostSettings(post, community_name) {
   const { err: err2, posts_and_comments } = await getCommunityPostsAndComments(
     community_name
@@ -159,14 +304,16 @@ export async function checkPostSettings(post, community_name) {
   }
   const type = post.type;
   const allowType = posts_and_comments.posts.post_type_options;
-  const allowPolls = posts_and_comments.posts.allow_polls_posts;
+  const allowPolls = posts_and_comments.posts.allow_polls;
+  const allowVideos = posts_and_comments.posts.allow_videos;
   const allowMultipleImages =
     posts_and_comments.posts.allow_multiple_images_per_post;
-  console.log(`allowType: ${allowType}, type: ${type}`);
+  console.log(`allowType: ${allowType}, type: ${type}`,allowPolls);
   if (
     (!allowPolls && post.polls.length > 0) ||
     (allowType == "Links Only" && type != "url" && type != "hybrid") ||
-    (allowType == "Text Posts Only" && type != "text")
+    (allowType == "Text Posts Only" && type != "text")||
+    (!allowVideos && post.videos.length > 0)
   )
     return {
       success: false,
@@ -193,6 +340,34 @@ export async function checkPostSettings(post, community_name) {
   };
 }
 
+/**
+ * Check post content settings against community-specific rules to determine if the post is allowed.
+ *
+ * @param {Object} post - The post object containing details of the post to be validated.
+ * @param {String} community_name - The name of the community to which the post belongs.
+ * 
+ * @returns {Object} An object indicating the result of the post content validation:
+ *   - {Boolean} success: Indicates whether the post content settings are valid (`true`) or not (`false`).
+ *   - {Object} [error]: The error details if the post content violates community rules (only present if `success` is `false`).
+ *     - {Number} status: The HTTP status code indicating the error (e.g., 400 for "Community rules violation").
+ *     - {String} message: A descriptive error message indicating the reason for the validation failure.
+ * 
+ * @example
+ * // Example usage of checkContentSettings function
+ * const post = {
+ *   type: "image_and_videos",
+ *   title: "Awesome post",
+ *   description: "This is a great post.",
+ *   link_url: "https://example.com",
+ * };
+ * const communityName = "community1";
+ * const result = await checkContentSettings(post, communityName);
+ * if (result.success) {
+ *   console.log("Post content settings are valid. Allow posting.");
+ * } else {
+ *   console.error("Post content settings are not valid:", result.error.message);
+ * }
+ */
 export async function checkContentSettings(post, community_name) {
   const { err: e, content_controls } = await getCommunityContentControls(
     community_name
@@ -330,6 +505,33 @@ export async function checkContentSettings(post, community_name) {
   };
 }
 
+/**
+ * Middleware function to fetch and populate posts with voting and saved status for the current user.
+ *
+ * @param {Object} currentUser - The authenticated user object.
+ * @param {Array} posts - An array of posts to be populated with user-specific voting and save status.
+ * 
+ * @returns {Array|null} An array of posts with added attributes:
+ *   - {Boolean} vote: Indicates the voting status of the current user on the post (-1 for downvoted, 0 for neutral, 1 for upvoted).
+ *   - {String|null} poll_vote: Indicates the poll option voted by the user (if applicable, otherwise `null`).
+ *   - {Boolean} saved: Indicates whether the post is saved by the current user.
+ * 
+ * @example
+ * // Example usage of checkVotesMiddleware function
+ * const currentUser = {
+ *   _id: "user123",
+ *   upvotes_posts_ids: ["post1", "post2"],
+ *   downvotes_posts_ids: [],
+ *   saved_posts_ids: ["post2", "post3"],
+ * };
+ * const posts = [
+ *   { _id: "post1", type: "text" },
+ *   { _id: "post2", type: "image_and_videos" },
+ *   { _id: "post3", type: "polls", polls: [{ id: "option1", users_ids: ["user123"] }] },
+ * ];
+ * const updatedPosts = await checkVotesMiddleware(currentUser, posts);
+ * console.log(updatedPosts);
+ */
 export async function checkVotesMiddleware(currentUser, posts) {
   // Assume currentUser is the authenticated user
   if (currentUser) {

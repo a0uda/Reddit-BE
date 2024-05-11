@@ -1,4 +1,6 @@
-// The little pencil icon on the community profile and banner pictures in the community's default/home/first-to-open page.
+/**
+ * @module community/services/addCommunityProfileAndBannerPictures
+ */
 
 import {
     communityNameExists
@@ -11,7 +13,7 @@ import {
  * @property {string} requestBody.community_name - The name of the community to add the rule to.
  * @property {string} requestBody.profile_picture - The profile picture of the community.
  * 
- * @returns
+ * @returns {Object}
  * @property {boolean} success - The success status of the operation.
  * @property {Object} err - The error message and status code.
  * 
@@ -52,7 +54,7 @@ const addCommunityProfilePicture = async (requestBody) => {
  * @property {string} requestBody.community_name - The name of the community to delete the profile picture from.
  * @property {string} requestBody.profile_picture - The profile picture of the community.
  * 
- * @returns
+ * @returns {Object}
  * @property {boolean} success - The success status of the operation.
  * @property {Object} err - The error message and status code.
  * 
@@ -93,7 +95,7 @@ const deleteCommunityProfilePicture = async (requestBody) => {
  * @property {string} requestBody.community_name - The name of the community to add the rule to.
  * @property {string} requestBody.banner_picture - The banner picture of the community.
  * 
- * @returns
+ * @returns {Object}
  * @property {boolean} success - The success status of the operation.
  * @property {Object} err - The error message and status code.
  * 
@@ -132,7 +134,7 @@ const addCommunityBannerPicture = async (requestBody) => {
  * @property {string} requestBody.community_name - The name of the community to delete the banner picture from.
  * @property {string} requestBody.banner_picture - The banner picture of the community.
  * 
- * @returns
+ * @returns {Object}
  * @property {boolean} success - The success status of the operation.
  * @property {Object} err - The error message and status code.
  * 

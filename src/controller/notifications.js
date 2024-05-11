@@ -1,9 +1,22 @@
+/**
+ * @module notifications/controller
+ */
 import { Notification } from "../db/models/Notification.js";
 import { User } from "../db/models/User.js";
 import { verifyAuthToken } from "./userAuth.js";
 import { generateResponse } from "../utils/generalUtils.js";
 import { Community } from "../db/models/Community.js";
 
+/**
+ * Send a notification to a user based on specified parameters and settings.
+ *
+ * @param {Object} user - The user object to receive the notification.
+ * @param {string} sending_user_username - The username of the user sending the notification.
+ * @param {Object} [post] - The post object associated with the notification (optional).
+ * @param {Object} [comment] - The comment object associated with the notification (optional).
+ * @param {string} notifType - The type of notification being sent (e.g., 'comments', 'replies').
+ * @returns {Object} An object indicating the success status and details of the sent notification.
+ */
 export async function pushNotification(
   user,
   sending_user_username,
@@ -70,7 +83,27 @@ export async function pushNotification(
     return { success: false, error: "Internal server error" };
   }
 }
-
+/**
+ * Retrieve notifications for the authenticated user.
+ *
+ * @param {Object} request - The HTTP request object containing user authentication details.
+ * @returns {Object} An object containing the retrieved notifications for the user.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - message {string} - A message indicating the outcome of the operation.
+ *   - notifications {Array} - An array of notification objects.
+ *     Each notification object has the following properties:
+ *     - id {string} - The unique identifier of the notification.
+ *     - created_at {Date} - The date and time when the notification was created.
+ *     - post_id {string} - The identifier of the associated post (if applicable).
+ *     - comment_id {string} - The identifier of the associated comment (if applicable).
+ *     - sending_user_username {string} - The username of the user who sent the notification.
+ *     - community_name {string} - The name of the community associated with the notification (if applicable).
+ *     - unread_flag {boolean} - Indicates whether the notification has been read.
+ *     - hidden_flag {boolean} - Indicates whether the notification is hidden.
+ *     - type {string} - The type of notification ('comments', 'replies', etc.).
+ *     - profile_picture {string|null} - The profile picture URL of the associated community or user.
+ *     - is_in_community {boolean} - Indicates whether the notification is related to a community.
+ */
 export async function getNotifications(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -139,6 +172,16 @@ export async function getNotifications(request) {
   }
 }
 
+/**
+ * Marks notifications as read based on the specified criteria.
+ *
+ * @param {Object} request - The HTTP request object containing user authentication details and notification ID (if applicable).
+ * @param {boolean} markAllFlag - A flag indicating whether to mark all notifications as read.
+ * @returns {Object} An object indicating the outcome of the operation.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code indicating the result of the operation.
+ *   - message {string} - A message describing the outcome of the operation.
+ */
 export async function markAsRead(request, markAllFlag) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -149,7 +192,7 @@ export async function markAsRead(request, markAllFlag) {
       const notifications = await Notification.find({
         user_id: user._id,
       }).exec();
-      
+
       await Promise.all(
         notifications.map(async (notification) => {
           notification.unread_flag = false;
@@ -180,6 +223,15 @@ export async function markAsRead(request, markAllFlag) {
   }
 }
 
+/**
+ * Hides a specific notification for the authenticated user.
+ *
+ * @param {Object} request - The HTTP request object containing user authentication details and the ID of the notification to hide.
+ * @returns {Object} An object indicating the outcome of hiding the notification.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code indicating the result of the operation.
+ *   - message {string} - A message describing the outcome of the operation.
+ */
 export async function hideNotification(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);
@@ -200,7 +252,17 @@ export async function hideNotification(request) {
     return generateResponse(false, 500, "Internal Server error");
   }
 }
-//get unread notifications count : Heba
+
+/**
+ * Retrieves the count of unread notifications for the authenticated user.
+ *
+ * @param {Object} request - The HTTP request object containing user authentication details.
+ * @returns {Object} An object indicating the outcome of retrieving the count of unread notifications.
+ *   - success {boolean} - Indicates whether the operation was successful.
+ *   - status {number} - The HTTP status code indicating the result of the operation.
+ *   - message {string} - A message describing the outcome of the operation.
+ *   - count {number} - The count of unread notifications for the user.
+ */
 export async function getUnreadNotificationsCount(request) {
   try {
     const { success, err, status, user, msg } = await verifyAuthToken(request);

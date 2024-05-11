@@ -1,3 +1,7 @@
+/**
+ * @module community/service/settings
+ */
+
 // Mod Tools --> Settings --> General Settings
 // Mod Tools --> Settings --> Posts and Comments
 // Mod Tools --> Moderation --> Content Controls
@@ -20,6 +24,17 @@ import { CommunityPostsAndComments } from "../db/models/communityPostsAndComment
 
 
 //////////////////////////////////////////////////////////////////////// Get Settings //////////////////////////////////////////////////////////////
+
+/**
+ * Fetches the general settings of a specified community.
+ *
+ * @param {string} community_name - The name of the community from which to fetch the general settings.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'general_settings' property with the fetched general settings. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const getCommunityGeneralSettings = async (community_name) => {
     // This could be due to a bug in the front-end code that incorrectly formats the community_name.
     if (typeof community_name !== 'string') {
@@ -51,6 +66,16 @@ const getCommunityGeneralSettings = async (community_name) => {
     }
 };
 
+/**
+ * Fetches the content controls of a specified community.
+ *
+ * @param {string} community_name - The name of the community from which to fetch the content controls.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'content_controls' property with the fetched content controls. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const getCommunityContentControls = async (community_name) => {
     if (typeof community_name !== 'string') {
         return { err: { status: 400, message: 'Invalid arguments' } };
@@ -74,6 +99,16 @@ const getCommunityContentControls = async (community_name) => {
         return { err: { status: 500, message: error.message } };
     }
 };
+
+/**
+ * Fetches the posts and comments of a specified community.
+ *
+ * @param {string} community_name - The name of the community from which to fetch the posts and comments.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains a 'posts_and_comments' property with the fetched posts and comments. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const getCommunityPostsAndComments = async (community_name) => {
     if (typeof community_name !== 'string') {
@@ -103,6 +138,17 @@ const getCommunityPostsAndComments = async (community_name) => {
 //////////////////////////////////////////////////////////////////////// Change Settings //////////////////////////////////////////////////////////////
 // These functions can be optimised by populating the settings attribute (exactly like in the get functions above) then accessing the settings attribute directly of the returned community from the query.
 // TODO: Update these functions after finishing the Community Appearance feature.
+
+/**
+ * Changes the general settings of a specified community.
+ *
+ * @param {string} community_name - The name of the community for which to change the general settings.
+ * @param {Object} general_settings - The new general settings for the community.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains an 'updated_general_settings' property with the updated general settings. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const changeCommunityGeneralSettings = async (
     community_name,
@@ -141,6 +187,17 @@ const changeCommunityGeneralSettings = async (
     }
 };
 
+/**
+ * Changes the content controls of a specified community.
+ *
+ * @param {string} community_name - The name of the community for which to change the content controls.
+ * @param {Object} content_controls - The new content controls for the community.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains an 'updated_content_controls' property with the updated content controls. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
+
 const changeCommunityContentControls = async (
     community_name,
     content_controls
@@ -171,6 +228,17 @@ const changeCommunityContentControls = async (
         return { err: { status: 500, message: error.message } };
     }
 };
+
+/**
+ * Changes the posts and comments of a specified community.
+ *
+ * @param {string} community_name - The name of the community for which to change the posts and comments.
+ * @param {Object} posts_and_comments - The new posts and comments for the community. This object can have 'posts' and 'comments' properties.
+ *
+ * @returns {Promise<Object>} - A promise that resolves to an object. If the function is successful, the object contains an 'updated_posts_and_comments' property with the updated posts and comments. If an error occurs, the object contains an 'err' property with the status code and error message.
+ *
+ * @throws {Object} - If an error occurs, an object is thrown with an 'err' property containing the status code and error message.
+ */
 
 const changeCommunityPostsAndComments = async (
     community_name,

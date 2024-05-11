@@ -271,6 +271,7 @@ describe("checkPostSettings", () => {
           post_type_options: "All Posts Allowed",
           allow_polls_posts: true,
           allow_multiple_images_per_post: true,
+          allow_videos:true
         },
       },
     };
@@ -280,6 +281,7 @@ describe("checkPostSettings", () => {
     const validPost = {
       type: "image_and_videos",
       polls: [],
+      videos: [{ path: "video1" }],
       images: [{ path: "image1.jpg" }, { path: "image2.jpg" }],
     };
 
@@ -297,6 +299,7 @@ describe("checkPostSettings", () => {
           post_type_options: "Links Only",
           allow_polls_posts: false,
           allow_multiple_images_per_post: true,
+          allow_videos:true
         },
       },
     };
@@ -307,6 +310,7 @@ describe("checkPostSettings", () => {
       type: "text",
       polls: [{ option: "option1" }],
       images: [],
+      videos:[]
     };
 
     const result = await checkPostSettings(invalidPost, communityName);
@@ -336,6 +340,7 @@ describe("checkPostSettings", () => {
     const postWithMultipleImages = {
       type: "image_and_videos",
       polls: [],
+      videos:[],
       images: [{ path: "image1.jpg" }, { path: "image2.jpg" }],
     };
 

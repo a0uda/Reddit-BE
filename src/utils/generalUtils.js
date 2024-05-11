@@ -1,6 +1,6 @@
 /**
  * Utility functions related to user operations.
- * @module users/utils/generalUtils
+ * @module utils/generalUtils
  */
 
 /**
