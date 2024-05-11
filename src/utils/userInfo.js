@@ -99,6 +99,7 @@ export async function getAboutFormat(user) {
     created_at: user.created_at,
     email: user.email,
     verified_email_flag: user.verified_email_flag,
+    is_password_set_flag: user.is_password_set_flag,
     gmail: user.gmail,
     connected_google: user.connected_google,
     facebook_email: user.facebook_email,
