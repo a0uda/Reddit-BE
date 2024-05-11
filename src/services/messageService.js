@@ -39,7 +39,8 @@ const composeNewMessage = async (request, isReply) => {
         ///////CASE 1: MODERATOR->USER////////////////////////
         //TODO: CHECK IF THE USER IS MUTING THIS COMMUNITY 
         if (sender_type == "moderator") {
-            console.log("sender is moderaor type")
+
+
             const community = await Community.findOne({ name: senderVia });
             if (!community) {
                 return { err: { status: 400, message: "the provided senderVia Community id does not exist" } };
@@ -52,17 +53,11 @@ const composeNewMessage = async (request, isReply) => {
             global_sender_id = sender._id;
             global_sender_via_id = community._id;
             if (receiver_type == "user") {
-                console.log("receiver is user type")
-                console.log("*****************")
-                const receiver = await User.findOne({ username: receiver_username });
-                if (receiver == null) {
-                    console.log("null ya heba")
 
-                } else {
-                    console.log("not null ya heba , it is : ", receiver)
-                }
+                const receiver = await User.findOne({ username: receiver_username });
+
                 if (!receiver) {
-                    console.log("reciever User does not exist")
+
                     return { err: { status: 400, message: "reciever User does not exist" } };
 
                 }
@@ -249,27 +244,22 @@ const getAllMessages = async (request) => {
 const deleteMessage = async (request) => {
 
     try {
-        console.log("inside delete message function")
-        console.log("inside delete message function")
+
         const { success, err, status, user, msg } = await verifyAuthToken(request);
-        console.log("auth passed")
+
         if (!user) {
             return { success, err, status, user, msg };
         }
 
         const { _id } = request.body;
-        console.log(_id);
+
         const message = await Message.findById(_id);
-        console.log("ya hebaaaaaaaaaaaaaaaaaa")
-        console.log("message zefta is  :")
-        console.log(message)
-        console.log("the consition is :")
-        console.log(message == null)
+
 
 
 
         if (message == null) {
-            console.log("message not found")
+
             return {
                 err: { status: 404, message: "Message not found" }
             };
@@ -420,7 +410,7 @@ const markAllAsRead = async (request) => {
 }
 const getUserUnreadMessagesCount = async (request) => {
     try {
-        console.log("here")
+
         const { success, err, status, user, msg } = await verifyAuthToken(request);
         if (!user || err) {
             return { success, err, status, user, msg };
@@ -429,8 +419,6 @@ const getUserUnreadMessagesCount = async (request) => {
         const blockedUsers = user.safety_and_privacy_settings.blocked_users.map(
             (user) => user.id
         );
-        console.log(blockedUsers)
-        console.log(messages)
         for (let i = 0; i < blockedUsers.length; i++) {
             messages = messages.filter(
                 (message) => message.sender_id.toString() != blockedUsers[i].toString()

@@ -42,7 +42,7 @@ messageRouter.get("/messages/unread", async (req, res, next) => {
 })
 messageRouter.get("/messages/read-all-messages", async (req, res, next) => {
     try {
-        console.log("debugging getUserUnreadMessages")
+
         const { err, messages } = await getAllMessages(req)
 
         if (err) { return next(err) }

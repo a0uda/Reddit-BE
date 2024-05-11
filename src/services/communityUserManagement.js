@@ -394,10 +394,10 @@ const muteUser = async (request) => {
         if (!mutingUser) {
             return { success, err, status, mutingUser, msg };
         }
-        console.log("passed auth")
+
         // Extract request parameters
         const { community_name, action, reason, username } = request.body;
-        console.log("action: ", action)
+
         // Check if the action is mute or unmute
         if (action === "mute" || action === "unmute") {
             // Find the community
@@ -486,7 +486,7 @@ const muteUser = async (request) => {
 
             });
             await message.save();
-            // console.log(community.muted_users)
+
             return { success: true };
         } else {
 
@@ -624,7 +624,7 @@ const approveUser = async (request) => {
         const moderator = community.moderators.find(
             (moderator) => moderator.username === approvingUser.username
         );
-        console.log("moderator: ", moderator);
+
         //check if moderator object is allowed to mute
         if (
             !moderator.has_access.everything &&
@@ -694,7 +694,7 @@ const unapproveUser = async (request) => {
         }
 
         const community = await communityNameExists(community_name);
-        console.log("community: ", community);
+
         if (!community) {
             return { err: { status: 400, message: "Community not found." } };
         }
@@ -760,7 +760,7 @@ const unapproveUser = async (request) => {
             subject: "You are unapproved in the subreddit  /r/ " + community_name,
         });
         await message.save();
-        console.log(community.approved_users);
+
         return { success: true };
     } catch (error) {
         return { err: { status: 500, message: error.message } };
@@ -778,13 +778,13 @@ const getInvitedModerators = async (community_name) => {
         const moderators = community.moderators;
         //filter moderator to get only who have flag pending_flag = false  
         const filtered_moderators = moderators.filter((moderator) => moderator.pending_flag);
-        //console.log("community.moderators", moderators);
+
         const returned_moderators = [];
 
         for (let i = 0; i < filtered_moderators.length; i++) {
             //get the user object from the user collection where username is the moderator's username
             const user = await User.findOne({ username: filtered_moderators[i].username });
-            console.log("user", user);
+
             returned_moderators.push({
                 username: filtered_moderators[i].username,
                 profile_picture: user.profile_picture,
@@ -792,8 +792,7 @@ const getInvitedModerators = async (community_name) => {
                 has_access: filtered_moderators[i].has_access,
             })
         }
-        console.log("end of for loop")
-        console.log("returned_moderators", returned_moderators);
+
 
         return { returned_moderators };
     } catch (error) {
@@ -908,7 +907,7 @@ const addModerator = async (request) => {
         const moderator = community.moderators.find(
             (moderator) => moderator.username === user.username
         );
-        console.log("moderator: ", moderator);
+
         if (moderator) {
             if (!moderator.pending_flag)
                 return {
@@ -973,7 +972,7 @@ const acceptModeratorInvitation = async (request) => {
         const invitation = await Message.findOne({
             _id: message_id
         })
-        console.log("invitation: ", invitation);
+
         if (!invitation) {
             return { err: { status: 400, message: "Invitation with this id not found." } };
 
@@ -1027,42 +1026,7 @@ const acceptModeratorInvitation = async (request) => {
  * {username: "user2", profile_picture: "profile_picture2", moderator_since: "2021-09-01T00:00:00.000Z"},
  * ]
  */
-//all moderators
-// const getModerators = async (community_name, pageNumber, pageSizeNumber) => {
 
-//     try {
-//         const community = await communityNameExists(community_name);
-//         if (!community) {
-//             return {
-//                 err: { status: 400, message: "Community not found." },
-//             };
-//         }
-//         const moderators = community.moderators;
-//         //filter moderator to get only who have flag pending_flag = false
-//         const filtered_moderators = moderators.filter((moderator) => !moderator.pending_flag);
-//         //console.log("community.moderators", moderators);
-//         const returned_moderators = [];
-
-//         for (let i = 0; i < filtered_moderators.length; i++) {
-//             //get the user object from the user collection where username is the moderator's username
-//             //pagination
-//             const user = await User.findOne({ username: filtered_moderators[i].username })
-//                 .skip((pageNumber - 1) * pageSizeNumber).
-//                 limit(pageSizeNumber);
-
-//             returned_moderators.push({
-//                 username: filtered_moderators[i].username,
-//                 profile_picture: user.profile_picture,
-//                 moderator_since: filtered_moderators[i].moderator_since,
-//                 has_access: filtered_moderators[i].has_access,
-//             })
-//         }
-
-//         return { returned_moderators };
-//     } catch (error) {
-//         return { err: { status: 500, message: error.message } };
-//     }
-// }; 
 const getModerators = async (community_name, pageNumber = 1, pageSizeNumber = 100) => {
     try {
         const community = await communityNameExists(community_name);
@@ -1114,7 +1078,7 @@ const getModeratorsSortedByDate = async (request, pageNumber = 1, pageSizeNumber
 
             return { err: { status: 400, message: "Community not found." } };
         }
-        console.log("passed community check")
+
         const moderator = community.moderators.find((moderator) => moderator.username === user.username);
         if (!moderator) {
 
@@ -1171,7 +1135,7 @@ const getEditableModerators = async (request, pageNumber, pageSizeNumber) => {
         }
 
         const moderators = community.moderators.filter((moderator) => !moderator.pending_flag);
-        console.log(moderators);
+
         // Calculate pagination offsets
         const startIndex = (pageNumber - 1) * pageSizeNumber;
         const endIndex = pageNumber * pageSizeNumber;
@@ -1192,8 +1156,6 @@ const getEditableModerators = async (request, pageNumber, pageSizeNumber) => {
                 });
             }
         }
-        console.log("editable moderators ya heba ");
-        console.log(editableModerators);
 
         return { editableModerators };
     } catch (error) {
