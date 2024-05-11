@@ -366,15 +366,18 @@ const getCommunity = async (request) => {
     //use verifyAuth to check if the user is authenticated
     const community_name = request.params.community_name;
     const { success, err, status, user, msg } = await verifyAuthToken(request);
+    let isLoggedIn = true;
     if (!user) {
+      isLoggedIn = false;
       //return error in auth token
-      return { err: { status: status, message: msg } };
+      //return { err: { status: status, message: msg } };
     }
-    //check if user username exist in the community.approved_users.username
-    const joined_flag = await Community.findOne({
-      name: community_name,
-      joined_users: { $elemMatch: { _id: user._id } },
-    });
+
+    let joined_flag = false;
+    let moderator_flag = false;
+    let muted_flag = false;
+    let favorite_flag = false;
+
     const community = await Community.findOne({ name: community_name });
     if (!community) {
       return { err: { status: 400, message: "community does not exist " } };
@@ -383,26 +386,29 @@ const getCommunity = async (request) => {
     const general_settings = await CommunityGeneralSettings.findById(
       general_settings_id
     );
+    if (isLoggedIn) {
+      joined_flag = await Community.findOne({
+        name: community_name,
+        joined_users: { $elemMatch: { _id: user._id } },
+      });
 
-    // These flags are requested by the front-end team.
-    console.log(user);
-    console.log(user.moderated_communities);
-    const moderator_flag = user.moderated_communities.some(
-      (com) => com.id.toString() == community._id.toString()
-    );
-    console.log(moderator_flag);
-    const muted_flag = user.safety_and_privacy_settings.muted_communities.some(
-      (com) => com.id.toString() == community._id.toString()
-    );
-    const favorite_flag =
-      user.communities.some(
-        (com) =>
-          com.id.toString() == community._id.toString() && com.favorite_flag
-      ) ||
-      user.moderated_communities.some(
-        (com) =>
-          com.id.toString() == community._id.toString() && com.favorite_flag
+      moderator_flag = user.moderated_communities.some(
+        (com) => com.id.toString() == community._id.toString()
       );
+
+      muted_flag = user.safety_and_privacy_settings.muted_communities.some(
+        (com) => com.id.toString() == community._id.toString()
+      );
+      favorite_flag =
+        user.communities.some(
+          (com) =>
+            com.id.toString() == community._id.toString() && com.favorite_flag
+        ) ||
+        user.moderated_communities.some(
+          (com) =>
+            com.id.toString() == community._id.toString() && com.favorite_flag
+        );
+    }
 
     const returned_community = {
       community: {
@@ -414,9 +420,9 @@ const getCommunity = async (request) => {
         banner_picture: community.banner_picture,
         created_at: community.created_at,
         welcome_message: general_settings.welcome_message.message || "", // sometimes this is empty string
-        joined_flag: joined_flag ? true : false,
         title: general_settings.title,
 
+        joined_flag: joined_flag ? true : false,
         moderator_flag: moderator_flag,
         muted_flag: muted_flag,
         favorite_flag: favorite_flag,
