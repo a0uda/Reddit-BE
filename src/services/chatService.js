@@ -138,7 +138,6 @@ const getMessages = async (sender, receiverUsername) => {
         { path: 'receiverId', select: 'username profile_picture' }
       ]
     });
-
   } catch (error) {
     return { err: { status: 500, message: 'An error occurred while trying to find the chat between the sender and receiver' } };
   }
