@@ -3,6 +3,11 @@ import {
   getCommentWithReplies,
   newComment,
   replyToComment,
+  commentVote,
+  commentSave,
+  commentApprove,
+  commentRemove,
+  commentReport,
 } from "../../src/controller/comments.js";
 import { Comment } from "../../src/db/models/Comment.js";
 import { User } from "../../src/db/models/User.js";
@@ -606,5 +611,500 @@ describe("Reply to Comment", () => {
     expect(result.success).toBe(true);
     expect(result.error).toEqual({});
     expect(result.message).toEqual("Replied to comment sucessfully ");
+  });
+});
+describe("Comment Vote", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully upvote a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+        vote: "1",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      upvote_users: [],
+      downvote_users: [],
+      upvotes_count: 0,
+      downvotes_count: 0,
+      save: jest.fn(),
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentVote function
+    const result = await commentVote(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("voted successfully");
+    // Add more assertions if necessary
+  });
+  it("should successfully upvote a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+        vote: "-1",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      upvote_users: [],
+      downvote_users: [],
+      upvotes_count: 0,
+      downvotes_count: 0,
+      save: jest.fn(),
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentVote function
+    const result = await commentVote(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("voted successfully");
+    // Add more assertions if necessary
+  });
+
+  it("should return error if comment is not found", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+        vote: "1",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      upvote_users: [],
+      downvote_users: [],
+      upvotes_count: 0,
+      downvotes_count: 0,
+      save: jest.fn(),
+    };
+    Comment.findOne.mockResolvedValueOnce(null);
+
+    const result = await commentVote(request);
+
+    // Assertions
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toBe("Comment Not Found or User Not Authorized");
+  });
+});
+
+describe("Comment Save", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully save a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    const mockComment = {
+      _id: "valid_comment_id",
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentSave function
+    const result = await commentSave(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("Action completed successfully");
+    // Add more assertions if necessary
+  });
+
+  it("should remove a saved comment if already saved", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    const mockComment = {
+      _id: "valid_comment_id",
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentSave function
+    const result = await commentSave(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("Action completed successfully");
+    // Add more assertions if necessary
+  });
+
+  it("should return error if comment is not found", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    Comment.findOne.mockResolvedValueOnce(null);
+
+    // Call the commentSave function
+    const result = await commentSave(request);
+
+    // Assertions
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toBe("Comment Not Found ");
+    // Add more assertions if necessary
+  });
+});
+describe("Comment Approve", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully approve a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      user_id: "userId",
+      moderator_details: {
+        removed_flag: true,
+        removed_by: "moderatorId",
+        removed_date: new Date(),
+        approved_flag: false,
+        approved_by: null,
+        approved_date: null,
+      },
+      save: jest.fn(),
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentApprove function
+    const result = await commentApprove(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("comment approved successfully");
+    expect(mockComment.moderator_details.approved_flag).toBe(true);
+    expect(mockComment.moderator_details.approved_by).toBe("userId");
+    // Add more assertions if necessary
+  });
+
+  it("should return error if comment is not found or user is not authorized", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment not found
+    Comment.findOne.mockResolvedValueOnce(null);
+
+    // Call the commentApprove function
+    const result = await commentApprove(request);
+
+    // Assertions
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toBe("comment Not Found or User Not Authorized");
+    // Add more assertions if necessary
+  });
+});
+
+describe("Comment Remove", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully remove a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      user_id: "userId",
+      moderator_details: {
+        removed_flag: true,
+        removed_by: "moderatorId",
+        removed_date: new Date(),
+        approved_flag: false,
+        approved_by: null,
+        approved_date: null,
+      },
+      save: jest.fn(),
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentApprove function
+    const result = await commentRemove(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("comment removed successfully");
+  });
+
+  it("should return error if comment is not found or user is not authorized", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment not found
+    Comment.findOne.mockResolvedValueOnce(null);
+
+    // Call the commentApprove function
+    const result = await commentRemove(request);
+
+    // Assertions
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toBe("comment Not Found or User Not Authorized");
+    // Add more assertions if necessary
+  });
+});
+
+describe("Comment Report", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully report a comment", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      reported_comments_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment
+    const mockComment = {
+      _id: "valid_comment_id",
+      user_id: "otherUserId",
+    };
+    Comment.findOne.mockResolvedValueOnce(mockComment);
+
+    // Call the commentReport function
+    const result = await commentReport(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("Comment is reported successfully");
+    expect(mockUser.reported_comments_ids).toContain("valid_comment_id");
+    // Add more assertions if necessary
+  });
+
+  it("should return error if comment is not found or user is not authorized to report", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_comment_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_comments_ids: ["valid_comment_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock comment not found
+    Comment.findOne.mockResolvedValueOnce(null);
+
+    // Call the commentReport function
+    const result = await commentReport(request);
+
+    // Assertions
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toBe("Comment Not Found or User Not Authorized");
+    // Add more assertions if necessary
   });
 });

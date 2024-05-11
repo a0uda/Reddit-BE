@@ -12,6 +12,10 @@ import {
   setSuggestedSort,
   pollVote,
   getTrendingPosts,
+  postApprove,
+  postRemove,
+  postSave,
+  postReport,
 } from "../../src/controller/posts.js";
 import {
   checkBannedUser,
@@ -43,7 +47,7 @@ describe("New Post", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  
+
   it("should return error if token is missing", async () => {
     const request = {
       headers: {},
@@ -2609,7 +2613,7 @@ describe("pollVote", () => {
 
     Post.findById.mockReturnValueOnce(mockPost);
     checkVotesMiddleware.mockResolvedValue([mockPost]);
-    
+
     Post.findById.mockReturnValueOnce(mockPost);
     const result = await pollVote(request);
 
@@ -2670,4 +2674,184 @@ describe("pollVote", () => {
   //   expect(result.error.status).toBe(500);
 
   // });
+});
+describe("post Save", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully save a post", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_post_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_posts_ids: [],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    const mockpost = {
+      _id: "valid_post_id",
+    };
+    Post.findOne.mockResolvedValueOnce(mockpost);
+
+    // Call the postSave function
+    const result = await postSave(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("Action completed successfully");
+    // Add more assertions if necessary
+  });
+
+  it("should remove a saved post if already saved", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_post_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_posts_ids: ["valid_post_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    const mockpost = {
+      _id: "valid_post_id",
+    };
+    Post.findOne.mockResolvedValueOnce(mockpost);
+
+    // Call the postSave function
+    const result = await postSave(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("Action completed successfully");
+    // Add more assertions if necessary
+  });
+
+  it("should successfully approve a post", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_post_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_posts_ids: ["valid_post_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock post
+    const mockpost = {
+      _id: "valid_post_id",
+      user_id: "userId",
+      moderator_details: {
+        removed_flag: true,
+        removed_by: "moderatorId",
+        removed_date: new Date(),
+        approved_flag: false,
+        approved_by: null,
+        approved_date: null,
+      },
+      save: jest.fn(),
+    };
+    Post.findOne.mockResolvedValueOnce(mockpost);
+
+    // Call the postApprove function
+    const result = await postApprove(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("post approved successfully");
+    expect(mockpost.moderator_details.approved_flag).toBe(true);
+    expect(mockpost.moderator_details.approved_by).toBe("userId");
+    // Add more assertions if necessary
+  });
+});
+
+describe("post Remove", () => {
+  beforeEach(() => {
+    // Clear all mock implementations and reset mock calls
+    jest.clearAllMocks();
+  });
+
+  it("should successfully remove a post", async () => {
+    const request = {
+      headers: {
+        authorization: "Bearer validToken",
+      },
+      body: {
+        id: "valid_post_id",
+      },
+    };
+    const mockUser = {
+      _id: "userId",
+      username: "blockingUser",
+      safety_and_privacy_settings: { blocked_users: [] },
+      followers_ids: [],
+      following_ids: [],
+      saved_posts_ids: ["valid_post_id"],
+      token: ["validToken"],
+      save: jest.fn(),
+    };
+    User.findById = jest.fn().mockReturnValueOnce(mockUser);
+
+    // Mock post
+    const mockpost = {
+      _id: "valid_post_id",
+      user_id: "userId",
+      moderator_details: {
+        removed_flag: true,
+        removed_by: "moderatorId",
+        removed_date: new Date(),
+        approved_flag: false,
+        approved_by: null,
+        approved_date: null,
+      },
+      save: jest.fn(),
+    };
+    Post.findOne.mockResolvedValueOnce(mockpost);
+
+    // Call the postApprove function
+    const result = await postRemove(request);
+
+    // Assertions
+    expect(result.success).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.msg).toBe("post removed successfully");
+  });
 });
