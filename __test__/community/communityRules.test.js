@@ -1,7 +1,12 @@
 
-import { getCommunityRules, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule } from "../../src/services/communityRulesAndRemovalReasons";
+import {
+  getCommunityRules, addNewRuleToCommunity, editCommunityRule, deleteCommunityRule
+  , addNewRemovalReasonToCommunity, editRemovalReason, deleteRemovalReason, getRemovalReasons
+
+} from "../../src/services/communityRulesAndRemovalReasons";
 import * as communityUtils from "../../src/utils/communities"; // Import the entire module
 import { Rule } from "../../src/db/models/Rule";
+import e from "cors";
 // Mock the entire module
 jest.mock("../../src/utils/communities");
 jest.mock("../../src/db/models/Rule");
@@ -307,3 +312,372 @@ describe('deleteRule', () => {
     });
   });
 });
+//////////////////////removal reasons tests ///////////////////////
+
+describe('addNewRemovalReasonToCommunity', () => {
+  beforeEach(() => {
+    // Reset the mock implementation before each test
+    communityUtils.communityNameExists.mockReset();
+  });
+
+  it('should successfully add a new removal reason to a community with valid parameters', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [],
+      save: jest.fn(),
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await addNewRemovalReasonToCommunity(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check the result
+    expect(result).toEqual({ success: true });
+  });
+
+  it('should return an error when the community name does not exist', async () => {
+    const requestBody = {
+      community_name: 'NonExistingCommunity',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock that the community name does not exist
+    communityUtils.communityNameExists.mockResolvedValue(null);
+
+    // Call the function
+    const result = await addNewRemovalReasonToCommunity(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check the result
+    expect(result).toEqual({
+      err: {
+        status: 400,
+        message: 'community name does not exist ',
+      },
+    });
+  });
+
+  it('should return an error when the community fails to save', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [],
+      save: jest.fn().mockRejectedValue(new Error('Failed to save community')),
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await addNewRemovalReasonToCommunity(requestBody);
+    expect(result.err.status).toEqual(500);
+  })
+});
+/*const editRemovalReason = async (requestBody) => {
+    let {
+        community_name,
+        removal_reason_id,
+        removal_reason_title,
+        removal_reason,
+    } = requestBody;
+    try {
+        const community = await communityNameExists(community_name);
+        console.log(community);
+
+        if (!community) {
+            return {
+                err: { status: 400, message: "community name does not exist " },
+            };
+        }
+        const removal_reasons = community.removal_reasons;
+        const removal_reason_index = removal_reasons.findIndex(
+            (reason) => reason._id == removal_reason_id
+        );
+        if (removal_reason_index === -1) {
+            return {
+                err: { status: 400, message: "removal reason id does not exist " },
+            };
+        }
+        removal_reasons[removal_reason_index].removal_reason_title =
+            removal_reason_title;
+        removal_reasons[removal_reason_index].reason_message = removal_reason;
+        await community.save();
+        return { success: true };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+
+} */
+describe('editRemovalReason', () => {
+  beforeEach(() => {
+    // Reset the mock implementation before each test
+    communityUtils.communityNameExists.mockReset();
+  });
+
+  it('should successfully edit a removal reason with valid parameters', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_id: 'removal_reason_id',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [
+        {
+          _id: 'removal_reason_id',
+          removal_reason_title: 'Old Removal Reason Title',
+          reason_message: 'Old removal reason.',
+        },
+      ],
+      save: jest.fn(),
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await editRemovalReason(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check the result
+    expect(result).toEqual({ success: true });
+  });
+
+  it('should return an error when the community name does not exist', async () => {
+    const requestBody = {
+      community_name: 'NonExistingCommunity',
+      removal_reason_id: 'removal_reason_id',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock that the community name does not exist
+    communityUtils.communityNameExists.mockResolvedValue(null);
+
+    // Call the function
+    const result = await editRemovalReason(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check the result
+    expect(result).toEqual({
+      err: {
+        status: 400,
+        message: 'community name does not exist ',
+      },
+    });
+  });
+
+  it('should return an error when the removal reason id does not exist', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_id: 'NonExistingRemovalReasonId',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock the existing community
+    const mockCommunity = { _id: 'community_id', removal_reasons: [], save: jest.fn() };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await editRemovalReason(requestBody);
+    expect(result.err.status).toEqual(400);
+  });
+  //internal server error 500 
+  it('should return an error when the community fails to save', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_id: 'removal_reason_id',
+      removal_reason_title: 'New Removal Reason Title',
+      removal_reason: 'This is a sample removal reason.',
+    };
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [
+        {
+          _id: 'removal_reason_id',
+          removal_reason_title: 'Old Removal Reason Title',
+          reason_message: 'Old removal reason.',
+        },
+      ],
+      save: jest.fn().mockRejectedValue(new Error('Failed to save community')),
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await editRemovalReason(requestBody);
+    expect(result.err.status).toEqual(500);
+  })
+
+
+})
+/*const getRemovalReasons = async (community_name) => {
+    try {
+        const community = await communityNameExists(community_name);
+        console.log(community);
+
+        if (!community) {
+            return {
+                err: { status: 500, message: "community name does not exist " },
+            };
+        }
+        console.log("*******************")
+        console.log(community.removal_reasons);
+        return { removal_reasons: community.removal_reasons };
+    } catch (error) {
+        return { err: { status: 500, message: error.message } };
+    }
+} */
+describe('getRemovalReasons', () => {
+  beforeEach(() => {
+    // Reset the mock implementation before each test
+    communityUtils.communityNameExists.mockReset();
+  });
+
+  it('should successfully get removal reasons for a community', async () => {
+    const community_name = 'ExistingCommunity';
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [
+        {
+          _id: 'removal_reason_id_1',
+          removal_reason_title: 'Removal Reason 1',
+          reason_message: 'This is removal reason 1.',
+        },
+        {
+          _id: 'removal_reason_id_2',
+          removal_reason_title: 'Removal Reason 2',
+          reason_message: 'This is removal reason 2.',
+        },
+      ],
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Call the function
+    const result = await getRemovalReasons(community_name);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(community_name);
+
+    // Check the result
+    expect(result).toEqual({
+      removal_reasons: mockCommunity.removal_reasons,
+    });
+  });
+
+  it('should return an error when the community name does not exist', async () => {
+    const community_name = 'NonExistingCommunity';
+
+    // Mock that the community name does not exist
+    communityUtils.communityNameExists.mockResolvedValue(null);
+
+    // Call the function
+    const result = await getRemovalReasons(community_name);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(community_name);
+
+    // Check the result
+    expect(result.err.status).toEqual(500);
+  });
+})
+
+describe('deleteRemovalReason', () => {
+  beforeEach(() => {
+    // Reset the mock implementation before each test
+    communityUtils.communityNameExists.mockReset();
+    communityUtils.getRemovalReasonById.mockReset();
+  });
+
+  it('should successfully delete a removal reason', async () => {
+    const requestBody = {
+      community_name: 'ExistingCommunity',
+      removal_reason_id: 'removal_reason_id',
+    };
+
+    // Mock the existing community
+    const mockCommunity = {
+      _id: 'community_id',
+      removal_reasons: [
+        {
+          _id: 'removal_reason_id',
+          removal_reason_title: 'Removal Reason Title',
+          reason_message: 'This is a removal reason.',
+        },
+      ],
+      save: jest.fn(),
+    };
+    communityUtils.communityNameExists.mockResolvedValue(mockCommunity);
+
+    // Mock the existing removal reason
+    const mockRemovalReason = {
+      _id: 'removal_reason_id',
+      removal_reason_title: 'Removal Reason Title',
+      reason_message: 'This is a removal reason.',
+    };
+    communityUtils.getRemovalReasonById.mockResolvedValue(mockRemovalReason);
+
+    // Call the function
+    const result = await deleteRemovalReason(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check if getRemovalReasonById was called with the correct argument
+    expect(communityUtils.getRemovalReasonById).toHaveBeenCalledWith(requestBody.removal_reason_id);
+
+    // Check if the removal reason was deleted
+    expect(mockCommunity.removal_reasons).toEqual([]);
+
+    // Check if the community was saved
+    expect(mockCommunity.save).toHaveBeenCalled();
+
+    // Check the result
+    expect(result).toEqual({ success: true });
+  });
+
+  it('should return an error when the community name does not exist', async () => {
+    const requestBody = {
+      community_name: 'NonExistingCommunity',
+      removal_reason_id: 'removal_reason_id',
+    };
+
+    // Mock that the community name does not exist
+    communityUtils.communityNameExists.mockResolvedValue(null);
+
+    // Call the function
+    const result = await deleteRemovalReason(requestBody);
+
+    // Check if communityNameExists was called with the correct argument
+    expect(communityUtils.communityNameExists).toHaveBeenCalledWith(requestBody.community_name);
+
+    // Check the result
+    expect(result.err.status).toEqual(500);
+  });
+})

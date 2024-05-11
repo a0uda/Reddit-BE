@@ -1,21 +1,22 @@
 
-import { composeNewMessage, createUsernameMention, getUserSentMessages, markMessageAsRead, markAllAsRead, getUserUnreadMessagesCount } from "../src/services/messageService.js";
-import { Message } from "../src/db/models/Message.js";
-import { User } from '../src/db/models/User';
-import { verifyAuthToken } from '../src/controller/userAuth';
-import { Community } from '../src/db/models/Community';
-import { Comment } from '../src/db/models/Comment';
+import { composeNewMessage, createUsernameMention, getUserSentMessages, markMessageAsRead, markAllAsRead, getUserUnreadMessagesCount, deleteMessage } from "../../src/services/messageService.js";
+import { Message } from "../../src/db/models/Message.js";
+import { User } from '../../src/db/models/User';
+import { verifyAuthToken } from '../../src/controller/userAuth';
+import { Community } from '../../src/db/models/Community';
+import { Comment } from '../../src/db/models/Comment';
 
-jest.mock("../src/db/models/User");
-jest.mock("../src/controller/userAuth");
-jest.mock("../src/utils/communities.js");
-jest.mock("../src/db/models/User");
-jest.mock("../src/controller/userAuth");
-jest.mock("../src/db/models/Community");
-jest.mock("../src/db/models/Message");
-jest.mock("../src/db/models/Post");
-jest.mock("../src/db/models/Comment");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/controller/userAuth");
+jest.mock("../../src/utils/communities.js");
+jest.mock("../../src/db/models/User");
+jest.mock("../../src/controller/userAuth");
+jest.mock("../../src/db/models/Community");
+jest.mock("../../src/db/models/Message");
+jest.mock("../../src/db/models/Post");
+jest.mock("../../src/db/models/Comment");
 describe('composeNewMessage', () => {
+
     //reset all mocks 
     jest.resetAllMocks();
     it('should return an error if the required fields are not provided', async () => {
@@ -397,6 +398,122 @@ describe('composeNewMessage', () => {
         expect(result.err.status).toBe(400);
         expect(result.err.message).toBe("the provided parent_message_id does not exist");
     })
+    //should return an error if the user is not authenticated 
+    it('should return an error if the user is not authenticated', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: false, status: 401, msg: 'error' });
+    })
+    //should return an error if the reciever doesnt exist
+    /*const whatever = require('whatever');
+
+test('test 1', () => {
+  whatever.mockImplementation(() => 'hello');
+}); */
+
+    it('should return error if receiver username doesnt exist ', async () => {
+        jest.resetAllMocks();
+        jest.resetModules();
+        //including the required modules 
+
+        const request = {
+            body: {
+                data: {
+                    sender_type: 'moderator',
+                    receiver_username: 'username',
+                    receiver_type: 'user',
+                    message: 'message',
+                    subject: 'subject',
+                    senderVia: 'community'
+                },
+                Headers: {
+                    authorization: 'Bearer token'
+                }
+            },
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: mockSender, status: 200, msg: 'success' });
+        const mockSender = {
+            username: 'username',
+            _id: '66356010be06bf92b669eda4'
+        }
+        const mockCommunity = {
+            _id: '66356010be06bf92b669eda0',
+            moderators: [{ username: 'username' }],
+            muted_users: [],
+            name: 'name',
+
+        }
+        const mockReceiver = {
+            username: 'username',
+            _id: '66356010be06bf92b669eda0'
+
+        }
+        //reset all mocks 
+
+        Community.findOne.mockResolvedValueOnce(mockCommunity);
+        mockCommunity.moderators.find = jest.fn().mockReturnValueOnce(true);
+        //reset the mock function 
+        jest.resetAllMocks();
+        User.findOne.mockResolvedValueOnce(null);
+        const result = await composeNewMessage(request, false);
+        expect(result.err.status).toBe(500);
+
+    })
+
+
+    it('should return internal server error', async () => {
+
+
+        jest.resetAllMocks();
+        jest.resetModules();
+        const request = {
+            body: {
+                data: {
+                    sender_type: 'moderator',
+                    receiver_username: 'username',
+                    receiver_type: 'user',
+                    message: 'message',
+                    subject: 'subject',
+                    senderVia: 'community'
+                },
+                Headers: {
+                    authorization: 'Bearer token'
+                }
+            },
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, user: mockSender, status: 200, msg: 'success' });
+        const mockSender = {
+            username: 'username',
+            _id: '66356010be06bf92b669eda4'
+        }
+        const mockCommunity = {
+            _id: '66356010be06bf92b669eda0',
+            moderators: [{ username: 'username' }],
+            muted_users: [],
+            name: 'name',
+
+        }
+        const mockReceiver = {
+            username: 'username',
+            _id: '66356010be06bf92b669eda0'
+
+        }
+        //reset all mocks 
+        jest.resetAllMocks();
+        jest.resetModules();
+
+        Community.findOne.mockResolvedValueOnce(mockCommunity);
+        mockCommunity.moderators.find = jest.fn().mockReturnValueOnce(true);
+        //reset the mock function 
+        jest.resetAllMocks();
+        User.findOne.mockResolvedValueOnce(null);
+        const result = await composeNewMessage(request, false);
+        expect(result.err.status).toBe(500);
+
+    })
+
 
 
 });
@@ -528,6 +645,17 @@ describe('markMessageAsRead', () => {
         expect(result.messages).toHaveLength(1);
 
 
+    }) //new test
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: { _id: '123' } });
+        Message.find.mockRejectedValueOnce(new Error('error'));
+        const result = await markMessageAsRead(request);
+        expect(result.err.status).toBe(500);
+
     })
 
 })
@@ -577,7 +705,18 @@ describe('markAllAsRead', () => {
 
 
     })
+    //new test
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: { _id: '123' } });
+        Message.find.mockRejectedValueOnce(new Error('error'));
+        const result = await markAllAsRead(request);
+        expect(result.err.status).toBe(500);
 
+    })
 })
 
 describe('getUserUnreadMessagesCount', () => {
@@ -657,10 +796,20 @@ describe('getUserUnreadMessagesCount', () => {
         const result = await getUserUnreadMessagesCount(request);
         expect(result.status).toBe(200);
         expect(result.count).toBe(3);
-    });
+    })
+    //new test
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: { _id: '123' } });
+        Message.find.mockRejectedValueOnce(new Error('error'));
+        const result = await getUserUnreadMessagesCount(request);
+        expect(result.err.status).toBe(500);
 
-
-})
+    })
+});
 
 describe('createUsernameMention', () => {
     it('should return an error if the user is not authenticated', async () => {
@@ -753,6 +902,7 @@ describe('createUsernameMention', () => {
     })
     it('should return success if the user mention is saved successfully', async () => {
         jest.resetAllMocks();
+
         const request = {
             Headers: { authorization: 'Bearer token ' },
             body: {
@@ -791,8 +941,68 @@ describe('createUsernameMention', () => {
         expect(mentionedUser.user_mentions[0].sender_username).toBe(mockUser.username);
         expect(mentionedUser.user_mentions[0].unread_flag).toBe(true);
     })
+    ////new test
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: { _id: '123' } });
+        Message.find.mockRejectedValueOnce(new Error('error'));
+        const result = await createUsernameMention(request);
+        expect(result.err.status).toBe(500);
+    })
+})
+
+describe('deleteMessage', () => {
+    it('should return Internal server error', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: {
+                authorization: 'Bearer token'
+            }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: false, status: 401, msg: 'error' });
+        const result = await deleteMessage(request);
+        expect(result.status).toBe(401);
+    })
+
+    it('should return an error if the message doesnt exist ', async () => {
+        jest.resetAllMocks();
+        jest.resetModules();
+        //re mock the module 
+
+        const { deleteMessage } = require('../../src/services/messageService.js');
+        const { verifyAuthToken } = require('../../src/controller/userAuth');
+        jest.mock('../../src/db/models/message.js');
+        jest.mock('../../src/controller/userAuth');
+        const request = {
+            Headers: {
+                authorization: 'Bearer token'
+            }
+            ,
+            body: { _id: '6635600be06bf92b669eda0' }
+        };
+        const mockUser = {
+            _id: '66356010be760bf92b669eda0'
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: mockUser });
+        Message.findById.mockResolvedValueOnce(null);
+        const result = await deleteMessage(request);
+        expect(result.err.status).toBe(404);
+        expect(result.err.message).toBe("Message not found");
+    })
+    //new test
+    it('should return an error if there is an error in the server', async () => {
+        jest.resetAllMocks();
+        const request = {
+            Headers: { authorization: 'Bearer token' }
+        };
+        verifyAuthToken.mockResolvedValueOnce({ success: true, status: 200, user: { _id: '123' } });
+        Message.find.mockRejectedValueOnce(new Error('error'));
+        const result = await deleteMessage(request);
+        expect(result.err.status).toBe(500);
+    })
+})
 
 
-
-}
-);
