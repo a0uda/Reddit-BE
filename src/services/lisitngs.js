@@ -29,6 +29,7 @@ export async function paginateFollowingPosts(
   const communityPosts = await Post.find({
     post_in_community_flag: true,
     community_id: { $in: joinedCommunities, $nin: mutedCommunities },
+    _id: { $nin: hidden_posts },
   })
     .sort(sortCriteria)
     .skip(offset)
@@ -166,7 +167,7 @@ export async function getPostsHelper(currentUser, offset, pageSize, sortBy) {
           (community) => community.id
         );
       // Check if the user follows anyone
-      if (followedUsers.length > 0) {
+      if (followedUsers.length > 0 || joined_communities.length > 0) {
         // Fetch posts from followed users
         posts = await paginateFollowingPosts(
           followedUsers,
