@@ -343,7 +343,7 @@ usersRouter.get("/users/internal-forget-password/:token", async (req, res) => {
       return;
     }
     console.log(msg);
-    res.redirect(`/resetpasswordpage/?token=${req.params.token}`); //frontend
+    res.redirect(`https://redditech.me/resetpassword/:${req.params.token}`); //frontend
     // res.status(200).send(msg);
   } catch (error) {
     res.status(500).json({ error: "hi Internal server error." });
